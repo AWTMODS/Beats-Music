@@ -1,0 +1,908 @@
+import 'dart:ui';
+import 'package:beats_music/blocs/player_overlay/player_overlay_cubit.dart';
+import 'package:beats_music/model/songModel.dart';
+import 'package:beats_music/screens/screen/home_views/timer_view.dart';
+import 'package:beats_music/screens/widgets/gradient_progress_bar.dart';
+import 'package:beats_music/screens/widgets/more_bottom_sheet.dart';
+import 'package:beats_music/screens/widgets/up_next_panel.dart';
+import 'package:beats_music/screens/widgets/volume_slider.dart';
+import 'package:beats_music/services/beats_music_player.dart';
+import 'package:beats_music/services/db/beats_music_db_service.dart';
+import 'package:beats_music/services/shortcuts_intents.dart';
+import 'package:beats_music/utils/imgurl_formator.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:icons_plus/icons_plus.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:beats_music/screens/widgets/like_widget.dart';
+import 'package:beats_music/screens/widgets/playPause_widget.dart';
+import 'package:beats_music/services/db/cubit/beats_music_db_cubit.dart';
+import 'package:beats_music/theme_data/default.dart';
+import 'package:beats_music/utils/load_Image.dart';
+import 'package:beats_music/utils/pallete_generator.dart';
+import 'package:responsive_framework/responsive_framework.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+import '../../blocs/mediaPlayer/beats_player_cubit.dart';
+import '../../blocs/mini_player/mini_player_bloc.dart';
+import 'package:beats_music/services/import_export_service.dart';
+import 'package:share_plus/share_plus.dart';
+import 'player_views/fullscreen_lyrics_view.dart';
+import 'player_views/lyrics_widget.dart';
+
+class AudioPlayerView extends StatefulWidget {
+  const AudioPlayerView({super.key});
+
+  @override
+  State<AudioPlayerView> createState() => _AudioPlayerViewState();
+}
+
+class _AudioPlayerViewState extends State<AudioPlayerView>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final UpNextPanelController _upNextPanelController = UpNextPanelController();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    // Register the collapse callback with PlayerOverlayCubit
+    // This allows GlobalFooter to collapse the panel on back gesture
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<PlayerOverlayCubit>().registerUpNextPanelCollapse(
+              () => _upNextPanelController.collapse(),
+            );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // Unregister the collapse callback
+    context.read<PlayerOverlayCubit>().unregisterUpNextPanelCollapse();
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  /// Handle back gesture/button press
+  /// Returns true if we handled the back action (should not pop), false otherwise
+  bool _handleBackNavigation(BuildContext context) {
+    // First, try to collapse the upnext panel if it's expanded
+    if (_upNextPanelController.collapse()) {
+      return true; // We handled it by collapsing the panel
+    }
+    // If panel was not expanded, hide the player
+    context.read<PlayerOverlayCubit>().hidePlayer();
+    return true; // We handled it by hiding the player
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    final musicPlayer = beatsPlayerCubit.beatsMusicPlayer;
+
+    return Shortcuts(
+      shortcuts: const <ShortcutActivator, Intent>{
+        SingleActivator(LogicalKeyboardKey.keyS): ShuffleIntent(),
+        SingleActivator(LogicalKeyboardKey.keyL): LoopPlaylistIntent(),
+        SingleActivator(LogicalKeyboardKey.keyM): LoopOffIntent(),
+        SingleActivator(LogicalKeyboardKey.keyO): LoopSingleIntent(),
+        SingleActivator(LogicalKeyboardKey.keyT): TimerIntent(),
+        SingleActivator(LogicalKeyboardKey.backspace): BackIntent(),
+      },
+      child: Actions(
+        actions: {
+          ShuffleIntent: CallbackAction<ShuffleIntent>(onInvoke: (intent) {
+            musicPlayer.shuffle(!musicPlayer.shuffleMode.value);
+            return null;
+          }),
+          LoopPlaylistIntent:
+              CallbackAction<LoopPlaylistIntent>(onInvoke: (intent) {
+            musicPlayer.setLoopMode(LoopMode.all);
+            return null;
+          }),
+          LoopOffIntent: CallbackAction<LoopOffIntent>(onInvoke: (intent) {
+            musicPlayer.setLoopMode(LoopMode.off);
+            return null;
+          }),
+          LoopSingleIntent:
+              CallbackAction<LoopSingleIntent>(onInvoke: (intent) {
+            musicPlayer.setLoopMode(LoopMode.one);
+            return null;
+          }),
+          TimerIntent: CallbackAction<TimerIntent>(onInvoke: (intent) {
+            Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const TimerView()));
+            return null;
+          }),
+          BackIntent: CallbackAction<BackIntent>(onInvoke: (intent) {
+            _handleBackNavigation(context);
+            return null;
+          }),
+        },
+        child: FocusScope(
+          autofocus: true,
+          child: Scaffold(
+            backgroundColor: const Color.fromARGB(255, 12, 4, 9),
+            resizeToAvoidBottomInset: false,
+            extendBodyBehindAppBar: true,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              foregroundColor: Default_Theme.primaryColor1,
+              centerTitle: true,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, size: 28),
+                onPressed: () {
+                  context.read<PlayerOverlayCubit>().hidePlayer();
+                },
+              ),
+              actions: [
+                IconButton(
+                    onPressed: () =>
+                        showMoreBottomSheet(context, musicPlayer.currentMedia),
+                    icon: const Icon(MingCute.more_2_fill,
+                        size: 25, color: Default_Theme.primaryColor1))
+              ],
+              title: Column(
+                children: [
+                  Text(
+                    'Enjoying From',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                            color: Default_Theme.primaryColor1,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold)
+                        .merge(Default_Theme.secondoryTextStyle),
+                  ),
+                  StreamBuilder<String>(
+                      stream: beatsPlayerCubit.beatsMusicPlayer.queueTitle,
+                      builder: (context, snapshot) {
+                        return Text(
+                          snapshot.data ?? "Unknown",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Default_Theme.primaryColor2,
+                            fontSize: 12,
+                          ).merge(Default_Theme.secondoryTextStyle),
+                        );
+                      }),
+                ],
+              ),
+            ),
+            body: AnimatedSwitcher(
+                duration: const Duration(seconds: 1),
+                child: ResponsiveBreakpoints.of(context)
+                        .smallerOrEqualTo(TABLET)
+                    ? LayoutBuilder(
+                        builder: (context, constraints) {
+                          return Stack(
+                            children: [
+                              _PlayerUI(
+                                musicPlayer: musicPlayer,
+                                tabController: _tabController,
+                                constraints: constraints,
+                                onQueueTap: () =>
+                                    _upNextPanelController.toggle(),
+                              ),
+                              UpNextPanel(
+                                peekHeight: 60.0,
+                                parentHeight: constraints.maxHeight,
+                                controller: _upNextPanelController,
+                              ),
+                            ],
+                          );
+                        },
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          ConstrainedBox(
+                              constraints: BoxConstraints(
+                                  minWidth: 400,
+                                  maxWidth:
+                                      MediaQuery.of(context).size.width * 0.60),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                  return _PlayerUI(
+                                    musicPlayer: musicPlayer,
+                                    tabController: _tabController,
+                                    constraints: constraints,
+                                    onQueueTap: () =>
+                                        _upNextPanelController.toggle(),
+                                  );
+                                }),
+                              )),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(15.0),
+                              child: SizedBox(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.8,
+                                  child: UpNextPanel(
+                                      peekHeight: 60,
+                                      parentHeight:
+                                          MediaQuery.of(context).size.height *
+                                              0.8,
+                                      isDesktopMode: true,
+                                      controller: _upNextPanelController)),
+                            ),
+                          )
+                        ],
+                      )),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PlayerUI extends StatelessWidget {
+  final BeatsMusicPlayer musicPlayer;
+  final TabController tabController;
+  final BoxConstraints constraints;
+  final VoidCallback onQueueTap;
+
+  const _PlayerUI({
+    required this.musicPlayer,
+    required this.tabController,
+    required this.constraints,
+    required this.onQueueTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            height: constraints.maxHeight * 0.92,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: AnimatedBuilder(
+                    animation: tabController.animation!,
+                    builder: (context, child) {
+                      final opacity = (1 - tabController.animation!.value);
+                      return Opacity(
+                        opacity: opacity,
+                        child: child,
+                      );
+                    },
+                    child: const AmbientImgShadowWidget(),
+                  ),
+                ),
+                SizedBox(
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight * 0.90,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: SizedBox(
+                      width: constraints.maxWidth * 0.90,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Flexible(child: SizedBox(height: 5)),
+                          Flexible(
+                            flex: 7,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              child: TabBarView(
+                                controller: tabController,
+                                physics: const BouncingScrollPhysics(),
+                                children: [
+                                  Tab(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 10),
+                                      child: CoverImageVolSlider(
+                                          constraints: constraints),
+                                    ),
+                                  ),
+                                  Tab(
+                                    child: ConstrainedBox(
+                                      constraints:
+                                          const BoxConstraints(minHeight: 200),
+                                      child: LyricsWidget(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          PlayerCtrlWidgets(
+                              musicPlayer: musicPlayer,
+                              onQueueTap: onQueueTap)
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class CoverImageVolSlider extends StatelessWidget {
+  final BoxConstraints constraints;
+  const CoverImageVolSlider({super.key, required this.constraints});
+
+  @override
+  Widget build(BuildContext context) {
+    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    return VolumeDragController(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(25),
+        child: StreamBuilder<MediaItem?>(
+            stream: beatsPlayerCubit.beatsMusicPlayer.mediaItem,
+            builder: (context, snapshot) {
+              final artUri = snapshot.data?.artUri?.toString() ?? "";
+              return LayoutBuilder(builder: (context, constraints) {
+                return ConstrainedBox(
+                  constraints: BoxConstraints(
+                      maxWidth: constraints.maxWidth * 0.98,
+                      maxHeight: constraints.maxHeight * 0.98),
+                  child: LoadImageCached(
+                      imageUrl: formatImgURL(artUri, ImageQuality.high),
+                      fallbackUrl: formatImgURL(artUri, ImageQuality.medium),
+                      fit: BoxFit.fitWidth),
+                );
+              });
+            }),
+      ),
+    );
+  }
+}
+
+class PlayerCtrlWidgets extends StatelessWidget {
+  const PlayerCtrlWidgets(
+      {super.key, required this.musicPlayer, required this.onQueueTap});
+  final BeatsMusicPlayer musicPlayer;
+  final VoidCallback onQueueTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width * 0.92,
+      child: Column(
+        children: [
+          const _SongInfoRow(),
+          const Padding(
+            padding: EdgeInsets.only(top: 10),
+            child: _PlayerProgressBar(),
+          ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 25),
+              child: _PlayerControlsRow(musicPlayer: musicPlayer),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 25),
+            child: _BottomActionsRow(onQueueTap: onQueueTap),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SongInfoRow extends StatelessWidget {
+  const _SongInfoRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    return Row(
+      children: [
+        Expanded(
+          flex: 7,
+          child: StreamBuilder<MediaItem?>(
+              stream: beatsPlayerCubit.beatsMusicPlayer.mediaItem,
+              builder: (context, snapshot) {
+                final mediaItem = snapshot.data;
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      clipBehavior: Clip.antiAlias,
+                      child: SelectableText(
+                        mediaItem?.title ?? "Unknown",
+                        textAlign: TextAlign.start,
+                        style: Default_Theme.secondoryTextStyle.merge(
+                            const TextStyle(
+                                fontSize: 22,
+                                fontFamily: "NotoSans",
+                                fontWeight: FontWeight.w700,
+                                overflow: TextOverflow.ellipsis,
+                                color: Default_Theme.primaryColor1)),
+                      ),
+                    ),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SelectableText(
+                        mediaItem?.artist ?? "Unknown",
+                        textAlign: TextAlign.start,
+                        style: Default_Theme.secondoryTextStyle.merge(TextStyle(
+                            fontSize: 15,
+                            fontFamily: "NotoSans",
+                            fontWeight: FontWeight.w500,
+                            overflow: TextOverflow.ellipsis,
+                            color: Default_Theme.primaryColor1
+                                .withValues(alpha: 0.7))),
+                      ),
+                    )
+                  ],
+                );
+              }),
+        ),
+        const Spacer(),
+        const _LikeButton(),
+      ],
+    );
+  }
+}
+
+class _DownloadButton extends StatelessWidget {
+  const _DownloadButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    return Tooltip(
+      message: "Available Offline",
+      child: StreamBuilder<MediaItem?>(
+        stream: beatsPlayerCubit.beatsMusicPlayer.mediaItem,
+        builder: (context, mediaSnapshot) {
+          final currentMedia = mediaSnapshot.data;
+          if (currentMedia == null) return const SizedBox.shrink();
+          return FutureBuilder(
+            future: BeatsMusicDBService.getDownloadDB(
+                mediaItem2MediaItemModel(currentMedia)),
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data != null) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 0.0, bottom: 3),
+                  child: IconButton(
+                    iconSize: 25,
+                    icon: Icon(
+                      Icons.offline_pin_rounded,
+                      color: Default_Theme.primaryColor1.withValues(alpha: 0.5),
+                    ),
+                    onPressed: () {
+                      // beatsPlayerCubit.beatsMusicPlayer.toggleDownload();
+                    },
+                  ),
+                );
+              } else {
+                return const SizedBox.shrink();
+              }
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _LikeButton extends StatelessWidget {
+  const _LikeButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    return StreamBuilder<ProgressBarStreams>(
+        stream: beatsPlayerCubit.progressStreams,
+        builder: (context, progressSnapshot) {
+          final isPlaying =
+              progressSnapshot.data?.currentPlayerState.playing ?? false;
+          return FutureBuilder(
+            future: context
+                .read<BeatsMusicDBCubit>()
+                .isLiked(beatsPlayerCubit.beatsMusicPlayer.currentMedia),
+            builder: (context, snapshot) {
+              final isLiked = snapshot.data ?? false;
+              return Padding(
+                padding: const EdgeInsets.only(left: 0.0, bottom: 3),
+                child: LikeBtnWidget(
+                  isPlaying: isPlaying,
+                  isLiked: isLiked,
+                  iconSize: 25,
+                  onLiked: () => context.read<BeatsMusicDBCubit>().setLike(
+                      beatsPlayerCubit.beatsMusicPlayer.currentMedia,
+                      isLiked: true),
+                  onDisliked: () => context.read<BeatsMusicDBCubit>().setLike(
+                      beatsPlayerCubit.beatsMusicPlayer.currentMedia,
+                      isLiked: false),
+                ),
+              );
+            },
+          );
+        });
+  }
+}
+
+class _PlayerProgressBar extends StatelessWidget {
+  const _PlayerProgressBar();
+
+  @override
+  Widget build(BuildContext context) {
+    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    return RepaintBoundary(
+      child: StreamBuilder<ProgressBarStreams>(
+          stream: beatsPlayerCubit.progressStreams,
+          builder: (context, snapshot) {
+            final data = snapshot.data;
+            final isPlaying = data?.currentPlayerState.playing ?? false;
+            return GradientProgressBar.fromAccentColors(
+              progress: data?.currentPos ?? Duration.zero,
+              total: data?.currentPlaybackState.duration ?? Duration.zero,
+              buffered:
+                  data?.currentPlaybackState.bufferedPosition ?? Duration.zero,
+              onSeek: (value) {
+                beatsPlayerCubit.beatsMusicPlayer.seek(value);
+              },
+              isPlaying: isPlaying,
+              // Just pass the accent colors - gradients are auto-generated!
+              activeAccentColor: Default_Theme.accentColor1, // Sky Blue
+              inactiveAccentColor: Default_Theme.accentColor2, // Pink
+              // Use "Light & Breezy" for Sky Blue (keeps it bright/cyan)
+              activeGradientStyle: GradientStyle.lightAndBreezy,
+              // Use "Warm & Rich" for Pink (makes it vibrant/orange-red, not pastel)
+              inactiveGradientStyle: GradientStyle.warmAndRich,
+              trackHeight: 6.0,
+              thumbRadius: 8.0,
+              timeLabelPadding: 5,
+              timeLabelStyle: Default_Theme.secondoryTextStyle.merge(TextStyle(
+                  fontSize: 15,
+                  color: Default_Theme.primaryColor1.withValues(alpha: 0.7))),
+              timeLabelLocation: TimeLabelLocation.below,
+              inactiveTrackColor:
+                  Default_Theme.primaryColor2.withValues(alpha: 0.1),
+              animationDuration: const Duration(milliseconds: 200),
+              animationCurve: Curves.easeOutCubic,
+            );
+          }),
+    );
+  }
+}
+
+class _PlayerControlsRow extends StatelessWidget {
+  final BeatsMusicPlayer musicPlayer;
+  const _PlayerControlsRow({required this.musicPlayer});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const _ShuffleControl(),
+        IconButton(
+          padding: EdgeInsets.zero,
+          onPressed: () => musicPlayer.skipToPrevious(),
+          icon: const Icon(MingCute.skip_previous_fill,
+              color: Default_Theme.primaryColor1, size: 35),
+        ),
+        const _PlayPauseButton(),
+        IconButton(
+          padding: EdgeInsets.zero,
+          onPressed: () => musicPlayer.skipToNext(),
+          icon: const Icon(MingCute.skip_forward_fill,
+              color: Default_Theme.primaryColor1, size: 35),
+        ),
+        const _LoopControl(),
+      ],
+    );
+  }
+}
+
+class _LoopControl extends StatelessWidget {
+  const _LoopControl();
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: "Loop",
+      child: StreamBuilder<LoopMode>(
+        stream: context.watch<BeatsPlayerCubit>().beatsMusicPlayer.loopMode,
+        builder: (context, snapshot) {
+          final loopMode = snapshot.data ?? LoopMode.off;
+          return PopupMenuButton(
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem(value: 0, child: Text("Off")),
+              const PopupMenuItem(value: 1, child: Text("Loop One")),
+              const PopupMenuItem(value: 2, child: Text("Loop All")),
+            ],
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Icon(
+                loopMode == LoopMode.off
+                    ? MingCute.repeat_line
+                    : loopMode == LoopMode.one
+                        ? MingCute.repeat_one_line
+                        : MingCute.repeat_fill,
+                color: loopMode == LoopMode.off
+                    ? Default_Theme.primaryColor1
+                    : Default_Theme.accentColor1,
+                size: 24,
+              ),
+            ),
+            onSelected: (value) {
+              final player = context.read<BeatsPlayerCubit>().beatsMusicPlayer;
+              switch (value) {
+                case 0:
+                  player.setLoopMode(LoopMode.off);
+                  break;
+                case 1:
+                  player.setLoopMode(LoopMode.one);
+                  break;
+                case 2:
+                  player.setLoopMode(LoopMode.all);
+                  break;
+              }
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ShuffleControl extends StatelessWidget {
+  const _ShuffleControl();
+
+  @override
+  Widget build(BuildContext context) {
+    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    return StreamBuilder<bool>(
+        stream: beatsPlayerCubit.beatsMusicPlayer.shuffleMode,
+        builder: (context, snapshot) {
+          final isShuffle = snapshot.data ?? false;
+          return Tooltip(
+            message: "Shuffle",
+            child: IconButton(
+              padding: const EdgeInsets.all(5),
+              constraints: const BoxConstraints(),
+              style: const ButtonStyle(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+              icon: Icon(
+                MingCute.shuffle_2_fill,
+                color: isShuffle
+                    ? Default_Theme.accentColor1
+                    : Default_Theme.primaryColor1,
+                size: 30,
+              ),
+              onPressed: () {
+                beatsPlayerCubit.beatsMusicPlayer.shuffle(!isShuffle);
+              },
+            ),
+          );
+        });
+  }
+}
+
+class _ExternalLinkControl extends StatelessWidget {
+  const _ExternalLinkControl();
+
+  @override
+  Widget build(BuildContext context) {
+    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    return Tooltip(
+      message: "Open Original Link",
+      child: IconButton(
+        padding: const EdgeInsets.all(5),
+        constraints: const BoxConstraints(),
+        style:
+            const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+        icon: StreamBuilder<MediaItem?>(
+            stream: beatsPlayerCubit.beatsMusicPlayer.mediaItem,
+            builder: (context, snapshot) {
+              if (snapshot.hasData &&
+                  snapshot.data?.extras?['perma_url'] != null) {
+                return snapshot.data?.extras?['source'] == 'youtube'
+                    ? const Icon(MingCute.youtube_fill,
+                        color: Default_Theme.primaryColor1, size: 24)
+                    : Text("JS",
+                        style: const TextStyle(
+                                color: Default_Theme.primaryColor1,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold)
+                            .merge(Default_Theme.secondoryTextStyle));
+              }
+              return const Icon(MingCute.external_link_line,
+                  color: Default_Theme.primaryColor1, size: 24);
+            }),
+        onPressed: () async {
+          final url = beatsPlayerCubit
+              .beatsMusicPlayer.currentMedia.extras?['perma_url'];
+          if (url != null && await canLaunchUrlString(url)) {
+            await launchUrlString(url);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Unable to open the link")),
+            );
+          }
+        },
+      ),
+    );
+  }
+}
+
+class _PlayPauseButton extends StatelessWidget {
+  const _PlayPauseButton();
+
+  @override
+  @override
+  Widget build(BuildContext context) {
+    final musicPlayer = context.read<BeatsPlayerCubit>().beatsMusicPlayer;
+    return BlocBuilder<MiniPlayerBloc, MiniPlayerState>(
+      builder: (context, state) {
+        Widget child;
+        Color buttonColor = Colors.white;
+        Color iconColor = Colors.black;
+
+        if (state is MiniPlayerInitial || state is MiniPlayerProcessing) {
+          child = const CircularProgressIndicator(color: Colors.black);
+        } else if (state is MiniPlayerCompleted) {
+          child = const Icon(FontAwesome.rotate_right_solid,
+              color: Colors.black, size: 35);
+        } else if (state is MiniPlayerError) {
+          child = const Icon(MingCute.warning_line, color: Colors.black);
+        } else if (state is MiniPlayerWorking) {
+          if (state.isBuffering) {
+            child = const CircularProgressIndicator(color: Colors.black);
+          } else {
+            child = Icon(
+              state.isPlaying ? FontAwesome.pause_solid : MingCute.play_fill,
+              size: 35,
+              color: Colors.black,
+            );
+          }
+        } else {
+          child = const SizedBox();
+        }
+
+        return GestureDetector(
+          onTap: () {
+            if (state is MiniPlayerWorking && !state.isBuffering) {
+              state.isPlaying ? musicPlayer.pause() : musicPlayer.play();
+            } else if (state is MiniPlayerCompleted) {
+              musicPlayer.seek(Duration.zero);
+              musicPlayer.play();
+            }
+          },
+          child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: buttonColor,
+              ),
+              width: 75,
+              height: 75,
+              child:
+                  Center(child: SizedBox(width: 35, height: 35, child: child))),
+        );
+      },
+    );
+  }
+}
+
+class AmbientImgShadowWidget extends StatefulWidget {
+  const AmbientImgShadowWidget({super.key});
+
+  @override
+  State<AmbientImgShadowWidget> createState() => _AmbientImgShadowWidgetState();
+}
+
+class _AmbientImgShadowWidgetState extends State<AmbientImgShadowWidget> {
+  Color? cachedColor;
+  String? lastArtUri;
+
+  @override
+  Widget build(BuildContext context) {
+    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    return StreamBuilder<MediaItem?>(
+        stream: beatsPlayerCubit.beatsMusicPlayer.mediaItem,
+        builder: (context, snapshot) {
+          final artUri = snapshot.data?.artUri?.toString();
+          if (artUri != lastArtUri) {
+            lastArtUri = artUri;
+            _fetchPalette(artUri);
+          }
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 100.0),
+            child: RepaintBoundary(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      (cachedColor ?? const Color.fromARGB(255, 163, 44, 115))
+                          .withValues(alpha: 0.30),
+                      Colors.transparent,
+                    ],
+                    center: Alignment.center,
+                    radius: 0.65,
+                  ),
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
+  void _fetchPalette(String? artUri) async {
+    if (artUri == null || artUri.isEmpty) return;
+    try {
+      final palette = await getPalleteFromImage(artUri);
+      if (mounted) {
+        setState(() {
+          cachedColor = palette.dominantColor?.color ??
+              const Color.fromARGB(255, 68, 252, 255);
+        });
+      }
+    } catch (e) {
+      // Handle error or ignore
+    }
+  }
+}
+
+class _BottomActionsRow extends StatelessWidget {
+  final VoidCallback onQueueTap;
+  const _BottomActionsRow({required this.onQueueTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TimerView()),
+            );
+          },
+          icon: const Icon(MingCute.alarm_1_line,
+              color: Default_Theme.primaryColor1, size: 24),
+        ),
+        IconButton(
+          onPressed: () async {
+            final song = beatsPlayerCubit.beatsMusicPlayer.currentMedia;
+            final tmpPath = await ImportExportService.exportMediaItem(
+                MediaItem2MediaItemDB(song));
+            tmpPath != null ? Share.shareXFiles([XFile(tmpPath)]) : null;
+          },
+          icon: const Icon(Icons.share_outlined,
+              color: Default_Theme.primaryColor1, size: 24),
+        ),
+        IconButton(
+          onPressed: onQueueTap,
+          icon: const Icon(Icons.queue_music_rounded,
+              color: Default_Theme.primaryColor1, size: 24),
+        ),
+      ],
+    );
+  }
+}

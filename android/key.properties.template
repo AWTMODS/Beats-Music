@@ -1,0 +1,29 @@
+# ============================================
+# Beats Music - App Signing Configuration
+# ============================================
+# Developer: Aadith C V
+# GitHub: https://github.com/AWTMODS
+# Instagram: @aadith.cv
+# Telegram: @artwebtech
+# ============================================
+# 
+# INSTRUCTIONS:
+# 1. Copy this file to 'key.properties' in the same directory
+# 2. Replace the placeholder values with your actual keystore information
+# 3. Never commit key.properties to version control (it's in .gitignore)
+# ============================================
+
+# Keystore Configuration
+storePassword=your_store_password_here
+keyPassword=your_key_password_here
+keyAlias=beats-music-key
+storeFile=beats-music-keystore.jks
+
+# Build Information
+# Generated: 2024-11-30
+# App: Beats Music
+# Package: com.awtmods.beats
+# Developer: Aadith C V
+
+# To generate a keystore, run:
+# keytool -genkey -v -keystore beats-music-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias beats-music-key
