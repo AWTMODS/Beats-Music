@@ -124,6 +124,27 @@ class _DownloadSettingsState extends State<DownloadSettings> {
                 ),
                 onTap: () {},
               ),
+              SwitchListTile(
+                  value: state.wifiOnlyDownload,
+                  title: Text(
+                    "Download on WiFi Only",
+                    style: const TextStyle(
+                      color: Default_Theme.primaryColor1,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ).merge(Default_Theme.secondoryTextStyle),
+                  ),
+                  subtitle: Text(
+                    "Prevent downloads on mobile data to save bandwidth.",
+                    style: TextStyle(
+                      color: Default_Theme.primaryColor1.withOpacity(0.5),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onChanged: (value) {
+                    context.read<SettingsCubit>().setWifiOnlyDownload(value);
+                  }),
               SettingTile(
                 title: "Download Folder",
                 subtitle: state.downPath,
