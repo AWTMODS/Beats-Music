@@ -13,7 +13,7 @@ class CountrySettings extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          'Country & Language Settings',
+          'Country Settings',
           style: const TextStyle(
                   color: Default_Theme.primaryColor1,
                   fontSize: 20,
@@ -79,39 +79,7 @@ class CountrySettings extends StatelessWidget {
                 ),
                 onTap: () {},
               ),
-              SettingTile(
-                title: "Language",
-                subtitle: "Language to set as default for the app.",
-                trailing: DropdownButton(
-                  value: state.languageCode,
-                  isDense: true,
-                  style: const TextStyle(
-                    overflow: TextOverflow.ellipsis,
-                    fontWeight: FontWeight.bold,
-                    color: Default_Theme.primaryColor1,
-                    fontSize: 15,
-                  ).merge(Default_Theme.secondoryTextStyle),
-                  underline: const SizedBox(),
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      context.read<SettingsCubit>().setLanguageCode(newValue);
-                    }
-                  },
-                  items: languages.entries.map<DropdownMenuItem<String>>((entry) {
-                    return DropdownMenuItem<String>(
-                      value: entry.value,
-                      child: SizedBox(
-                        width: 100,
-                        child: Text(
-                          entry.key,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                onTap: () {},
-              ),
+
             ],
           );
         },
@@ -319,9 +287,4 @@ final Map<String, String> countries = {
   // Add more countries and their ISO alpha-2 codes here
 };
 
-final Map<String, String> languages = {
-  'English': 'en',
-  'Hindi': 'hi',
-  'Arabic': 'ar',
-  'Spanish': 'es',
-};
+
