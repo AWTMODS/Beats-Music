@@ -4,7 +4,7 @@ import 'package:beats_music/services/db/beats_music_db_service.dart';
 Future<Map<String, String>> initializeHeaders({String language = 'en'}) async {
   Map<String, String> h = {
     "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.42",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     'accept': '*/*',
     'accept-encoding': 'gzip, deflate',
     'content-type': 'application/json',
@@ -21,7 +21,7 @@ Future<Map<String, String>> initializeHeaders({String language = 'en'}) async {
   return h;
 }
 
-Future<Map<String, dynamic>> initializeContext() async {
+Future<Map<String, dynamic>> initializeContext({String language = 'en'}) async {
   final DateTime now = DateTime.now();
   final String year = now.year.toString();
   final String month = now.month.toString().padLeft(2, '0');
@@ -30,11 +30,11 @@ Future<Map<String, dynamic>> initializeContext() async {
   return {
     'context': {
       'client': {
-        "hl": "en-IN",
+        "hl": language,
         "gl": await BeatsMusicDBService.getSettingStr(GlobalStrConsts.countryCode,
             defaultValue: "IN"),
-        'clientName': 'WEB_REMIX',
-        'clientVersion': '1.$date.01.00',
+        'clientName': 'ANDROID_MUSIC',
+        'clientVersion': '6.01.55',
       },
       'user': {}
     }
