@@ -72,8 +72,8 @@ class SettingsView extends StatelessWidget {
           _buildSectionHeader("General"),
           _buildSectionContainer([
             settingListTile(
-                title: "Language & Country",
-                subtitle: "Select your language and country.",
+                title: "Country",
+                subtitle: "Select your country.",
                 icon: MingCute.globe_fill,
                 onTap: () {
                   Navigator.push(
