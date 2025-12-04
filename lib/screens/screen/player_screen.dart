@@ -66,18 +66,6 @@ class _AudioPlayerViewState extends State<AudioPlayerView>
     super.dispose();
   }
 
-  /// Handle back gesture/button press
-  /// Returns true if we handled the back action (should not pop), false otherwise
-  bool _handleBackNavigation(BuildContext context) {
-    // First, try to collapse the upnext panel if it's expanded
-    if (_upNextPanelController.collapse()) {
-      return true; // We handled it by collapsing the panel
-    }
-    // If panel was not expanded, hide the player
-    context.read<PlayerOverlayCubit>().hidePlayer();
-    return true; // We handled it by hiding the player
-  }
-
   @override
   Widget build(BuildContext context) {
     final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
@@ -118,28 +106,61 @@ class _AudioPlayerViewState extends State<AudioPlayerView>
             return null;
           }),
           BackIntent: CallbackAction<BackIntent>(onInvoke: (intent) {
-            _handleBackNavigation(context);
+            // First, try to collapse the upnext panel if it's expanded
+            if (_upNextPanelController.collapse()) {
+              return null;
+            }
+            // Panel was not expanded, hide the player and navigate back
+            context.read<PlayerOverlayCubit>().hidePlayer();
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
             return null;
           }),
         },
-        child: FocusScope(
-          autofocus: true,
-          child: Scaffold(
-            backgroundColor: const Color.fromARGB(255, 12, 4, 9),
-            resizeToAvoidBottomInset: false,
-            extendBodyBehindAppBar: true,
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-              foregroundColor: Default_Theme.primaryColor1,
-              centerTitle: true,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back, size: 28),
-                onPressed: () {
-                  context.read<PlayerOverlayCubit>().hidePlayer();
-                },
-              ),
+        child: PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (!didPop) {
+              // First, try to collapse the upnext panel if it's expanded
+              if (_upNextPanelController.collapse()) {
+                // Panel was collapsed, don't navigate
+                return;
+              }
+              // Panel was not expanded, hide the player and navigate back
+              context.read<PlayerOverlayCubit>().hidePlayer();
+              // Use Navigator.pop instead of relying on canPop
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
+            }
+          },
+          child: FocusScope(
+            autofocus: true,
+            child: Scaffold(
+              backgroundColor: const Color.fromARGB(255, 12, 4, 9),
+              resizeToAvoidBottomInset: false,
+              extendBodyBehindAppBar: true,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                foregroundColor: Default_Theme.primaryColor1,
+                centerTitle: true,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, size: 28),
+                  onPressed: () {
+                    // First, try to collapse the upnext panel if it's expanded
+                    if (_upNextPanelController.collapse()) {
+                      return;
+                    }
+                    // Panel was not expanded, hide the player and navigate back
+                    context.read<PlayerOverlayCubit>().hidePlayer();
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
               actions: [
                 IconButton(
                     onPressed: () =>
@@ -236,6 +257,7 @@ class _AudioPlayerViewState extends State<AudioPlayerView>
                           )
                         ],
                       )),
+          ),
           ),
         ),
       ),
