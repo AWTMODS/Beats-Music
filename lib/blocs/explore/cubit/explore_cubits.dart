@@ -225,8 +225,20 @@ class YTMusicCubit extends Cubit<YTMusicCubitState> {
 
 class MalayalamSongsCubit extends Cubit<MalayalamSongsState> {
   MalayalamSongsCubit() : super(MalayalamSongsInitial()) {
+    _clearOldCache();
     fetchMalayalamSongsFromDB();
     fetchMalayalamSongs();
+  }
+
+  // Clear old cache to force refresh with high-quality images
+  Future<void> _clearOldCache() async {
+    final cacheVersion = await BeatsMusicDBService.getAPICache("MalayalamSongs_v2");
+    if (cacheVersion == null) {
+      // Clear old cache
+      await BeatsMusicDBService.putAPICache("MalayalamSongs", "");
+      await BeatsMusicDBService.putAPICache("MalayalamSongs_v2", "1");
+      log("Cleared old Malayalam songs cache", name: "MalayalamSongs");
+    }
   }
 
   void fetchMalayalamSongsFromDB() async {
@@ -267,8 +279,20 @@ class MalayalamSongsCubit extends Cubit<MalayalamSongsState> {
 
 class HindiSongsCubit extends Cubit<HindiSongsState> {
   HindiSongsCubit() : super(HindiSongsInitial()) {
+    _clearOldCache();
     fetchHindiSongsFromDB();
     fetchHindiSongs();
+  }
+
+  // Clear old cache to force refresh with high-quality images
+  Future<void> _clearOldCache() async {
+    final cacheVersion = await BeatsMusicDBService.getAPICache("HindiSongs_v2");
+    if (cacheVersion == null) {
+      // Clear old cache
+      await BeatsMusicDBService.putAPICache("HindiSongs", "");
+      await BeatsMusicDBService.putAPICache("HindiSongs_v2", "1");
+      log("Cleared old Hindi songs cache", name: "HindiSongs");
+    }
   }
 
   void fetchHindiSongsFromDB() async {
@@ -308,8 +332,20 @@ class HindiSongsCubit extends Cubit<HindiSongsState> {
 
 class TamilSongsCubit extends Cubit<TamilSongsState> {
   TamilSongsCubit() : super(TamilSongsInitial()) {
+    _clearOldCache();
     fetchTamilSongsFromDB();
     fetchTamilSongs();
+  }
+
+  // Clear old cache to force refresh with high-quality images
+  Future<void> _clearOldCache() async {
+    final cacheVersion = await BeatsMusicDBService.getAPICache("TamilSongs_v2");
+    if (cacheVersion == null) {
+      // Clear old cache
+      await BeatsMusicDBService.putAPICache("TamilSongs", "");
+      await BeatsMusicDBService.putAPICache("TamilSongs_v2", "1");
+      log("Cleared old Tamil songs cache", name: "TamilSongs");
+    }
   }
 
   void fetchTamilSongsFromDB() async {
