@@ -24,7 +24,7 @@ Future<List<Map<String, dynamic>>> fetchTamilSongs() async {
           "gl": "IN",
         }
       },
-      "query": "now trending tamil songs",
+      "query": "latest tamil hit songs",
       "params": "EgWKAQIIAWoMEAMQBBAJEAoQBRAV"  // Filter for songs
     };
 
@@ -85,7 +85,7 @@ Future<List<Map<String, dynamic>>> fetchTamilSongs() async {
                   ?['content']?['musicPlayButtonRenderer']
                   ?['playNavigationEndpoint']?['watchEndpoint']?['videoId'];
 
-          // Extract thumbnail
+          // Extract thumbnail (use first for highest quality)
           final String? thumbnail = renderer['thumbnail']
               ?['musicThumbnailRenderer']?['thumbnail']
               ?['thumbnails']?.last?['url'];
@@ -100,7 +100,7 @@ Future<List<Map<String, dynamic>>> fetchTamilSongs() async {
               'firstItemId': 'youtube$videoId',
               'image': thumbnail,
               'images': [thumbnail],
-              'isWide': true,
+              'isWide': false,
               'url': await getSongUrl('youtube$videoId'),
               'provider': 'youtube',
             });
