@@ -385,7 +385,7 @@ class _MyAppState extends State<MyApp> {
                   navigatorKey: GlobalRoutes.globalRouterKey,
                 ),
               ),
-              scaffoldMessengerKey: SnackbarService.messengerKey,
+              // scaffoldMessengerKey: SnackbarService.messengerKey,
               routerConfig: GlobalRoutes.globalRouter,
               theme: Default_Theme().defaultThemeData,
               scrollBehavior: CustomScrollBehavior(),
