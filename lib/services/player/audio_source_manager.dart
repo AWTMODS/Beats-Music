@@ -11,7 +11,22 @@ import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 
 class AudioSourceManager {
-  // AudioSourceManager without audio source caching
+  // Cache for audio sources to prevent redundant fetching
+  final Map<String, AudioSource> _audioSourceCache = {};
+  
+  // Method to clear cache for a specific song ID (useful if playback fails)
+  void clearCachedSource(String mediaId) {
+    if (_audioSourceCache.containsKey(mediaId)) {
+      _audioSourceCache.remove(mediaId);
+      log('Cleared cached source for: $mediaId', name: "AudioSourceManager");
+    }
+  }
+
+  // Clear entire cache
+  void clearAllCache() {
+    _audioSourceCache.clear();
+    log('Cleared all audio source cache', name: "AudioSourceManager");
+  }
 
   Future<AudioSource> getAudioSource(MediaItem mediaItem,
       {required bool isConnected}) async {
@@ -28,6 +43,13 @@ class AudioSourceManager {
             Uri.file('${_down.filePath}/${_down.fileName}'),
             tag: mediaItem);
         return audioSource;
+      }
+      
+      // Check cache for online sources
+      if (_audioSourceCache.containsKey(mediaItem.id)) {
+        log("Returning cached audio source for: ${mediaItem.title}", 
+            name: "AudioSourceManager");
+        return _audioSourceCache[mediaItem.id]!;
       }
 
       // Check network connectivity before attempting online playback
@@ -54,6 +76,8 @@ class AudioSourceManager {
                 name: "AudioSourceManager");
             
             audioSource = AudioSource.uri(Uri.parse(downloadUrl), tag: mediaItem);
+            // Cache the result
+            _audioSourceCache[mediaItem.id] = audioSource;
             return audioSource;
           } else {
             log('Failed to get Spotify download URL', name: "AudioSourceManager");
@@ -81,6 +105,8 @@ class AudioSourceManager {
                 duration: const Duration(seconds: 1));
             
             audioSource = AudioSource.uri(Uri.parse(spotifyUrl), tag: mediaItem);
+            // Cache the result
+            _audioSourceCache[mediaItem.id] = audioSource;
             return audioSource;
           } else {
             log('Spotify URL not available, falling back to other sources', 
@@ -102,23 +128,38 @@ class AudioSourceManager {
 
         audioSource =
             YouTubeAudioSource(videoId: id, quality: quality, tag: mediaItem);
+            
+        // Note: YouTubeAudioSource handles its own stream extraction and caching internally usually,
+        // but we can cache the object wrapper.
+        _audioSourceCache[mediaItem.id] = audioSource;
       } else {
-        String? kurl = await getJsQualityURL(mediaItem.extras?["url"]);
+         String? kurl;
+         // Optimization: If URL is already provided in extras and looks valid, use it
+         if (mediaItem.extras?["url"] != null && 
+             mediaItem.extras!["url"].toString().startsWith('http')) {
+             // For some sources, the URL in extras IS the stream URL
+             // But usually it's a page URL that needs scraping
+             // We'll proceed with getJsQualityURL to be safe unless we are sure
+         }
+         
+        kurl = await getJsQualityURL(mediaItem.extras?["url"]);
         if (kurl == null || kurl.isEmpty) {
           throw Exception('Failed to get stream URL');
         }
 
         log('Playing: $kurl', name: "AudioSourceManager");
         audioSource = AudioSource.uri(Uri.parse(kurl), tag: mediaItem);
+        // Cache the result
+        _audioSourceCache[mediaItem.id] = audioSource;
       }
 
       return audioSource;
     } catch (e) {
       log('Error getting audio source for ${mediaItem.title}: $e',
           name: "AudioSourceManager");
+      // Clear cache if we failed and maybe had a bad cached entry (though we check cache first)
+      clearCachedSource(mediaItem.id);
       rethrow;
     }
   }
-
-  // Cache-related getters removed
 }
