@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:beats_music/model/chart_model.dart';
+import 'dart:developer';
 import 'package:beats_music/services/db/beats_music_db_service.dart';
 import 'package:beats_music/utils/imgurl_formator.dart';
 import 'package:beats_music/utils/load_Image.dart';
@@ -20,7 +21,10 @@ class ChartScreen extends StatefulWidget {
 class _ChartScreenState extends State<ChartScreen> {
   Future<ChartModel?> chartModel = Future.value(null);
   Future<ChartModel?> getChart() async {
-    return await BeatsMusicDBService.getChart(widget.chartName);
+    log('ChartScreen: requesting chart for "${widget.chartName}"', name: 'ChartScreen');
+    final result = await BeatsMusicDBService.getChart(widget.chartName);
+    log('ChartScreen: result for "${widget.chartName}" is ${result != null ? "FOUND" : "NULL"}', name: 'ChartScreen');
+    return result;
   }
 
   @override
