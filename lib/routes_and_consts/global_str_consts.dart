@@ -32,6 +32,13 @@ class GlobalStrConsts {
   static const String useSpotifySearch = "useSpotifySearch";
   static const String enableCrossfade = "enableCrossfade";
   static const String wifiOnlyDownload = "wifiOnlyDownload";
+  
+  // Search source settings
+  static const String showYTMusicSearch = "showYTMusicSearch";
+  static const String showYTVideoSearch = "showYTVideoSearch";
+  static const String showJioSaavnSearch = "showJioSaavnSearch";
+  static const String showSpotifySearch = "showSpotifySearch";
+  static const String defaultSearchEngine = "defaultSearchEngine";
 
   // LastFM
   static const String lFMApiKey = "lastFMKey";
