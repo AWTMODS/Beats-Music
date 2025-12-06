@@ -277,6 +277,11 @@ class BeatsMusicPlayer extends BaseAudioHandler
         _queueManager.queue.value[_queueManager.currentPlayingIdx]);
   }
 
+  /// Preload a specific song (e.g. for trending list)
+  Future<void> preloadSong(MediaItem mediaItem) async {
+    await _preloadManager.preloadSong(mediaItem);
+  }
+
   @override
   Future<void> play() async {
     if (_isDisposed) {
