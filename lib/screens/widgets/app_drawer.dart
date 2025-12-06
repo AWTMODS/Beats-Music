@@ -73,7 +73,7 @@ class AppDrawer extends StatelessWidget {
                   title: 'Account',
                   onTap: () {
                     Navigator.pop(context);
-                    ToastUtils.showDefault();
+                    ToastUtils.showAccountComingSoon();
                   },
                 ),
                 const Divider(color: Default_Theme.cardColor, height: 1),
@@ -110,7 +110,7 @@ class AppDrawer extends StatelessWidget {
                   title: 'Privacy Policy',
                   onTap: () {
                     Navigator.pop(context);
-                    ToastUtils.showComingSoon();
+                    ToastUtils.showPrivacyPolicyComingSoon();
                   },
                 ),
               ],
