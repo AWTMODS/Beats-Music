@@ -66,10 +66,10 @@ class GlobalRoutes {
                   routes: [
                     GoRoute(
                         name: GlobalStrConsts.ChartScreen,
-                        path: 'ChartScreen:chartName',
+                        path: 'ChartScreen',
                         builder: (context, state) => ChartScreen(
                             chartName:
-                                state.pathParameters['chartName'] ?? "none")),
+                                state.uri.queryParameters['name'] ?? "none")),
                   ])
             ]),
             // Search
