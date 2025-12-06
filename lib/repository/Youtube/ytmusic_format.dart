@@ -134,6 +134,7 @@ List formatVideoItems(List itemsList) {
 
 Future<List> formatHomeSections(List items) async {
   List result = [];
+  log('formatHomeSections: Processing ${items.length} items', name: 'YTM');
   try {
     for (Map v in items) {
       final e = v['richItemRenderer']['content'];
@@ -186,6 +187,7 @@ Future<List> formatHomeSections(List items) async {
               'youtube${e['gridPlaylistRenderer']['navigationEndpoint']['watchEndpoint']['videoId']}',
           'image': e['gridPlaylistRenderer']['thumbnail']['thumbnails'][0]
               ['url'],
+          'isWide': false,
           'images': e['gridPlaylistRenderer']['thumbnail']['thumbnails']
               .map((e) => e['url'])
               .toList(),
@@ -214,10 +216,11 @@ Future<List> formatHomeSections(List items) async {
         });
       }
     }
-  } catch (e) {
-    log('Error in formatHomeSections: $e');
+  } catch (e, stackTrace) {
+    log('Error in formatHomeSections: $e', name: 'YTM');
+    log('Stack trace: $stackTrace', name: 'YTM');
   }
-
+  log('formatHomeSections: Returning ${result.length} items', name: 'YTM');
   return result;
 }
 
