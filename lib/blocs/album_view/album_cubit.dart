@@ -56,6 +56,10 @@ class AlbumCubit extends Cubit<AlbumState> {
             }
           },
         );
+        break;
+      case SourceEngine.eng_Spotify:
+        // Spotify albums not supported via Aswin Sparky API
+        break;
       case SourceEngine.eng_YTV:
       // TODO: Handle this case.
     }
