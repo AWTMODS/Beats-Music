@@ -70,9 +70,6 @@ To ensure a smooth and collaborative contribution process, we kindly ask that yo
 6. **Create a Pull Request:** Submit a pull request, and let your notes join the Beats Music Symphony!
 
 </br>
-<p align=center>
-<a href="https://apt.izzysoft.de/fdroid/index/apk/ls.bloomee.musicplayer">
-<img alt="izzyondroid" src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButtonGreyBorder.svg" height=45/></a></p>
 
 <h4 align=center>Developed by Aadith C V</h4>
 <p align=center>
