@@ -46,18 +46,19 @@ Future<Map<String, List>> getMusicHome({String countryCode = "IN"}) async {
         RegExp(r'ytInitialData = (\{[\s\S]*?\});\s*</script>', dotAll: true)
             .firstMatch(response.body)![1]!;
     final Map data = json.decode(searchResults) as Map;
-    // dev.log("data: ${json.encode(data)}", name: "YTM");
+    dev.log("YouTube Music response parsed successfully", name: "YTM");
+    
     final List result = data['contents']['twoColumnBrowseResultsRenderer']
             ['tabs'][0]['tabRenderer']['content']['richGridRenderer']
         ['contents'] as List;
-    // dev.log("result: $result", name: "YTM");
+    dev.log("Found ${result.length} raw sections in richGridRenderer", name: "YTM");
     final List headResult = data['header']['carouselHeaderRenderer']['contents']
         [0]['carouselItemRenderer']['carouselItems'] as List;
 
     final List shelfRenderer = result.map((element) {
       return element['richSectionRenderer']['content']['richShelfRenderer'];
     }).toList();
-    // dev.log("${shelfRenderer.first}", name: "YTM");
+    dev.log("Extracted ${shelfRenderer.length} shelfRenderers", name: "YTM");
     final List finalResult = [];
 
     for (Map element in shelfRenderer) {
@@ -84,8 +85,9 @@ Future<Map<String, List>> getMusicHome({String countryCode = "IN"}) async {
     // dev.log("finalResult: $finalResult", name: "YTM");
 
     final List finalHeadResult = formatHeadItems(headResult);
-    // dev.log("finalHeadResult: $finalHeadResult", name: "YTM");
+    dev.log("Formatted ${finalHeadResult.length} head items", name: "YTM");
     finalResult.removeWhere((element) => element == null);
+    dev.log("Final result has ${finalResult.length} sections", name: "YTM");
 
     return {'body': finalResult, 'head': finalHeadResult};
   } catch (e) {
