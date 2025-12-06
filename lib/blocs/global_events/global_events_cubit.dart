@@ -10,7 +10,7 @@ part 'global_events_state.dart';
 
 class GlobalEventsCubit extends Cubit<GlobalEventsState> {
   GlobalEventsCubit() : super(GlobalEventsInitial()) {
-    // checkForUpdates(); // Disabled for v1.0.0(beta)
+    checkForUpdates(); // Enabled for v1.0.0(beta)
   }
 
   void checkForUpdates() async {
