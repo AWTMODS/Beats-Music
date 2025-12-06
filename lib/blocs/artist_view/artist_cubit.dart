@@ -72,6 +72,9 @@ class ArtistCubit extends Cubit<ArtistState> {
           }
         });
         break;
+      case SourceEngine.eng_Spotify:
+        // Spotify artists not supported via Aswin Sparky API
+        break;
       case SourceEngine.eng_YTV:
       // TODO: Handle this case.
     }
