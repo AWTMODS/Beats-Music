@@ -32,7 +32,7 @@ jobs:
             - name: Setup Flutter
               uses: subosito/flutter-action@v2
               with:
-                flutter-version: '3.35.4'
+                flutter-version: '3.24.5'
                 channel: 'stable'
 
             - name: Install Dependencies
@@ -54,19 +54,8 @@ jobs:
               shell: powershell
               run: Rename-Item -Path "build/app/outputs/flutter-apk/app-release.apk" -NewName "beats_music_android_v$env:VERSION+${{github.run_number}}.apk"
 
-            - name: Build Windows App
-              run: flutter build windows --release --build-number ${{github.run_number}}
-
-            - name: Rename file
-              run: Rename-Item -Path "build/windows/x64/runner/Release/bloomee.exe" -NewName "Beats.exe"
-           
-            - name: ZIP build
-              run: Compress-Archive -Path build/windows/x64/runner/Release/* -Destination  build/windows/x64/beats_music_windows_x64_v${{ env.VERSION }}+${{github.run_number}}.zip
-            
             - name: Upload Artifacts
               uses: actions/upload-artifact@v4
               with:
                 name: Release
-                path: |
-                  build/app/outputs/flutter-apk/beats_music_android_v${{ env.VERSION }}+${{github.run_number}}.apk
-                  build/windows/x64/beats_music_windows_x64_v${{ env.VERSION }}+${{github.run_number}}.zip
+                path: build/app/outputs/flutter-apk/beats_music_android_v${{ env.VERSION }}+${{github.run_number}}.apk
