@@ -7,6 +7,7 @@ import 'package:beats_music/blocs/mediaPlayer/beats_player_cubit.dart';
 import 'package:beats_music/blocs/notification/notification_cubit.dart';
 import 'package:beats_music/blocs/settings_cubit/cubit/settings_cubit.dart';
 import 'package:beats_music/model/MediaPlaylistModel.dart';
+import 'package:beats_music/screens/screen/library_views/cubit/current_playlist_cubit.dart';
 import 'package:beats_music/screens/screen/home_views/recents_view.dart';
 import 'package:beats_music/screens/screen/home_views/setting_views/about.dart';
 import 'package:beats_music/screens/widgets/more_bottom_sheet.dart';
@@ -125,8 +126,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               icon: MingCute.heart_fill,
                               iconColor: Color(0xFFB565D8),
                               onTap: () {
-                                context.pushNamed('PlaylistView',
-                                    pathParameters: {'id': 'Liked Songs'});
+                                context.read<CurrentPlaylistCubit>().setupPlaylist('Liked');
+                                context.pushNamed('PlaylistView');
                               },
                             ),
                             QuickAccessCard(
@@ -134,29 +135,45 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               icon: MingCute.time_fill,
                               iconColor: Color(0xFF1E88E5),
                               onTap: () {
-                                context.pushNamed('PlaylistView',
-                                    pathParameters: {'id': 'recently_played'});
+                                context.read<CurrentPlaylistCubit>().setupPlaylist('recently_played');
+                                context.pushNamed('PlaylistView');
                               },
                             ),
                             QuickAccessCard(
                               title: "Your Top Mix",
                               icon: MingCute.star_fill,
                               iconColor: Color(0xFFFF9800),
+                              onTap: () {
+                                context.read<CurrentPlaylistCubit>().setupPlaylist('your_top_mix');
+                                context.pushNamed('PlaylistView');
+                              },
                             ),
                             QuickAccessCard(
                               title: "Discover Weekly",
                               icon: MingCute.compass_fill,
                               iconColor: Color(0xFF43A047),
+                              onTap: () {
+                                context.read<CurrentPlaylistCubit>().setupPlaylist('discover_weekly');
+                                context.pushNamed('PlaylistView');
+                              },
                             ),
                             QuickAccessCard(
                               title: "Release Radar",
                               icon: MingCute.radar_fill,
                               iconColor: Color(0xFFE53935),
+                              onTap: () {
+                                context.read<CurrentPlaylistCubit>().setupPlaylist('release_radar');
+                                context.pushNamed('PlaylistView');
+                              },
                             ),
                             QuickAccessCard(
                               title: "Daily Mix 1",
                               icon: MingCute.playlist_2_fill,
                               iconColor: Color(0xFF5E35B1),
+                              onTap: () {
+                                context.read<CurrentPlaylistCubit>().setupPlaylist('daily_mix_1');
+                                context.pushNamed('PlaylistView');
+                              },
                             ),
                           ],
                         ),
