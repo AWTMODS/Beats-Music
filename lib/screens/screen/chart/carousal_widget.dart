@@ -139,8 +139,8 @@ class _CaraouselWidgetState extends State<CaraouselWidget> {
                                 child: GestureDetector(
                                   onTap: () => GoRouter.of(context).pushNamed(
                                       GlobalStrConsts.ChartScreen,
-                                      pathParameters: {
-                                        "chartName": selectedCharts[index].title
+                                      queryParameters: {
+                                        "name": selectedCharts[index].title
                                       }),
                                   child: ChartWidget(
                                     chartInfo: selectedCharts[index],
