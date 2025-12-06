@@ -21,7 +21,7 @@ class PlayerInitializer {
         androidNotificationChannelId: 'com.beatsMusicPlayer.notification.status',
         androidNotificationChannelName: 'Beats Music',
         androidResumeOnClick: true,
-        // androidNotificationIcon: 'assets/icons/BeatsMusic_logo_fore.png',
+        androidNotificationIcon: 'mipmap/ic_launcher',
         androidShowNotificationBadge: true,
         notificationColor: Default_Theme.accentColor2,
       ),
