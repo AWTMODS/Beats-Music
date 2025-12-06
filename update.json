@@ -1,35 +1,20 @@
 {
     "platform_releases": {
         "android": {
-            "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.0.2/app-release.apk",
-            "filename": "beats-music-v1.0.2+102-android.apk",
-            "description": "Android APK for Beats Music v1.0.2"
-        },
-        "windows": {
-            "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.0.2/beats-music-windows-x64.exe",
-            "filename": "beats-music-v1.0.2+102-windows-x64.exe",
-            "description": "Windows installer for Beats Music v1.0.2"
-        },
-        "linux": {
-            "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.0.2/beats-music-linux-x64.AppImage",
-            "filename": "beats-music-v1.0.2+102-linux-x64.AppImage",
-            "description": "Linux AppImage for Beats Music v1.0.2"
-        },
-        "mac": {
-            "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.0.2/beats-music-macos.dmg",
-            "filename": "beats-music-v1.0.2+102-macos.dmg",
-            "description": "macOS DMG for Beats Music v1.0.2"
+            "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.0.0/app-release.apk",
+            "filename": "beats-music-v1.0.0+100-android.apk",
+            "description": "Android APK for Beats Music v1.0.0"
         }
     },
     "release": {
         "url": "https://github.com/AWTMODS/Beats-Music/releases/latest",
-        "filename": "beats-music-v1.0.2+102.apk",
+        "filename": "beats-music-v1.0.0+100.apk",
         "description": "Latest release of Beats Music"
     },
     "metadata": {
-        "version": "1.0.3",
-        "build": "103",
-        "release_date": "2025-12-01",
+        "version": "1.0.0",
+        "build": "100",
+        "release_date": "2025-12-06",
         "release_notes_url": "https://raw.githubusercontent.com/AWTMODS/Beats-Music/main/CHANGELOG.md",
         "minimum_supported_version": "0.0.1"
     }
