@@ -4,24 +4,42 @@ import 'package:beats_music/screens/widgets/snackbar.dart';
 class ToastUtils {
   static void showSleepTimerExpired() {
     SnackbarService.showMessage(
-      "Sleep timer has expired.",
+      "Sleep Timer\nPlayback stopped automatically",
+      backgroundColor: Colors.indigo,
     );
   }
 
   static void showComingSoon() {
     SnackbarService.showMessage(
-      "We are working on this, will be soon available",
+      "Coming Soon\nWe are working on this, will be soon available",
+       backgroundColor: Colors.blueGrey,
+    );
+  }
+
+   static void showPrivacyPolicyComingSoon() {
+    SnackbarService.showMessage(
+      "Privacy Policy\nComing soon in the next update",
+      backgroundColor: Colors.blueGrey,
+    );
+  }
+
+  static void showAccountComingSoon() {
+    SnackbarService.showMessage(
+      "Account\nComing soon - User profiles & cloud sync",
+      backgroundColor: Colors.green,
     );
   }
 
   static void showNotAvailable() {
     SnackbarService.showMessage(
-      "This Feature is not available now",
+      "Feature Not Available\nThis feature is temporarily disabled",
+      backgroundColor: Colors.redAccent,
     );
   }
+  
   static void showDefault() {
     SnackbarService.showMessage(
-      "We are working on this, will be soon available",
+      "Coming Soon\nWe are working on this, will be soon available",
     );
   }
 }
