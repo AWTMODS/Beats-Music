@@ -52,6 +52,22 @@ class PreloadManager {
       _preloadNext2(next2Media);
     }
   }
+
+  /// Manually preload a specific song (e.g. from trending list)
+  Future<void> preloadSong(MediaItem mediaItem) async {
+    // If already preloading this song, skip
+    if (_preloadedNextMediaId == mediaItem.id || _preloadedNext2MediaId == mediaItem.id) {
+      return;
+    }
+    
+    // Use the secondary preload player for manual preloads to avoid interfering 
+    // with the primary "next song" preloader if possible
+    if (!_isPreloadingNext2) {
+      await _preloadNext2(mediaItem);
+    } else if (!_isPreloadingNext) {
+      await _preloadNext(mediaItem);
+    }
+  }
   
   Future<void> _preloadNext(MediaItem mediaItem) async {
     if (onGetAudioSource == null) return;
