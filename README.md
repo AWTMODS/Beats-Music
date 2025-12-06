@@ -1,7 +1,7 @@
 ![BeatsMusicBanner](./assets/docs/beats_music_banner.jpg)
 **<h1 align=center>Beats Music 🎵</h1>**
 <p align="center"><img src=https://img.shields.io/github/downloads/AWTMODS/Beats-Music/total?style=for-the-badge&label=DOWNLOADS
- /> <a href="https://github.com/AWTMODS/Beats-Music/releases/latest"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/AWTMODS/Beats-Music?display_name=release&style=for-the-badge&color=f01d7c" ></a>
+ /> <a href="https://github.com/AWTMODS/Beats-Music/releases/latest"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/AWTMODS/Beats-Music?display_name=release&style=for-the-badge&color=169c2d" ></a>
 <img alt="GitHub License" src="https://img.shields.io/github/license/AWTMODS/Beats-Music?style=for-the-badge&color=1881cc" > <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/AWTMODS/Beats-Music/checkout.yml?style=for-the-badge" > <br><img src=https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white />
 </p>
 
