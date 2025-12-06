@@ -5,7 +5,7 @@
 <img alt="GitHub License" src="https://img.shields.io/github/license/AWTMODS/Beats-Music?style=for-the-badge&color=1881cc" > <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/AWTMODS/Beats-Music/checkout.yml?style=for-the-badge" > <br><img src=https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white />
 </p>
 
-Beats Music is an experimental open-source music player designed to bring you ad-free tunes from various sources. Dive into a world of limitless music from platforms like YouTube and JioSaavn, with more sources blooming soon! 🎵
+Beats Music is an experimental open-source music player designed to bring you ad-free tunes from various sources. Dive into a world of limitless music from platforms like YouTube and JioSaavn,Spotify, with more sources blooming soon! 🎵
 
 ![BeatsFeatures](./assets/docs/beats_music_features.jpg)
 
@@ -70,9 +70,6 @@ To ensure a smooth and collaborative contribution process, we kindly ask that yo
 6. **Create a Pull Request:** Submit a pull request, and let your notes join the Beats Music Symphony!
 
 </br>
-<p align=center>
-<a href="https://apt.izzysoft.de/fdroid/index/apk/ls.bloomee.musicplayer">
-<img alt="izzyondroid" src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButtonGreyBorder.svg" height=45/></a></p>
 
 <h4 align=center>Developed by Aadith C V</h4>
 <p align=center>
