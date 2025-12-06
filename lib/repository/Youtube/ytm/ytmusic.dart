@@ -25,9 +25,9 @@ class YTMusic extends YTMusicServices
         songs.add({
           "title": item["title"],
           "album": item["album"]?["name"] ?? "Unknown",
-          "artists": item["artists"] != null
-              ? item["artists"].map((e) => e["name"]).toList().join(", ")
-              : "Unknown",
+            "artists": item["artists"] != null
+                ? item["artists"].map((e) => e?["name"] ?? "Unknown").toList().join(", ")
+                : "Unknown",
           "videoId": item["videoId"],
           "thumbnail": item["thumbnails"].first["url"],
           "duration": item["duration"],
@@ -55,9 +55,9 @@ class YTMusic extends YTMusicServices
         songs.add({
           "title": item["title"],
           "album": item["album"]?["name"] ?? "Unknown",
-          "artists": item["artists"] != null
-              ? item["artists"].map((e) => e["name"]).toList().join(", ")
-              : "Unknown",
+            "artists": item["artists"] != null
+                ? item["artists"].map((e) => e?["name"] ?? "Unknown").toList().join(", ")
+                : "Unknown",
           "videoId": item["videoId"],
           "thumbnail": item["thumbnails"].first["url"],
           "duration": item["duration"],
@@ -95,7 +95,7 @@ class YTMusic extends YTMusicServices
             "https://music.youtube.com/playlist?list=${albumDetails["header"]["playlistId"]}",
         "artists": albumDetails["header"]["artists"] != null
             ? albumDetails["header"]["artists"]
-                .map((e) => e["name"])
+                .map((e) => e?["name"] ?? "Unknown")
                 .toList()
                 .join("")
             : "Unknown",
@@ -112,10 +112,10 @@ class YTMusic extends YTMusicServices
             "type": item["type"],
             "duration": item["duration"],
             "artists": item["artists"] != null
-                ? item["artists"].map((e) => e["name"]).toList().join(", ")
+                ? item["artists"].map((e) => e?["name"] ?? "Unknown").toList().join(", ")
                 : albumDetails["header"]["artists"] != null
                     ? albumDetails["header"]["artists"]
-                        .map((e) => e["name"])
+                        .map((e) => e?["name"] ?? "Unknown")
                         .toList()
                         .join("")
                     : "Unknown",
@@ -198,9 +198,9 @@ class YTMusic extends YTMusicServices
         try {
           songsList.add({
             "title": item["title"],
-            "album": item["album"]["name"],
+            "album": item["album"]?["name"] ?? "Unknown",
             "artists": item["artists"] != null
-                ? item["artists"].map((e) => e["name"]).toList().join(", ")
+                ? item["artists"].map((e) => e?["name"] ?? "Unknown").toList().join(", ")
                 : "Unknown",
             "artists_map": item["artists"] != null
                 ? item["artists"]
@@ -282,9 +282,9 @@ class YTMusic extends YTMusicServices
         try {
           songs.add({
             "title": item["title"],
-            "album": item["album"]["name"],
+            "album": item["album"]?["name"] ?? "Unknown",
             "artists": item["artists"] != null
-                ? item["artists"].map((e) => e["name"]).toList().join(", ")
+                ? item["artists"].map((e) => e?["name"] ?? "Unknown").toList().join(", ")
                 : "Unknown",
             "artists_map": item["artists"] != null
                 ? item["artists"]
@@ -338,7 +338,7 @@ class YTMusic extends YTMusicServices
           albums.add({
             "title": item["title"],
             "artists": item["artists"] != null
-                ? item["artists"].map((e) => e["name"]).toList().join(", ")
+                ? item["artists"].map((e) => e?["name"] ?? "Unknown").toList().join(", ")
                 : "Unknown",
             "artists_map": item["artists"] != null
                 ? item["artists"]
