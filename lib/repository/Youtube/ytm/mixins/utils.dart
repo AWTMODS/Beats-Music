@@ -153,8 +153,19 @@ Map<String, dynamic> handlePageHeader(Map<String, dynamic> header,
 
 handleContents(List contents, {List? thumbnails}) {
   List contentsResult = [];
-  for (Map content in contents) {
+  int filteredCount = 0;
+  
+  for (int i = 0; i < contents.length; i++) {
+    Map content = contents[i];
     Map result = {};
+    
+    // Handle musicTwoColumnItemRenderer (new YouTube Music format)
+    Map? musicTwoColumnItemRenderer = nav(content, ['musicTwoColumnItemRenderer']);
+    if (musicTwoColumnItemRenderer != null) {
+      // Extract the actual renderer from inside musicTwoColumnItemRenderer
+      content = musicTwoColumnItemRenderer;
+    }
+    
     Map? musicResponsiveListItemRenderer =
         nav(content, ['musicResponsiveListItemRenderer']);
     Map? musicTwoRowItemRenderer = nav(content, ['musicTwoRowItemRenderer']);
@@ -162,22 +173,45 @@ handleContents(List contents, {List? thumbnails}) {
         nav(content, ['musicMultiRowListItemRenderer']);
     Map? playlistPanelVideoRenderer =
         nav(content, ['playlistPanelVideoRenderer']);
+    
+    String rendererType = 'unknown';
     if (musicResponsiveListItemRenderer != null) {
+      rendererType = 'musicResponsiveListItemRenderer';
       result = handleMusicResponsiveListItemRenderer(
           musicResponsiveListItemRenderer,
           thumbnails: thumbnails);
     } else if (musicTwoRowItemRenderer != null) {
+      rendererType = 'musicTwoRowItemRenderer';
       result = handleMusicTwoRowItemRenderer(musicTwoRowItemRenderer,
           thumbnails: thumbnails);
     } else if (musicMultiRowListItemRenderer != null) {
+      rendererType = 'musicMultiRowListItemRenderer';
       result =
           handleMusicMultiRowListItemRenderer(musicMultiRowListItemRenderer);
     } else if (playlistPanelVideoRenderer != null) {
+      rendererType = 'playlistPanelVideoRenderer';
       result = handlePlaylistPanelVideoRenderer(playlistPanelVideoRenderer);
+    } else if (content['thumbnail'] != null && content['title'] != null) {
+      // New YouTube Music format: direct properties without renderer wrapper
+      rendererType = 'directProperties';
+      result = handleDirectPropertiesItem(content);
+      print('[handleContents] DirectProperties item $i: title=${result['title']}, videoId=${result['videoId']}, thumbnails=${result['thumbnails']?.length ?? 0}');
+    } else {
+      print('[handleContents] Item $i: Unknown renderer type, keys: ${content.keys.toList()}');
     }
-    if (result['thumbnails'] == null) continue;
+    
+    if (result['thumbnails'] == null) {
+      filteredCount++;
+      print('[handleContents] ⚠️ Item $i ($rendererType) filtered: no thumbnails. Title: ${result['title']}, VideoId: ${result['videoId']}');
+      continue;
+    }
     contentsResult.add(result);
   }
+  
+  if (filteredCount > 0) {
+    print('[handleContents] Filtered out $filteredCount items due to missing thumbnails');
+  }
+  
   return contentsResult;
 }
 
@@ -466,24 +500,52 @@ Map<String, dynamic> handleMusicResponsiveListItemRenderer(Map item,
       nav(flexColumns[1], [
             'musicResponsiveListItemFlexColumnRenderer',
             'text',
-            'runs',
-            0,
-            'text'
+            'runs'
           ]) !=
           null) {
-    itemresult['artists'] = [
-      {
-        'name': nav(flexColumns[1], [
-          'musicResponsiveListItemFlexColumnRenderer',
-          'text',
-          'runs',
-          0,
-          'text'
-        ]),
-        'endpoint': null
+    var runs = nav(flexColumns[1], [
+      'musicResponsiveListItemFlexColumnRenderer',
+      'text',
+      'runs'
+    ]);
+    if (runs is List) {
+      List<Map<String, dynamic>> artists = [];
+      for (var run in runs) {
+        String text = run['text'] ?? '';
+        // Skip common separators and metadata
+        if ([' • ', ' & ', ', ', '|'].contains(text)) continue;
+        if (text.contains('views') || text.contains('ago') || text.contains('minutes') || text.contains('seconds')) continue;
+        
+        // If we hit a known metadata separator like a pure bullet, we might want to stop if we already have artists
+        // But for "Year in Music", the format is often "Artist • Album • Year"
+        // So we should capture the first valid text run as the artist.
+        
+        artists.add({
+          'name': text,
+          'endpoint': nav(run, ['navigationEndpoint', 'browseEndpoint']),
+        });
       }
-    ];
+      
+      if (artists.isNotEmpty) {
+        itemresult['artists'] = artists;
+      }
+    }
   }
+  
+  // Fallback: If still no artists, check "subtitle" field directly if available
+  if ((itemresult['artists'] == null || itemresult['artists'].isEmpty) && item['subtitle'] != null) {
+      var subtitleRuns = nav(item, ['subtitle', 'runs']);
+      if (subtitleRuns != null) {
+          itemresult['artists'] = [];
+           for (var run in subtitleRuns) {
+              String text = run['text'];
+               if ([' • ', ' & ', ', ', '|'].contains(text)) continue;
+               if (text.contains('views') || text.contains('ago')) continue;
+               itemresult['artists'].add({'name': text, 'endpoint': null});
+           }
+      }
+  }
+
   return itemresult;
 }
 
@@ -672,4 +734,104 @@ handleMusicMultiRowListItemRenderer(Map item) {
 
   itemresult.removeWhere((key, val) => val == null || val.toString().isEmpty);
   return itemresult;
+}
+
+handleDirectPropertiesItem(Map item) {
+  // Handle new YouTube Music format where items have direct properties
+  // without renderer wrappers (e.g., in playlist contents)
+  
+  try {
+    // Extract thumbnails - try ALL possible paths
+    List? thumbnails;
+    
+    // Path 1: Standard musicThumbnailRenderer path
+    thumbnails = nav(item, ['thumbnail', 'musicThumbnailRenderer', 'thumbnail', 'thumbnails']);
+    
+    // Path 2: Direct thumbnail path
+    if (thumbnails == null || (thumbnails is List && thumbnails.isEmpty)) {
+      thumbnails = nav(item, ['thumbnail', 'thumbnails']);
+    }
+    
+    // Path 3: Top-level thumbnails
+    if (thumbnails == null || (thumbnails is List && thumbnails.isEmpty)) {
+      thumbnails = nav(item, ['thumbnails']);
+    }
+    
+    // Path 4: Create fallback from videoId if still no thumbnails
+    if (thumbnails == null || (thumbnails is List && thumbnails.isEmpty)) {
+      final videoId = nav(item, ['playlistItemData', 'videoId']) ??
+          nav(item, ['navigationEndpoint', 'watchEndpoint', 'videoId']);
+      
+      if (videoId != null) {
+        // Generate YouTube thumbnail URLs from videoId
+        // Order: low to high quality (app uses .last for highest quality)
+        thumbnails = [
+          {'url': 'https://i.ytimg.com/vi/$videoId/default.jpg', 'width': 120, 'height': 90},
+          {'url': 'https://i.ytimg.com/vi/$videoId/mqdefault.jpg', 'width': 320, 'height': 180},
+          {'url': 'https://i.ytimg.com/vi/$videoId/hqdefault.jpg', 'width': 480, 'height': 360},
+          {'url': 'https://i.ytimg.com/vi/$videoId/sddefault.jpg', 'width': 640, 'height': 480},
+          {'url': 'https://i.ytimg.com/vi/$videoId/maxresdefault.jpg', 'width': 1280, 'height': 720},
+        ];
+        print('[handleDirectPropertiesItem] Generated fallback thumbnails for videoId: $videoId');
+      }
+    }
+    
+    Map itemresult = {
+      'title': nav(item, ['title', 'runs', 0, 'text']),
+      'thumbnails': thumbnails,
+      'subtitle': nav(item, ['subtitle', 'runs'])?.map((el) => el['text']).join(''),
+      'videoId': nav(item, ['playlistItemData', 'videoId']) ??
+          nav(item, ['navigationEndpoint', 'watchEndpoint', 'videoId']),
+      'playlistId': nav(item, ['navigationEndpoint', 'watchEndpoint', 'playlistId']),
+      'endpoint': nav(item, ['navigationEndpoint', 'browseEndpoint']),
+    };
+
+    // Try to extract type from navigation endpoint
+    String? pageType = nav(item, [
+      'navigationEndpoint',
+      'watchEndpoint',
+      'watchEndpointMusicSupportedConfigs',
+      'watchEndpointMusicConfig',
+      'musicVideoType'
+    ]) ?? nav(item, [
+      'navigationEndpoint',
+      'browseEndpoint',
+      'browseEndpointContextSupportedConfigs',
+      'browseEndpointContextMusicConfig',
+      'pageType'
+    ]);
+    
+    itemresult['type'] = itemCategory[pageType] ?? 'SONG';
+
+    // Extract artists from subtitle runs
+    List? subtitleRuns = nav(item, ['subtitle', 'runs']);
+    if (subtitleRuns != null) {
+      try {
+        itemresult.addAll(checkRuns(subtitleRuns));
+      } catch (e) {
+        print('[handleDirectPropertiesItem] Error in checkRuns for subtitle: $e');
+      }
+    }
+
+    // Extract menu items for additional metadata
+    List? menuItems = nav(item, ['menu', 'menuRenderer', 'items']);
+    if (menuItems != null) {
+      try {
+        itemresult.addAll(checkRuns(menuItems));
+      } catch (e) {
+        print('[handleDirectPropertiesItem] Error in checkRuns for menu: $e');
+      }
+    }
+
+    itemresult.removeWhere((key, val) => val == null || val.toString().isEmpty);
+    return itemresult;
+  } catch (e, stackTrace) {
+    print('[handleDirectPropertiesItem] ERROR: $e');
+    print('[handleDirectPropertiesItem] Stack trace: $stackTrace');
+    // Return minimal valid result to avoid breaking the entire list
+    return {
+      'title': 'Error parsing item',
+      'videoId': null,
+    };
+  }
 }
