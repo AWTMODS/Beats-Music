@@ -5,7 +5,7 @@
 <img alt="GitHub License" src="https://img.shields.io/github/license/AWTMODS/Beats-Music?style=for-the-badge&color=1881cc" > <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/AWTMODS/Beats-Music/checkout.yml?style=for-the-badge" > <br><img src=https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white />
 </p>
 
-Beats Music is an experimental open-source music player designed to bring you ad-free tunes from various sources. Dive into a world of limitless music from platforms like YouTube and JioSaavn, with more sources blooming soon! 🎵
+Beats Music is an experimental open-source music player designed to bring you ad-free tunes from various sources. Dive into a world of limitless music from platforms like YouTube and JioSaavn,Spotify, with more sources blooming soon! 🎵
 
 ![BeatsFeatures](./assets/docs/beats_music_features.jpg)
 
