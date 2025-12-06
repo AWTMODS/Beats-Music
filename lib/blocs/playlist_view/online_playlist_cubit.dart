@@ -72,6 +72,9 @@ class OnlPlaylistCubit extends Cubit<OnlPlaylistState> {
           },
         );
         break;
+      case SourceEngine.eng_Spotify:
+        // Spotify playlists not supported via Aswin Sparky API
+        break;
       case SourceEngine.eng_YTV:
         YouTubeServices().fetchPlaylistItems(playlist.sourceId).then((value) {
           final songs = fromYtVidSongMapList2MediaItemList(value[0]['items']);
