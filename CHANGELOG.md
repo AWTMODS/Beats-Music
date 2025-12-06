@@ -1,41 +1,29 @@
-# Changelog
 
-## v0.0.1 - 2025-12-03
+## v1.0.0 - 2025-12-06
 
-### 🎨 Rebranding
-
-- Updated all UI text and notifications to reflect new branding
-- Updated app logo with new green music disc design
-- Replaced app icon background with solid black
-- Updated README.md with new banner and feature images
-
-### 🔧 Fixes
-
-- Updated GitHub release URLs to point to `AWTMODS/Beats-Music`
-- Fixed "Download Now" button to use correct repository links
-- Reverted "Music from device" feature (removed `on_audio_query` dependency)
-- Fixed Java/Kotlin version compatibility issues
-
-### 📝 Documentation
-- Updated README.md with new branding and images
-- Updated all GitHub badges to point to correct repository
-- Marked multi-language support as completed in features list
-
-### 🏗️ Technical
-- Set app version to 0.0.1+1
-- Regenerated launcher icons for all platforms
-- Cleaned up unused dependencies
-
-### ✨ New Features
-- **Library UI**: Added "Downloads" shortcut with dynamic cover art (shows first downloaded song)
-- **Settings**: Reorganized settings for better usability
-  - Moved "Download on WiFi Only" to Download Settings
-  - Moved "Clear Cache" to Storage Settings
-  - Simplified Country Settings (removed redundant Language option)
-- **Search**: Enhanced search history
-  - Shows last 3 recent searches
-  - Added "Clear All" option for search history
-- **UI Polish**: Added app logo placeholder for Liked Songs
+### ✨ Features
+- **Smart Discovery**:
+  - Instant access to "Your Top Mix", "Discover Weekly", and "Release Radar"
+  - Quick Access grid for Liked Songs and Recently Played
+  - AI-powered "Made For You" mixes based on listening history
+- **Universal Search**:
+  - Unified search across YouTube Music, Spotify, and JioSaavn
+  - Search by Song, Album, Artist, or Playlist
+  - Import external playlists via URL
+- **Premium Library**:
+  - Organized "Liked Songs" with one-tap access
+  - Dedicated "Downloads" section for offline playback
+  - Local music support
+- **Advanced Player**:
+  - High-quality streaming (up to 320kbps)
+  - Synchronized Lyrics support
+  - Sleep Timer (15min to 1 hour)
+  - Background playback with notification controls
+- **Customization & UI**:
+  - Floating iOS-style "Bubble" notifications
+  - Modern "Beats Green" dark theme
+  - Smooth animations and transitions
+  - Data saver options for streaming and downloading
 
 ---
 
