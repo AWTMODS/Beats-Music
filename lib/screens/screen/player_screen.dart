@@ -26,8 +26,6 @@ import 'package:responsive_framework/responsive_framework.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../../blocs/mediaPlayer/beats_player_cubit.dart';
 import '../../blocs/mini_player/mini_player_bloc.dart';
-import 'package:beats_music/services/import_export_service.dart';
-import 'package:share_plus/share_plus.dart';
 import 'player_views/fullscreen_lyrics_view.dart';
 import 'player_views/lyrics_widget.dart';
 
@@ -344,7 +342,8 @@ class _PlayerUI extends StatelessWidget {
                           ),
                           PlayerCtrlWidgets(
                               musicPlayer: musicPlayer,
-                              onQueueTap: onQueueTap)
+                              onQueueTap: onQueueTap,
+                              tabController: tabController)
                         ],
                       ),
                     ),
@@ -392,9 +391,13 @@ class CoverImageVolSlider extends StatelessWidget {
 
 class PlayerCtrlWidgets extends StatelessWidget {
   const PlayerCtrlWidgets(
-      {super.key, required this.musicPlayer, required this.onQueueTap});
+      {super.key,
+      required this.musicPlayer,
+      required this.onQueueTap,
+      required this.tabController});
   final BeatsMusicPlayer musicPlayer;
   final VoidCallback onQueueTap;
+  final TabController tabController;
 
   @override
   Widget build(BuildContext context) {
@@ -416,7 +419,8 @@ class PlayerCtrlWidgets extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.only(top: 25),
-            child: _BottomActionsRow(onQueueTap: onQueueTap),
+            child: _BottomActionsRow(
+                onQueueTap: onQueueTap, tabController: tabController),
           ),
         ],
       ),
@@ -891,11 +895,13 @@ class _AmbientImgShadowWidgetState extends State<AmbientImgShadowWidget> {
 
 class _BottomActionsRow extends StatelessWidget {
   final VoidCallback onQueueTap;
-  const _BottomActionsRow({required this.onQueueTap});
+  final TabController tabController;
+  const _BottomActionsRow(
+      {required this.onQueueTap, required this.tabController});
 
   @override
   Widget build(BuildContext context) {
-    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    // final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -910,13 +916,14 @@ class _BottomActionsRow extends StatelessWidget {
               color: Default_Theme.primaryColor1, size: 24),
         ),
         IconButton(
-          onPressed: () async {
-            final song = beatsPlayerCubit.beatsMusicPlayer.currentMedia;
-            final tmpPath = await ImportExportService.exportMediaItem(
-                MediaItem2MediaItemDB(song));
-            tmpPath != null ? Share.shareXFiles([XFile(tmpPath)]) : null;
+          onPressed: () {
+            if (tabController.index == 1) {
+              tabController.animateTo(0);
+            } else {
+              tabController.animateTo(1);
+            }
           },
-          icon: const Icon(Icons.share_outlined,
+          icon: const Icon(MingCute.music_2_fill,
               color: Default_Theme.primaryColor1, size: 24),
         ),
         IconButton(
