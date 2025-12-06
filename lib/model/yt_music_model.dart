@@ -53,14 +53,23 @@ List<MediaItemModel> fromYtSongMapList2MediaItemList(List<dynamic> songList) {
 }
 
 MediaItemModel ytmMap2MediaItem(Map song) {
+  String artistName = 'Unknown';
+  if (song['artists'] != null && song['artists'] is List) {
+    artistName = (song['artists'] as List)
+        .map((e) => e['name'])
+        .join(', ');
+  } else if (song['subtitle'] != null) {
+      artistName = song['subtitle'];
+  }
+
   return MediaItemModel(
       id: song["videoId"],
       title: song["title"],
       album: song["album"],
-      artist: song["artists"],
+      artist: artistName,
       artUri: Uri.parse(song["thumbnail"]),
       genre: song["type"],
-      duration: Duration(seconds: int.parse(song["duration"])),
+      duration: Duration(seconds: int.parse(song["duration"] ?? '0')),
       extras: {
         "url": song["perma_url"],
         "source": "youtube",
