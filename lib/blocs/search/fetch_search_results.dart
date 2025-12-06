@@ -1,6 +1,9 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:http/http.dart' as http;
 import 'dart:developer';
 import 'package:beats_music/model/playlist_onl_model.dart';
+import 'package:beats_music/model/spotifyModel.dart';
+import 'package:beats_music/repository/Spotify/aswin_sparky_api.dart';
 import 'package:beats_music/repository/Youtube/ytm/ytmusic.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -146,6 +149,8 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
       LastSearch(query: "", sourceEngine: SourceEngine.eng_YTV);
   LastSearch last_JIS_search =
       LastSearch(query: "", sourceEngine: SourceEngine.eng_JIS);
+  LastSearch last_Spotify_search =
+      LastSearch(query: "", sourceEngine: SourceEngine.eng_Spotify);
 
   List<MediaItemModel> _mediaItemList = List.empty(growable: true);
 
@@ -386,6 +391,248 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
     }
   }
 
+  Future<void> searchSpotifyTracks(
+    String query, {
+    ResultTypes resultType = ResultTypes.songs,
+  }) async {
+    log("Spotify Search", name: "FetchSearchRes");
+    
+    last_Spotify_search.query = query;
+    emit(FetchSearchResultsLoading(resultType: resultType));
+    
+    // Check if query is a Spotify URL
+    if (query.contains('open.spotify.com/track/')) {
+      try {
+        final track = await AswinSparkyAPI().getTrackFromUrl(query);
+        
+        if (track != null) {
+          final mediaItem = fromSpotifyAswinMap2MediaItem(track, spotifyUrl: query);
+          last_Spotify_search.mediaItemList = [mediaItem];
+          
+          emit(state.copyWith(
+            mediaItems: [mediaItem],
+            loadingState: LoadingState.loaded,
+            hasReachedMax: true,
+            resultType: ResultTypes.songs,
+            sourceEngine: SourceEngine.eng_Spotify,
+          ));
+        } else {
+          emit(state.copyWith(
+            mediaItems: [],
+            loadingState: LoadingState.loaded,
+            hasReachedMax: true,
+            resultType: ResultTypes.songs,
+            sourceEngine: SourceEngine.eng_Spotify,
+          ));
+        }
+      } catch (e) {
+        log("Error fetching Spotify track: $e", name: "FetchSearchRes");
+        emit(state.copyWith(
+          mediaItems: [],
+          loadingState: LoadingState.loaded,
+          hasReachedMax: true,
+          resultType: ResultTypes.songs,
+          sourceEngine: SourceEngine.eng_Spotify,
+        ));
+      }
+    } else {
+      // Search Spotify by query using Aswin Sparky API
+      try {
+        final searchResults = await AswinSparkyAPI().searchSpotify(query);
+        
+        if (searchResults.isNotEmpty) {
+          // Convert search results directly to MediaItems
+          // Don't fetch download URLs yet - they'll be fetched in background
+          List<MediaItemModel> mediaItems = [];
+          
+          for (var result in searchResults.take(10)) { // Limit to 10 results
+            try {
+              // Use search result data directly
+              final title = result['name'] ?? result['title'] ?? 'Unknown Title';
+              
+              // Extract artist - API returns it as a string already (e.g., "ARJN, KDS, FIFTY4, RONN")
+              final artist = result['artists'] ?? result['artist'] ?? 'Unknown Artist';
+              
+              final spotifyLink = result['link'] ?? '';
+              
+              // Search API doesn't provide image, duration, or album
+              // We'll fetch these from the track details API in background
+              
+              // Create track ID from Spotify link
+              String trackId = 'spotify_${title}_${artist}'
+                  .replaceAll(' ', '_')
+                  .replaceAll(RegExp(r'[^\w_]'), '');
+              
+              final mediaItem = MediaItemModel(
+                id: trackId,
+                title: title,
+                artist: artist,
+                album: artist, // Use artist as album for search results
+                artUri: Uri.parse(''), // Will be fetched from track details
+                duration: Duration.zero, // Will be fetched from track details
+                genre: 'Spotify',
+                extras: {
+                  'url': '', // Will be fetched in background
+                  'spotify_link': spotifyLink, // Store Spotify link for later
+                  'language': 'Spotify',
+                  'has_lyrics': 'false',
+                  '320kbps': 'true',
+                  'perma_url': spotifyLink,
+                  'subtitle': artist,
+                  'source': 'spotify_aswin',
+                  'year': '',
+                  'release_date': '',
+                  'needs_url_fetch': 'true', // Flag to fetch URL before playing
+                  'needs_metadata_fetch': 'true', // Flag to fetch image and duration
+                },
+              );
+              
+              mediaItems.add(mediaItem);
+            } catch (e) {
+              log("Error parsing Spotify search result: $e", name: "FetchSearchRes");
+            }
+          }
+          
+          last_Spotify_search.mediaItemList = mediaItems;
+          
+          emit(state.copyWith(
+            mediaItems: List<MediaItemModel>.from(mediaItems),
+            loadingState: LoadingState.loaded,
+            hasReachedMax: true,
+            resultType: ResultTypes.songs,
+            sourceEngine: SourceEngine.eng_Spotify,
+          ));
+          
+          log("Got ${mediaItems.length} Spotify results, preloading metadata in background...", name: "FetchSearchRes");
+          
+          // Preload download URLs and metadata (image, duration) in background (don't await)
+          _preloadSpotifyUrls(mediaItems);
+        } else {
+          log("No Spotify results found for query: $query", name: "FetchSearchRes");
+          emit(state.copyWith(
+            mediaItems: [],
+            loadingState: LoadingState.loaded,
+            hasReachedMax: true,
+            resultType: ResultTypes.songs,
+            sourceEngine: SourceEngine.eng_Spotify,
+          ));
+        }
+      } catch (e) {
+        log("Error searching Spotify: $e", name: "FetchSearchRes");
+        emit(state.copyWith(
+          mediaItems: [],
+          loadingState: LoadingState.loaded,
+          hasReachedMax: true,
+          resultType: ResultTypes.songs,
+          sourceEngine: SourceEngine.eng_Spotify,
+        ));
+      }
+    }
+  }
+
+  /// Preload Spotify download URLs and metadata in background
+  Future<void> _preloadSpotifyUrls(List<MediaItemModel> mediaItems) async {
+    // Process all items in parallel using Future.wait to avoid simplified sequential blocking
+    // We update UI individually as they complete to give fast feedback
+    
+    // Create a list of futures, but we don't necessarily need to wait for all of them 
+    // to finish before returning. However, we want to start them all at once.
+    mediaItems.map((mediaItem) => _fetchSingleItemMetadata(mediaItem, mediaItems)).toList();
+    
+    log("Started parallel preload for ${mediaItems.length} Spotify tracks", name: "FetchSearchRes");
+  }
+
+
+
+  /// Helper to fetch metadata for a single item and update state
+  Future<void> _fetchSingleItemMetadata(MediaItemModel mediaItem, List<MediaItemModel> allItems) async {
+      try {
+        final spotifyLink = mediaItem.extras?['spotify_link'];
+        if (spotifyLink != null && spotifyLink.isNotEmpty) {
+          
+          // FAST PATH: Try to scrape the album image directly from the Spotify page first
+          // This creates an immediate visual update while the heavy downloader runs
+          if (!isClosed) {
+             _fetchSpotifyImage(spotifyLink).then((imageUrl) {
+               if (imageUrl != null && imageUrl.isNotEmpty && !isClosed) {
+                 mediaItem.artUri = Uri.parse(imageUrl);
+                 log("Fast-fetched image for: ${mediaItem.title}", name: "FetchSearchRes");
+                 emiitState(allItems);
+               }
+             });
+          }
+
+          // SLOW PATH: Fetch download URL and full metadata (image, duration, album)
+          final trackData = await AswinSparkyAPI().getTrackFromUrl(spotifyLink);
+          
+          if (trackData != null && !isClosed) {
+            bool updated = false;
+            
+            // Update the mediaItem's extras with the download URL
+            if (trackData['download'] != null) {
+              mediaItem.extras?['url'] = trackData['download'];
+              mediaItem.extras?['needs_url_fetch'] = 'false'; // Mark as preloaded
+              updated = true;
+            }
+            
+            // Update metadata (image, duration, album)
+            if (trackData['cover'] != null) {
+              // Only update if different or empty
+              final newUri = Uri.parse(trackData['cover']);
+              if (mediaItem.artUri != newUri) {
+                mediaItem.artUri = newUri;
+                updated = true;
+              }
+            }
+            if (trackData['duration'] != null) {
+              mediaItem.duration = Duration(seconds: int.tryParse(trackData['duration'].toString()) ?? 0);
+              updated = true;
+            }
+            if (trackData['album'] != null) {
+              mediaItem.album = trackData['album'];
+              updated = true;
+            }
+            
+            mediaItem.extras?['needs_metadata_fetch'] = 'false'; // Mark as preloaded
+            
+            if (updated) {
+               log("Fully preloaded metadata for: ${mediaItem.title}", name: "FetchSearchRes");
+               emiitState(allItems);
+            }
+          }
+        }
+      } catch (e) {
+        log("Error preloading metadata for ${mediaItem.title}: $e", name: "FetchSearchRes");
+      }
+  }
+
+  /// Helper for safe state emission
+  void emiitState(List<MediaItemModel> allItems) {
+     if (!isClosed) {
+       emit(state.copyWith(
+         mediaItems: List<MediaItemModel>.from(allItems),
+       ));
+     }
+  }
+
+  /// Quickly scrape the og:image from a Spotify URL
+  Future<String?> _fetchSpotifyImage(String url) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        // Regex to find <meta property="og:image" content="...">
+        final RegExp exp = RegExp(r'<meta property="og:image" content="([^"]+)"');
+        final match = exp.firstMatch(response.body);
+        if (match != null) {
+          return match.group(1);
+        }
+      }
+    } catch (e) {
+      // Ignore errors in fast path
+    }
+    return null;
+  }
+
   Future<void> search(String query,
       {SourceEngine sourceEngine = SourceEngine.eng_YTM,
       ResultTypes resultType = ResultTypes.songs}) async {
@@ -398,6 +645,9 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
         break;
       case SourceEngine.eng_JIS:
         searchJISTracks(query, resultType: resultType);
+        break;
+      case SourceEngine.eng_Spotify:
+        searchSpotifyTracks(query, resultType: resultType);
         break;
       default:
         log("Invalid Source Engine", name: "FetchSearchRes");
