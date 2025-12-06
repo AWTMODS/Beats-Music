@@ -476,7 +476,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
 
         // For critical errors, try to recover
         if (errorType == PlayerErrorType.sourceError) {
-          // _audioSourceManager.clearCachedSource(mediaId);
+          _audioSourceManager.clearCachedSource(mediaId);
         }
       } else {
         final currentItem = _queueManager.currentMediaItem;
