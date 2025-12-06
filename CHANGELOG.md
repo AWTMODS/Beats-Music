@@ -3,14 +3,14 @@
 ## v0.0.1 - 2025-12-03
 
 ### 🎨 Rebranding
-- Rebranded from "Bloomee" to "Beats Music"
+
 - Updated all UI text and notifications to reflect new branding
 - Updated app logo with new green music disc design
 - Replaced app icon background with solid black
 - Updated README.md with new banner and feature images
 
 ### 🔧 Fixes
-- Fixed update screen branding (replaced "Bloomee🌸" with "Beats Music")
+
 - Updated GitHub release URLs to point to `AWTMODS/Beats-Music`
 - Fixed "Download Now" button to use correct repository links
 - Reverted "Music from device" feature (removed `on_audio_query` dependency)
@@ -39,5 +39,3 @@
 
 ---
 
-## Previous Versions
-See the original [BloomeeTunes repository](https://github.com/HemantKArya/BloomeeTunes) for earlier version history.
