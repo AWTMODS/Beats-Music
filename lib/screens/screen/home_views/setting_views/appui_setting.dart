@@ -1,8 +1,10 @@
 import 'package:beats_music/blocs/settings_cubit/cubit/settings_cubit.dart';
 import 'package:beats_music/model/source_engines.dart';
 import 'package:beats_music/repository/LastFM/lastfmapi.dart';
+import 'package:beats_music/routes_and_consts/global_str_consts.dart';
 import 'package:beats_music/screens/screen/chart/show_charts.dart';
 import 'package:beats_music/screens/widgets/snackbar.dart';
+import 'package:beats_music/services/db/beats_music_db_service.dart';
 import 'package:flutter/material.dart';
 import 'package:beats_music/theme_data/default.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -199,6 +201,142 @@ class _AppUISettingsState extends State<AppUISettings> {
                       onChanged: (b) {
                         context.read<SettingsCubit>().setShowTamilTrending(b);
                       }),
+                ],
+              ),
+              ExpansionTile(
+                title: Text(
+                  "Search Source Settings",
+                  style: const TextStyle(
+                          color: Default_Theme.primaryColor1, fontSize: 16)
+                      .merge(Default_Theme.secondoryTextStyleMedium),
+                ),
+                subtitle: Text(
+                  "Configure default search engine and visibility of search source chips.",
+                  style: TextStyle(
+                          color: Default_Theme.primaryColor1.withOpacity(0.5),
+                          fontSize: 12)
+                      .merge(Default_Theme.secondoryTextStyleMedium),
+                ),
+                collapsedIconColor: Default_Theme.primaryColor1,
+                children: [
+                  ListTile(
+                    title: Text(
+                      "Default Search Engine",
+                      style: const TextStyle(
+                              color: Default_Theme.primaryColor1,
+                              fontSize: 15)
+                          .merge(Default_Theme.secondoryTextStyleMedium),
+                    ),
+                    subtitle: FutureBuilder<String?>(
+                      future: BeatsMusicDBService.getSettingStr(
+                          GlobalStrConsts.defaultSearchEngine),
+                      builder: (context, snapshot) {
+                        final current = snapshot.data ?? 'YouTube';
+                        return DropdownButton<String>(
+                          value: current,
+                          dropdownColor: Default_Theme.themeColor,
+                          style: const TextStyle(
+                              color: Default_Theme.primaryColor1),
+                          items: ['YouTube Music', 'YouTube', 'JioSaavn', 'Spotify']
+                              .map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value == 'YouTube Music' ? 'YTMusic' : value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              BeatsMusicDBService.putSettingStr(
+                                  GlobalStrConsts.defaultSearchEngine,
+                                  newValue);
+                              setState(() {});
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(color: Colors.white10, height: 1),
+                  FutureBuilder<bool?>(
+                    future: BeatsMusicDBService.getSettingBool(
+                        GlobalStrConsts.showYTMusicSearch),
+                    builder: (context, snapshot) {
+                      return SwitchListTile(
+                          value: snapshot.data ?? true,
+                          title: Text(
+                            "Show YouTube Music",
+                            style: const TextStyle(
+                                    color: Default_Theme.primaryColor1,
+                                    fontSize: 15)
+                                .merge(Default_Theme.secondoryTextStyleMedium),
+                          ),
+                          onChanged: (b) {
+                            BeatsMusicDBService.putSettingBool(
+                                GlobalStrConsts.showYTMusicSearch, b);
+                            setState(() {});
+                          });
+                    },
+                  ),
+                  FutureBuilder<bool?>(
+                    future: BeatsMusicDBService.getSettingBool(
+                        GlobalStrConsts.showYTVideoSearch),
+                    builder: (context, snapshot) {
+                      return SwitchListTile(
+                          value: snapshot.data ?? true,
+                          title: Text(
+                            "Show YouTube",
+                            style: const TextStyle(
+                                    color: Default_Theme.primaryColor1,
+                                    fontSize: 15)
+                                .merge(Default_Theme.secondoryTextStyleMedium),
+                          ),
+                          onChanged: (b) {
+                            BeatsMusicDBService.putSettingBool(
+                                GlobalStrConsts.showYTVideoSearch, b);
+                            setState(() {});
+                          });
+                    },
+                  ),
+                  FutureBuilder<bool?>(
+                    future: BeatsMusicDBService.getSettingBool(
+                        GlobalStrConsts.showJioSaavnSearch),
+                    builder: (context, snapshot) {
+                      return SwitchListTile(
+                          value: snapshot.data ?? true,
+                          title: Text(
+                            "Show JioSaavn",
+                            style: const TextStyle(
+                                    color: Default_Theme.primaryColor1,
+                                    fontSize: 15)
+                                .merge(Default_Theme.secondoryTextStyleMedium),
+                          ),
+                          onChanged: (b) {
+                            BeatsMusicDBService.putSettingBool(
+                                GlobalStrConsts.showJioSaavnSearch, b);
+                            setState(() {});
+                          });
+                    },
+                  ),
+                  FutureBuilder<bool?>(
+                    future: BeatsMusicDBService.getSettingBool(
+                        GlobalStrConsts.showSpotifySearch),
+                    builder: (context, snapshot) {
+                      return SwitchListTile(
+                          value: snapshot.data ?? true,
+                          title: Text(
+                            "Show Spotify",
+                            style: const TextStyle(
+                                    color: Default_Theme.primaryColor1,
+                                    fontSize: 15)
+                                .merge(Default_Theme.secondoryTextStyleMedium),
+                          ),
+                          onChanged: (b) {
+                            BeatsMusicDBService.putSettingBool(
+                                GlobalStrConsts.showSpotifySearch, b);
+                            setState(() {});
+                          });
+                    },
+                  ),
                 ],
               ),
             ],
