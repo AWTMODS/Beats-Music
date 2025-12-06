@@ -331,38 +331,118 @@ mixin BrowsingMixin on YTMusicServices {
   }
 
   Future<List> getPlaylistSongs(String playlistId) async {
+    print('[getPlaylistSongs] Fetching playlist: $playlistId');
     Map<String, dynamic> body = {
       "browseId": playlistId.startsWith('VL') ? playlistId : 'VL$playlistId'
     };
+    print('[getPlaylistSongs] Browse ID: ${body["browseId"]}');
+    
     var response = await sendRequest('browse', body);
+    print('[getPlaylistSongs] Response keys: ${response.keys.toList()}');
+    if (response['contents'] != null) {
+       print('[getPlaylistSongs] Top-level contents keys: ${response['contents'].keys.toList()}');
+    }
 
-    List contents = nav(response, [
-          'contents',
-          'singleColumnBrowseResultsRenderer',
-          'tabs',
-          0,
-          'tabRenderer',
-          'content',
-          'sectionListRenderer',
-          'contents',
-          0,
-          'musicPlaylistShelfRenderer',
-          'contents'
-        ]) ??
-        nav(response, [
-          'contents',
-          'twoColumnBrowseResultsRenderer',
-          'secondaryContents',
-          'sectionListRenderer',
-          'contents',
-          0,
-          'musicPlaylistShelfRenderer',
-          'contents'
+
+    try {
+      List? sectionListContents = nav(response, [
+            'contents',
+            'singleColumnBrowseResultsRenderer',
+            'tabs',
+            0,
+            'tabRenderer',
+            'content',
+            'sectionListRenderer',
+            'contents'
+          ], noneIfAbsent: true) ??
+          nav(response, [
+            'contents',
+            'twoColumnBrowseResultsRenderer',
+            'secondaryContents',
+            'sectionListRenderer',
+            'contents'
+          ], noneIfAbsent: true);
+
+      List? contents;
+      if (sectionListContents != null) {
+        for (var section in sectionListContents) {
+          // Check for musicPlaylistShelfRenderer (Standard Playlists)
+          if (section['musicPlaylistShelfRenderer'] != null) {
+            contents = section['musicPlaylistShelfRenderer']['contents'];
+            break;
+          }
+          // Check for musicShelfRenderer (Charts / Auto-generated)
+          if (section['musicShelfRenderer'] != null) {
+             contents = section['musicShelfRenderer']['contents'];
+             print('[getPlaylistSongs] Found musicShelfRenderer');
+             break;
+          }
+          // Check for itemSectionRenderer (Variable list)
+          if (section['itemSectionRenderer'] != null) {
+              // Usually inside 'contents' of itemSectionRenderer
+             var itemContents = section['itemSectionRenderer']['contents'];
+             if (itemContents != null && itemContents is List && itemContents.isNotEmpty) {
+                 if (itemContents.first['musicPlaylistShelfRenderer'] != null) {
+                     contents = itemContents.first['musicPlaylistShelfRenderer']['contents'];
+                     print('[getPlaylistSongs] Found nested musicPlaylistShelfRenderer inside itemSectionRenderer');
+                     break;
+                 }
+                 if (itemContents.first['musicShelfRenderer'] != null) {
+                     contents = itemContents.first['musicShelfRenderer']['contents'];
+                     print('[getPlaylistSongs] Found nested musicShelfRenderer inside itemSectionRenderer');
+                     break;
+                 }
+             }
+          }
+        }
+      }
+
+      if (contents == null) {
+        print('[getPlaylistSongs] ⚠️ Contents is NULL - navigation failed!');
+        print('[getPlaylistSongs] Response structure: ${response['contents']?.keys.toList()}');
+        
+        // Final fallback: Check secondaryContents directly for loose shelf
+        var secondary = nav(response, [
+                'contents',
+                'twoColumnBrowseResultsRenderer',
+                'secondaryContents'
         ]);
+         if (secondary != null && secondary is List) {
+             for (var item in secondary) {
+                 if (item['musicPlaylistShelfRenderer'] != null) {
+                     contents = item['musicPlaylistShelfRenderer']['contents'];
+                      print('[getPlaylistSongs] Found musicPlaylistShelfRenderer in secondaryContents');
+                     break;
+                 }
+                  if (item['musicShelfRenderer'] != null) {
+                     contents = item['musicShelfRenderer']['contents'];
+                      print('[getPlaylistSongs] Found musicShelfRenderer in secondaryContents');
+                     break;
+                 }
+             }
+         }
 
-    List result = handleContents(contents);
+         if (contents == null) {
+            return [];
+         }
+      }
+      
+      print('[getPlaylistSongs] Found ${contents.length} raw items');
 
-    return result;
+      List result = handleContents(contents);
+      
+      print('[getPlaylistSongs] After handleContents: ${result.length} items (${contents.length - result.length} filtered out)');
+      if (result.isEmpty && contents.isNotEmpty) {
+          print('[getPlaylistSongs] ALL items filtered out! Check first raw item:');
+          print(contents.first);
+      }
+
+      return result;
+    } catch (e, stack) {
+      print('[getPlaylistSongs] 🔴 Error: $e');
+      print('[getPlaylistSongs] Stack: $stack');
+      return [];
+    }
   }
 }
 
