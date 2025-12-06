@@ -6,6 +6,7 @@ import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:beats_music/services/db/beats_music_db_service.dart';
 import 'package:beats_music/utils/ytstream_source.dart';
 import 'package:beats_music/repository/Spotify/spotify_downloader_api.dart';
+import 'package:beats_music/repository/Spotify/aswin_sparky_api.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -36,7 +37,35 @@ class AudioSourceManager {
 
       AudioSource audioSource;
 
-      // Try Spotify first if available
+      // Check if this is a Spotify Aswin track that needs URL fetching
+      if (mediaItem.extras?["needs_url_fetch"] == 'true' && 
+          mediaItem.extras?["spotify_link"] != null) {
+        try {
+          log("Fetching Spotify download URL for: ${mediaItem.title}", 
+              name: "AudioSourceManager");
+          
+          // Fetch download URL from Aswin Sparky API
+          final trackData = await AswinSparkyAPI().getTrackFromUrl(
+              mediaItem.extras!["spotify_link"]);
+          
+          if (trackData != null && trackData['download'] != null) {
+            final downloadUrl = trackData['download'];
+            log('Got Spotify download URL, playing: ${mediaItem.title}', 
+                name: "AudioSourceManager");
+            
+            audioSource = AudioSource.uri(Uri.parse(downloadUrl), tag: mediaItem);
+            return audioSource;
+          } else {
+            log('Failed to get Spotify download URL', name: "AudioSourceManager");
+            throw Exception('Failed to get Spotify download URL');
+          }
+        } catch (e) {
+          log('Error fetching Spotify URL: $e', name: "AudioSourceManager");
+          throw Exception('Failed to fetch Spotify audio: $e');
+        }
+      }
+
+      // Try Spotify first if available (old implementation)
       if (mediaItem.extras?["spotifyId"] != null) {
         try {
           log("Attempting Spotify playback for: ${mediaItem.title}", 
