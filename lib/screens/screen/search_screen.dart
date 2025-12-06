@@ -33,7 +33,7 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   late List<SourceEngine> availSourceEngines;
-  late SourceEngine _sourceEngine;
+  SourceEngine _sourceEngine = SourceEngine.eng_JIS;
   final TextEditingController _textEditingController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<ResultTypes> resultType =
