@@ -25,6 +25,8 @@ import '../widgets/tabList_widget.dart';
 import '../widgets/quick_access_card.dart';
 import '../widgets/app_drawer.dart';
 import 'package:badges/badges.dart' as badges;
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:audio_service/audio_service.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -191,6 +193,40 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 return const SizedBox.shrink();
                               }
                               if (state.songs.isNotEmpty) {
+                                // Precache first 3 images and preload audio for first 2 songs
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  for (var i = 0; i < state.songs.length && i < 3; i++) {
+                                    final song = state.songs[i];
+                                    final imageUrl = song['image'];
+                                    
+                                    // Precache image
+                                    if (imageUrl != null && imageUrl.toString().isNotEmpty) {
+                                      precacheImage(
+                                        CachedNetworkImageProvider(imageUrl.toString()),
+                                        context,
+                                      );
+                                    }
+                                    
+                                    // Preload audio (first 2 songs only)
+                                    if (i < 2) {
+                                      try {
+                                        final mediaItem = MediaItem(
+                                          id: song['id'] ?? 'unknown',
+                                          title: song['title'] ?? 'Unknown',
+                                          artist: song['artist'] ?? song['subtitle'] ?? 'Unknown Artist',
+                                          artUri: Uri.parse(song['image'] ?? ''),
+                                          extras: {
+                                            'url': song['url'] ?? '',
+                                            'source': song['provider'] ?? 'youtube',
+                                          },
+                                        );
+                                        context.read<BeatsPlayerCubit>().beatsMusicPlayer.preloadSong(mediaItem);
+                                      } catch (e) {
+                                        log('Error preloading audio: $e', name: 'ExploreScreen');
+                                      }
+                                    }
+                                  }
+                                });
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
                                   child: HorizontalCardView(
@@ -219,6 +255,40 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 return const SizedBox.shrink();
                               }
                               if (state.songs.isNotEmpty) {
+                                // Precache first 3 images and preload audio for first 2 songs
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  for (var i = 0; i < state.songs.length && i < 3; i++) {
+                                    final song = state.songs[i];
+                                    final imageUrl = song['image'];
+                                    
+                                    // Precache image
+                                    if (imageUrl != null && imageUrl.toString().isNotEmpty) {
+                                      precacheImage(
+                                        CachedNetworkImageProvider(imageUrl.toString()),
+                                        context,
+                                      );
+                                    }
+                                    
+                                    // Preload audio (first 2 songs only)
+                                    if (i < 2) {
+                                      try {
+                                        final mediaItem = MediaItem(
+                                          id: song['id'] ?? 'unknown',
+                                          title: song['title'] ?? 'Unknown',
+                                          artist: song['artist'] ?? song['subtitle'] ?? 'Unknown Artist',
+                                          artUri: Uri.parse(song['image'] ?? ''),
+                                          extras: {
+                                            'url': song['url'] ?? '',
+                                            'source': song['provider'] ?? 'youtube',
+                                          },
+                                        );
+                                        context.read<BeatsPlayerCubit>().beatsMusicPlayer.preloadSong(mediaItem);
+                                      } catch (e) {
+                                        log('Error preloading audio: $e', name: 'ExploreScreen');
+                                      }
+                                    }
+                                  }
+                                });
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
                                   child: HorizontalCardView(
@@ -247,6 +317,40 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 return const SizedBox.shrink();
                               }
                               if (state.songs.isNotEmpty) {
+                                // Precache first 3 images and preload audio for first 2 songs
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  for (var i = 0; i < state.songs.length && i < 3; i++) {
+                                    final song = state.songs[i];
+                                    final imageUrl = song['image'];
+                                    
+                                    // Precache image
+                                    if (imageUrl != null && imageUrl.toString().isNotEmpty) {
+                                      precacheImage(
+                                        CachedNetworkImageProvider(imageUrl.toString()),
+                                        context,
+                                      );
+                                    }
+                                    
+                                    // Preload audio (first 2 songs only)
+                                    if (i < 2) {
+                                      try {
+                                        final mediaItem = MediaItem(
+                                          id: song['id'] ?? 'unknown',
+                                          title: song['title'] ?? 'Unknown',
+                                          artist: song['artist'] ?? song['subtitle'] ?? 'Unknown Artist',
+                                          artUri: Uri.parse(song['image'] ?? ''),
+                                          extras: {
+                                            'url': song['url'] ?? '',
+                                            'source': song['provider'] ?? 'youtube',
+                                          },
+                                        );
+                                        context.read<BeatsPlayerCubit>().beatsMusicPlayer.preloadSong(mediaItem);
+                                      } catch (e) {
+                                        log('Error preloading audio: $e', name: 'ExploreScreen');
+                                      }
+                                    }
+                                  }
+                                });
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
                                   child: HorizontalCardView(
