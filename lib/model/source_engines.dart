@@ -4,7 +4,8 @@ import 'package:beats_music/services/db/beats_music_db_service.dart';
 enum SourceEngine {
   eng_JIS("JISaavn"),
   eng_YTM("YTMusic"),
-  eng_YTV("YTVideo");
+  eng_YTV("YTVideo"),
+  eng_Spotify("Spotify");
 
   final String value;
   const SourceEngine(this.value);
@@ -19,6 +20,7 @@ Map<SourceEngine, List<String>> sourceEngineCountries = {
   ],
   SourceEngine.eng_YTM: [],
   SourceEngine.eng_YTV: [],
+  SourceEngine.eng_Spotify: [],
 };
 
 Future<List<SourceEngine>> availableSourceEngines() async {
