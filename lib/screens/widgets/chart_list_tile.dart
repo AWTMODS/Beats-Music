@@ -43,8 +43,8 @@ class ChartListTile extends StatelessWidget {
           );
           MediaItemModel? mediaItem;
           try {
-            mediaItem =
-                await MixedAPI().getYtTrackByMeta("$title $subtitle".trim());
+            mediaItem = await MixedAPI()
+                .getYtTrackByMeta("$title $subtitle".trim(), useStringMatcher: false);
             if (mediaItem != null) {
               SnackbarService.showMessage(
                 "Media loaded.",
@@ -60,10 +60,8 @@ class ChartListTile extends StatelessWidget {
           } catch (e) {
             log(e.toString(), name: "ChartListTile");
           }
-          context.push(
-              "/${GlobalStrConsts.searchScreen}?query=$title by $subtitle");
           SnackbarService.showMessage(
-            "Can't find media. Searching...",
+            "Could not find song to play.",
             loading: false,
             duration: const Duration(seconds: 1),
           );
