@@ -70,10 +70,14 @@ class YouTubeServices {
     Map? data,
     bool? getUrl,
   }) async {
+    log('[YTVideo] Fetching video: $id', name: 'YoutubeAPI');
     final Video? vid = await getVideoFromId(id);
     if (vid == null) {
+      log('[YTVideo] ⚠️ Failed to fetch video: $id', name: 'YoutubeAPI');
       return null;
     }
+    log('[YTVideo] ✓ Video fetched: ${vid.title} (${vid.duration})', name: 'YoutubeAPI');
+    
     final Map? response = await formatVideo(
       video: vid,
       quality: await BeatsMusicDBService.getSettingStr(
@@ -89,16 +93,34 @@ class YouTubeServices {
       //         defaultValue:
       //             true) as bool
     );
+    
+    if (response == null) {
+      log('[YTVideo] ⚠️ formatVideo returned null for: $id', name: 'YoutubeAPI');
+    } else {
+      log('[YTVideo] ✓ Video formatted successfully: ${response['title']}', name: 'YoutubeAPI');
+    }
+    
     return response;
   }
 
   Future<Map?> refreshLink(String id, {String quality = 'Low'}) async {
+    log('[YTVideo] Refreshing link for: $id', name: 'YoutubeAPI');
     try {
       final StreamManifest manifest =
           await yt.videos.streamsClient.getManifest(id);
       final List<AudioOnlyStreamInfo> sortedStreamInfo =
           manifest.audioOnly.sortByBitrate();
 
+      if (sortedStreamInfo.isEmpty) {
+        log('[YTVideo] ⚠️ No audio streams found for: $id', name: 'YoutubeAPI');
+        return {
+          'id': id,
+          'qurls': [false, '', ''],
+        };
+      }
+
+      log('[YTVideo] ✓ Found ${sortedStreamInfo.length} audio streams', name: 'YoutubeAPI');
+      
       Map<String, dynamic> data = {
         'id': id,
         'qurls': [
@@ -110,7 +132,7 @@ class YouTubeServices {
 
       return data;
     } catch (e) {
-      log('Error in refreshLink: $e', name: "YoutubeAPI");
+      log('[YTVideo] ⚠️ Error in refreshLink: $e', name: "YoutubeAPI");
     }
     return {
       'id': id,
@@ -507,25 +529,40 @@ class YouTubeServices {
     Video video,
     // {bool preferM4a = true}
   ) async {
-    final StreamManifest manifest =
-        await yt.videos.streamsClient.getManifest(video.id);
-    final List<AudioOnlyStreamInfo> sortedStreamInfo =
-        manifest.audioOnly.sortByBitrate();
-    if (Platform.isIOS || Platform.isMacOS) {
-      final List<AudioOnlyStreamInfo> m4aStreams = sortedStreamInfo
-          .where((element) => element.audioCodec.contains('mp4'))
-          .toList();
-
-      if (m4aStreams.isNotEmpty) {
-        return [
-          m4aStreams.first.url.toString(),
-          m4aStreams.last.url.toString(),
-        ];
+    log('[YTVideo] Getting stream URLs for: ${video.id.value}', name: 'YoutubeAPI');
+    try {
+      final StreamManifest manifest =
+          await yt.videos.streamsClient.getManifest(video.id);
+      final List<AudioOnlyStreamInfo> sortedStreamInfo =
+          manifest.audioOnly.sortByBitrate();
+      
+      if (sortedStreamInfo.isEmpty) {
+        log('[YTVideo] ⚠️ No audio streams available for: ${video.id.value}', name: 'YoutubeAPI');
+        return [];
       }
+      
+      log('[YTVideo] ✓ Found ${sortedStreamInfo.length} streams (${sortedStreamInfo.first.bitrate} - ${sortedStreamInfo.last.bitrate})', name: 'YoutubeAPI');
+      
+      if (Platform.isIOS || Platform.isMacOS) {
+        final List<AudioOnlyStreamInfo> m4aStreams = sortedStreamInfo
+            .where((element) => element.audioCodec.contains('mp4'))
+            .toList();
+
+        if (m4aStreams.isNotEmpty) {
+          log('[YTVideo] Using M4A streams for iOS/macOS', name: 'YoutubeAPI');
+          return [
+            m4aStreams.first.url.toString(),
+            m4aStreams.last.url.toString(),
+          ];
+        }
+      }
+      return [
+        sortedStreamInfo.first.url.toString(),
+        sortedStreamInfo.last.url.toString(),
+      ];
+    } catch (e) {
+      log('[YTVideo] ⚠️ Error getting stream URLs: $e', name: 'YoutubeAPI');
+      return [];
     }
-    return [
-      sortedStreamInfo.first.url.toString(),
-      sortedStreamInfo.last.url.toString(),
-    ];
   }
 }
