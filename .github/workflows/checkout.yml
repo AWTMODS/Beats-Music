@@ -46,24 +46,24 @@ jobs:
                   echo "VERSION=$ver" >> $env:GITHUB_ENV
             
             - name: Build App files
-              run: flutter build apk --release --build-number ${{github.run_number}}
+              run: flutter build apk --release
 
 
             - name: Rename APK file
               shell: powershell
-              run: Rename-Item -Path "build/app/outputs/flutter-apk/app-release.apk" -NewName "beats_music_android_v$env:VERSION+${{github.run_number}}.apk"
+              run: Rename-Item -Path "build/app/outputs/flutter-apk/app-release.apk" -NewName "beats_music_android_v$env:VERSION+100.apk"
 
             - name: Build Windows App
-              run: flutter build windows --release --build-number ${{github.run_number}}
+              run: flutter build windows --release
 
             - name: ZIP Windows Build
               shell: powershell
-              run: Compress-Archive -Path build/windows/x64/runner/Release/* -Destination build/windows/x64/beats_music_windows_x64_v${{ env.VERSION }}+${{github.run_number}}.zip
+              run: Compress-Archive -Path build/windows/x64/runner/Release/* -Destination build/windows/x64/beats_music_windows_x64_v${{ env.VERSION }}+100.zip
             
             - name: Upload Artifacts
               uses: actions/upload-artifact@v4
               with:
                 name: Release
                 path: |
-                  build/app/outputs/flutter-apk/beats_music_android_v${{ env.VERSION }}+${{github.run_number}}.apk
-                  build/windows/x64/beats_music_windows_x64_v${{ env.VERSION }}+${{github.run_number}}.zip
+                  build/app/outputs/flutter-apk/beats_music_android_v${{ env.VERSION }}+100.apk
+                  build/windows/x64/beats_music_windows_x64_v${{ env.VERSION }}+100.zip
