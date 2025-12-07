@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:beats_music/services/db/beats_music_db_service.dart';
@@ -6,6 +7,7 @@ import 'package:beats_music/routes_and_consts/global_str_consts.dart';
 
 class PreloadManager {
   // Hidden audio players for preloading
+  // REUSE strategy: keep them alive to prevent native crash
   AudioPlayer? _preloadPlayerNext;
   String? _preloadedNextMediaId;
   AudioPlayer? _preloadPlayerNext2;
@@ -26,6 +28,11 @@ class PreloadManager {
     required Duration? totalDuration,
   }) async {
     if (totalDuration == null || totalDuration.inSeconds == 0) return;
+
+    // STABILITY FIX: Disable preloading on Desktop (Windows/Linux)
+    // The native MPV player crashes when handling concurrent streams/players.
+    // We must disable preloading to ensure the app doesn't crash mid-song.
+    if (Platform.isWindows || Platform.isLinux) return;
     
     // Get aggressive preloading setting
     final aggressivePreload = await BeatsMusicDBService.getSettingBool(
@@ -76,27 +83,28 @@ class PreloadManager {
     log('Preloading next song: ${mediaItem.title}', name: 'PreloadManager');
     
     try {
-      // Dispose old preload player if exists
-      await _preloadPlayerNext?.dispose();
-      
-      // Create new player for preloading
-      _preloadPlayerNext = AudioPlayer();
+      // REUSE: Initialize once if null
+      _preloadPlayerNext ??= AudioPlayer();
+
+      // Stop before loading new source (instead of dispose)
+      try {
+        await _preloadPlayerNext!.stop();
+      } catch (_) {}
       
       // Get audio source
       final audioSource = await onGetAudioSource!(mediaItem);
       
+      // Set volume to 0 BEFORE loading
+      await _preloadPlayerNext!.setVolume(0);
+      
       // Load and buffer the audio
       await _preloadPlayerNext!.setAudioSource(audioSource);
-      
-      // Set volume to 0 to avoid any sound
-      await _preloadPlayerNext!.setVolume(0);
       
       _preloadedNextMediaId = mediaItem.id;
       log('Successfully preloaded & buffered: ${mediaItem.title}', name: 'PreloadManager');
     } catch (e) {
       log('Failed to preload ${mediaItem.title}: $e', name: 'PreloadManager');
-      await _preloadPlayerNext?.dispose();
-      _preloadPlayerNext = null;
+      // Do NOT dispose on error, just clear state
       _preloadedNextMediaId = null;
     } finally {
       _isPreloadingNext = false;
@@ -110,27 +118,28 @@ class PreloadManager {
     log('Preloading 2nd next song: ${mediaItem.title}', name: 'PreloadManager');
     
     try {
-      // Dispose old preload player if exists
-      await _preloadPlayerNext2?.dispose();
-      
-      // Create new player for preloading
-      _preloadPlayerNext2 = AudioPlayer();
+      // REUSE: Initialize once if null
+      _preloadPlayerNext2 ??= AudioPlayer();
+
+      // Stop before loading new source
+      try {
+        await _preloadPlayerNext2!.stop();
+      } catch (_) {}
       
       // Get audio source
       final audioSource = await onGetAudioSource!(mediaItem);
       
+      // Set volume to 0 BEFORE loading
+      await _preloadPlayerNext2!.setVolume(0);
+      
       // Load and buffer the audio
       await _preloadPlayerNext2!.setAudioSource(audioSource);
-      
-      // Set volume to 0 to avoid any sound
-      await _preloadPlayerNext2!.setVolume(0);
       
       _preloadedNext2MediaId = mediaItem.id;
       log('Successfully preloaded & buffered 2nd: ${mediaItem.title}', name: 'PreloadManager');
     } catch (e) {
       log('Failed to preload 2nd ${mediaItem.title}: $e', name: 'PreloadManager');
-      await _preloadPlayerNext2?.dispose();
-      _preloadPlayerNext2 = null;
+      // Do NOT dispose on error
       _preloadedNext2MediaId = null;
     } finally {
       _isPreloadingNext2 = false;
@@ -156,11 +165,18 @@ class PreloadManager {
         final source = _preloadPlayerNext2!.audioSource;
         log('Using preloaded 2nd source for: $mediaId', name: 'PreloadManager');
         
-        // Shift next2 to next
-        _preloadPlayerNext?.dispose();
+        // SWAP PLAYERS: Move player2 to player1 to keep the chain going
+        // This is safe because we just pass references, no disposal
+        final tempPlayer = _preloadPlayerNext;
         _preloadPlayerNext = _preloadPlayerNext2;
+        _preloadPlayerNext2 = tempPlayer; // Move old player1 to player2 (recycling)
+
+        // Stop the "new" player2 (which was old player1) to reset it
+        if (_preloadPlayerNext2 != null) {
+           _preloadPlayerNext2!.stop().catchError((_) {});
+        }
+
         _preloadedNextMediaId = _preloadedNext2MediaId;
-        _preloadPlayerNext2 = null;
         _preloadedNext2MediaId = null;
         
         return source;
@@ -176,22 +192,29 @@ class PreloadManager {
   /// Clear all preloaded sources
   Future<void> clearPreload() async {
     log('Clearing all preloaded sources', name: 'PreloadManager');
-    await _preloadPlayerNext?.dispose();
-    _preloadPlayerNext = null;
+    try {
+        await _preloadPlayerNext?.stop();
+    } catch (_) {}
     _preloadedNextMediaId = null;
-    await _preloadPlayerNext2?.dispose();
-    _preloadPlayerNext2 = null;
+
+    try {
+        await _preloadPlayerNext2?.stop();
+    } catch (_) {}
     _preloadedNext2MediaId = null;
   }
   
   /// Clear only the next preload (called after it's used)
   Future<void> clearNextPreload() async {
-    await _preloadPlayerNext?.dispose();
-    _preloadPlayerNext = null;
+    try {
+        await _preloadPlayerNext?.stop();
+    } catch (_) {}
     _preloadedNextMediaId = null;
   }
   
+  /// Only call this when APP CLOSES
   Future<void> dispose() async {
     await clearPreload();
+    await _preloadPlayerNext?.dispose();
+    await _preloadPlayerNext2?.dispose();
   }
 }
