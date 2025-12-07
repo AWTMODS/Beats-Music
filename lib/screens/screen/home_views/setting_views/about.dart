@@ -34,18 +34,28 @@ class About extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // App Icon
+              // App Logo
               Container(
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Default_Theme.spotifyGreen,
                   borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Default_Theme.spotifyGreen.withOpacity(0.3),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
-                child: const Icon(
-                  MingCute.music_2_fill,
-                  size: 64,
-                  color: Colors.white,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(
+                    'assets/icons/beats_music_logo.png',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
@@ -66,8 +76,8 @@ class About extends StatelessWidget {
                 future: PackageInfo.fromPlatform(),
                 builder: (context, snapshot) {
                   final version = snapshot.hasData
-                      ? 'v${snapshot.data!.version} (beta)'
-                      : 'v1.0.0 (beta)';
+                      ? 'v${snapshot.data!.version}'
+                      : 'v1.0.0';
                   return Text(
                     version,
                     style: const TextStyle(
@@ -179,26 +189,103 @@ class About extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     _buildCreditTile(
-                      name: 'Rinshan',
-                      role: 'Testing',
-                      icon: MingCute.user_star_line,
+                      name: 'Bloomee',
+                      role: 'Inspiration & Open Source',
+                      icon: MingCute.flower_fill,
                     ),
                     const SizedBox(height: 12),
                     _buildCreditTile(
                       name: 'Aswin',
-                      role: 'Spotify API',
+                      role: 'Spotify API Provider',
                       icon: FontAwesome.spotify_brand,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Beta Testers',
+                      style: TextStyle(
+                        color: Default_Theme.primaryColor1,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCreditTile(
+                      name: 'Rinshan',
+                      role: 'Beta Tester',
+                      icon: MingCute.user_star_line,
                     ),
                     const SizedBox(height: 12),
                     _buildCreditTile(
                       name: 'Jaganadh',
-                      role: 'Testing',
+                      role: 'Beta Tester',
+                      icon: MingCute.user_star_line,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCreditTile(
+                      name: 'Vyshnav',
+                      role: 'Beta Tester',
+                      icon: MingCute.user_star_line,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCreditTile(
+                      name: 'Affan',
+                      role: 'Beta Tester',
+                      icon: MingCute.user_star_line,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCreditTile(
+                      name: 'Sinan',
+                      role: 'Beta Tester',
                       icon: MingCute.user_star_line,
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 32),
+              
+              // Beta Testing Button
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      launchUrl(
+                        Uri.parse('https://docs.google.com/forms/d/e/1FAIpQLSfky4TnSZPzi3-wdHHaq6-ZWqaNkfvYYVayXYf1vrYsXC9FlQ/viewform'),
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(MingCute.user_add_fill, color: Colors.white, size: 20),
+                          SizedBox(width: 12),
+                          Text(
+                            'Apply for Beta Testing',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               
               // Support Button
               Container(
