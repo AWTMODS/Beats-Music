@@ -5,6 +5,7 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:beats_music/screens/widgets/mini_player_widget.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../theme_data/default.dart';
+import 'dart:io' show Platform;
 
 class GlobalFooter extends StatelessWidget {
   const GlobalFooter({super.key, required this.navigationShell});
@@ -12,46 +13,56 @@ class GlobalFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: navigationShell.currentIndex == 0,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          navigationShell.goBranch(0);
-        }
-      },
-      child: Scaffold(
-        body: ResponsiveBreakpoints.of(context).isMobile
-            ? _AnimatedPageView(navigationShell: navigationShell)
-            : Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: VerticalNavBar(navigationShell: navigationShell),
-                  ),
-                  Expanded(
-                    child: _AnimatedPageView(navigationShell: navigationShell),
-                  ),
-                ],
-              ),
-        backgroundColor: Default_Theme.themeColor,
-        drawerScrimColor: Default_Theme.themeColor,
-        bottomNavigationBar: SafeArea(
-            child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const MiniPlayerWidget(),
-            Container(
-              color: Colors.transparent,
-              margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-              child: ResponsiveBreakpoints.of(context).isMobile
-                  ? HorizontalNavBar(navigationShell: navigationShell)
-                  : const Wrap(),
+    // Only use PopScope on mobile platforms (Android/iOS)
+    final isMobilePlatform = Platform.isAndroid || Platform.isIOS;
+    
+    final scaffoldWidget = Scaffold(
+      body: ResponsiveBreakpoints.of(context).isMobile
+          ? _AnimatedPageView(navigationShell: navigationShell)
+          : Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: VerticalNavBar(navigationShell: navigationShell),
+                ),
+                Expanded(
+                  child: _AnimatedPageView(navigationShell: navigationShell),
+                ),
+              ],
             ),
-          ],
-        )),
-      ),
+      backgroundColor: Default_Theme.themeColor,
+      drawerScrimColor: Default_Theme.themeColor,
+      bottomNavigationBar: SafeArea(
+          child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const MiniPlayerWidget(),
+          Container(
+            color: Colors.transparent,
+            margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+            child: ResponsiveBreakpoints.of(context).isMobile
+                ? HorizontalNavBar(navigationShell: navigationShell)
+                : const Wrap(),
+          ),
+        ],
+      )),
     );
+
+    // Only wrap with PopScope on mobile platforms
+    if (isMobilePlatform) {
+      return PopScope(
+        canPop: navigationShell.currentIndex == 0,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) {
+            navigationShell.goBranch(0);
+          }
+        },
+        child: scaffoldWidget,
+      );
+    }
+    
+    return scaffoldWidget;
   }
 }
 
