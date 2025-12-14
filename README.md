@@ -41,6 +41,10 @@ Beats Music is an experimental open-source music player designed to bring you ad
 <h3 align=center>Download for Android 😍</h3>
 <p align="center"><a href="https://github.com/AWTMODS/Beats-Music/releases"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" height=40/></a>
 </p>
+
+<h3 align=center>Download for Windows 😍</h3>
+<p align="center"><a href="https://github.com/AWTMODS/Beats-Music/releases"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=windows&logoColor=white" height=40/></a>
+</p>
 </br>
 
 <h3 align="center"> Support Development</h3>
