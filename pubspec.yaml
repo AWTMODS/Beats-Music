@@ -3,7 +3,7 @@ description: An Open source Free Music Player.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+100
+version: 1.1.0+101
 
 environment:
   sdk: '>=3.0.6 <4.0.0'
@@ -22,6 +22,7 @@ dependencies:
   flutter_bloc: ^9.1.1
   dart_des: ^1.0.2
   http: ^1.5.0
+  dio: ^5.3.3
   convert: ^3.1.1
   html: ^0.15.6
   google_nav_bar: ^5.0.6
@@ -65,6 +66,12 @@ dependencies:
   crypto: ^3.0.5
   dart_discord_rpc: ^0.0.2
 
+  # Firebase Dependencies (Phase 3)
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  google_sign_in: ^6.2.1
+
   mime: ^2.0.0
 
 
@@ -77,6 +84,7 @@ dependencies:
   audio_service_mpris: ^0.2.0
   media_kit_libs_windows_audio: any
   audio_service_win: ^0.0.2
+  shared_preferences: ^2.3.3
 
   
 
@@ -125,6 +133,7 @@ flutter:
   assets:
     - assets/icons/lazy_loading.png
     - assets/icons/beats_music_logo.png
+    - assets/CHANGELOG.md
     
   fonts:
     - family: Unageo
