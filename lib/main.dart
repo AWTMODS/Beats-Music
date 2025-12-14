@@ -39,6 +39,9 @@ import 'package:responsive_framework/responsive_framework.dart';
 import 'blocs/mediaPlayer/beats_player_cubit.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:beats_music/services/discord_service.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void processIncomingIntent(SharedMedia sharedMedia) {
   // Check if there's text content that might be a URL
@@ -115,6 +118,7 @@ void setupPlayerCubit() {
 }
 
 Future<void> initServices() async {
+  await Firebase.initializeApp();
   String appDocPath = (await getApplicationDocumentsDirectory()).path;
   String appSuppPath = (await getApplicationSupportDirectory()).path;
   BeatsMusicDBService(appDocPath: appDocPath, appSuppPath: appSuppPath);
@@ -131,6 +135,26 @@ Future<void> main() async {
     );
   }
   await initServices();
+  
+  // Check First Run / Auth State
+  final prefs = await SharedPreferences.getInstance();
+  final bool seenPermission = prefs.getBool('seen_permission') ?? false;
+  final bool loginSkipped = prefs.getBool('login_skipped') ?? false;
+  final bool isLoggedIn = FirebaseAuth.instance.currentUser != null; // Firebase init is done above
+  
+  if (!seenPermission) {
+    GlobalRoutes.initialRoute = GlobalRoutes.PERMISSION;
+  } else if (!isLoggedIn && !loginSkipped) {
+    GlobalRoutes.initialRoute = GlobalRoutes.LOGIN;
+  } else {
+    GlobalRoutes.initialRoute = GlobalRoutes.SEARCH; // Wait, SEARCH or EXPLORE? Routes says /Explore default.
+    // GlobalRoutes.initialRoute default is /Explore.
+    // Wait, routes.dart had: initialLocation: '/Explore'
+    // I changed it to initialRoute variable.
+    // If I don't set it, it stays /Explore (if I initialized it to /Explore)
+    GlobalRoutes.initialRoute = '/Explore'; 
+  }
+
   setHighRefreshRate();
   setupPlayerCubit();
   DiscordService.initialize();

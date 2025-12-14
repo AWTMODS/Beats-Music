@@ -11,14 +11,34 @@ import 'package:beats_music/screens/screen/library_views/playlist_screen.dart';
 import 'package:beats_music/screens/screen/offline_screen.dart';
 import 'package:beats_music/screens/screen/search_screen.dart';
 import 'package:beats_music/screens/screen/chart/chart_view.dart';
+import 'package:beats_music/screens/auth/login_screen.dart';
+import 'package:beats_music/screens/auth/permission_screen.dart';
 
 class GlobalRoutes {
+  static const String SEARCH = '/search';
+  static const String LOGIN = '/login';
+  static const String PERMISSION = '/permission';
+  
   static final globalRouterKey = GlobalKey<NavigatorState>();
 
+  static String initialRoute = '/Explore';
+
   static final globalRouter = GoRouter(
-    initialLocation: '/Explore',
+    initialLocation: initialRoute,
     navigatorKey: globalRouterKey,
     routes: [
+      GoRoute(
+        path: '/',
+        redirect: (_, __) => initialRoute,
+      ),
+      GoRoute(
+        path: LOGIN,
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: PERMISSION,
+        builder: (context, state) => const PermissionScreen(),
+      ),
       GoRoute(
         name: GlobalStrConsts.playerScreen,
         path: "/MusicPlayer",
