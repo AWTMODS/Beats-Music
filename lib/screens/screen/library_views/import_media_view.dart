@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:developer';
+import 'package:beats_music/services/db/GlobalDB.dart';
 import 'package:beats_music/model/songModel.dart';
 import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:beats_music/services/db/beats_music_db_service.dart';
@@ -172,6 +173,48 @@ class ImportMediaFromPlatformsView extends StatelessWidget {
                   ),
                 );
               }),
+          ImportFromBtn(
+            btnName: "Import Local Songs",
+            btnIcon: Icons.audio_file,
+            onClickFunc: () async {
+               final result = await FilePicker.platform.pickFiles(
+                allowMultiple: true,
+                type: FileType.audio,
+              );
+              
+              if (result != null && result.files.isNotEmpty) {
+                 SnackbarService.showMessage("Importing ${result.files.length} songs...");
+                 int count = 0;
+                 
+                 for (var file in result.files) {
+                   if (file.path == null) continue;
+                   
+                   final fileName = file.name;
+                   final title = fileName.replaceAll(RegExp(r'\.[^.]*$'), ''); // Remove extension
+                   
+                   final mediaItem = MediaItemDB(
+                     mediaID: file.path!, // Use path as unique ID
+                     title: title,
+                     artist: "Unknown Artist",
+                     album: "Local Import",
+                     artURL: "",
+                     genre: "Local",
+                     duration: 0, // Unknown
+                     streamingURL: file.path!,
+                     source: "local",
+                     permaURL: file.path!,
+                     language: "Unknown",
+                     isLiked: false,
+                   );
+
+                   await BeatsMusicDBService.addMediaItem(mediaItem, "Local Imports");
+                   count++;
+                 }
+                 
+                 SnackbarService.showMessage("Successfully imported $count songs to 'Local Imports'");
+              }
+            },
+          ),
         ],
       ),
     );
@@ -375,9 +418,9 @@ Future getIdAndShowBottomSheet(BuildContext context,
                                             name: "Import Media");
                                       }
                                     });
-                                    break;
-                                  case ImportType.storage:
-                                  // TODO: Handle this case.
+                                     break;
+                                   case ImportType.storage:
+                                   // TODO: Handle this case.
                                 }
                               },
                             ),

@@ -96,7 +96,7 @@ Changelog parseChangelog(String? log) {
   for (final block in versionBlocks) {
     final lines = block.trim().split('\n');
     final titleLine = lines.first;
-    final versionMatch = RegExp(r'\[(.*?)\](?: - (.*))?').firstMatch(titleLine);
+    final versionMatch = RegExp(r'^(?:\[)?(.*?)(?:\])?(?: - (.*))?$').firstMatch(titleLine);
     if (versionMatch == null) continue;
 
     final versionNumber = versionMatch.group(1) ?? 'Unknown Version';
