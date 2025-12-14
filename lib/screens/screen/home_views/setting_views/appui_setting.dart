@@ -57,6 +57,8 @@ class _AppUISettingsState extends State<AppUISettings> {
                             color: Default_Theme.primaryColor1, fontSize: 16)
                         .merge(Default_Theme.secondoryTextStyleMedium),
                   ),
+                  activeColor: Default_Theme.accentColor2,
+                  activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                   onChanged: (value) {
                     context.read<SettingsCubit>().setAutoSlideCharts(value);
                   }),
@@ -75,6 +77,8 @@ class _AppUISettingsState extends State<AppUISettings> {
                             color: Default_Theme.primaryColor1, fontSize: 16)
                         .merge(Default_Theme.secondoryTextStyleMedium),
                   ),
+                  activeColor: Default_Theme.accentColor2,
+                  activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                   onChanged: (value) {
                     context.read<SettingsCubit>().setLastFMExpore(value);
                     if (value && LastFmAPI.initialized == false) {
@@ -112,6 +116,8 @@ class _AppUISettingsState extends State<AppUISettings> {
                                 fontSize: 17)
                             .merge(Default_Theme.secondoryTextStyleMedium),
                       ),
+                      activeColor: Default_Theme.accentColor2,
+                      activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                       onChanged: (b) {
                         context.read<SettingsCubit>().setSourceEngineSwitches(
                             SourceEngine.values.indexOf(e), b);
@@ -142,6 +148,8 @@ class _AppUISettingsState extends State<AppUISettings> {
                                 fontSize: 17)
                             .merge(Default_Theme.secondoryTextStyleMedium),
                       ),
+                      activeColor: Default_Theme.accentColor2,
+                      activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                       onChanged: (b) {
                         context.read<SettingsCubit>().setChartShow(e.title, b);
                       });
@@ -172,6 +180,8 @@ class _AppUISettingsState extends State<AppUISettings> {
                                 fontSize: 17)
                             .merge(Default_Theme.secondoryTextStyleMedium),
                       ),
+                      activeColor: Default_Theme.accentColor2,
+                      activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                       onChanged: (b) {
                         context
                             .read<SettingsCubit>()
@@ -186,6 +196,8 @@ class _AppUISettingsState extends State<AppUISettings> {
                                 fontSize: 17)
                             .merge(Default_Theme.secondoryTextStyleMedium),
                       ),
+                      activeColor: Default_Theme.accentColor2,
+                      activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                       onChanged: (b) {
                         context.read<SettingsCubit>().setShowHindiTrending(b);
                       }),
@@ -198,6 +210,8 @@ class _AppUISettingsState extends State<AppUISettings> {
                                 fontSize: 17)
                             .merge(Default_Theme.secondoryTextStyleMedium),
                       ),
+                      activeColor: Default_Theme.accentColor2,
+                      activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                       onChanged: (b) {
                         context.read<SettingsCubit>().setShowTamilTrending(b);
                       }),
@@ -270,6 +284,8 @@ class _AppUISettingsState extends State<AppUISettings> {
                                     fontSize: 15)
                                 .merge(Default_Theme.secondoryTextStyleMedium),
                           ),
+                          activeColor: Default_Theme.accentColor2,
+                          activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                           onChanged: (b) {
                             BeatsMusicDBService.putSettingBool(
                                 GlobalStrConsts.showYTMusicSearch, b);
@@ -290,6 +306,8 @@ class _AppUISettingsState extends State<AppUISettings> {
                                     fontSize: 15)
                                 .merge(Default_Theme.secondoryTextStyleMedium),
                           ),
+                          activeColor: Default_Theme.accentColor2,
+                          activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                           onChanged: (b) {
                             BeatsMusicDBService.putSettingBool(
                                 GlobalStrConsts.showYTVideoSearch, b);
@@ -310,6 +328,8 @@ class _AppUISettingsState extends State<AppUISettings> {
                                     fontSize: 15)
                                 .merge(Default_Theme.secondoryTextStyleMedium),
                           ),
+                          activeColor: Default_Theme.accentColor2,
+                          activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                           onChanged: (b) {
                             BeatsMusicDBService.putSettingBool(
                                 GlobalStrConsts.showJioSaavnSearch, b);
@@ -330,6 +350,8 @@ class _AppUISettingsState extends State<AppUISettings> {
                                     fontSize: 15)
                                 .merge(Default_Theme.secondoryTextStyleMedium),
                           ),
+                          activeColor: Default_Theme.accentColor2,
+                          activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                           onChanged: (b) {
                             BeatsMusicDBService.putSettingBool(
                                 GlobalStrConsts.showSpotifySearch, b);

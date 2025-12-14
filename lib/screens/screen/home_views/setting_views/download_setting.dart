@@ -142,6 +142,8 @@ class _DownloadSettingsState extends State<DownloadSettings> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  activeColor: Default_Theme.accentColor2,
+                  activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                   onChanged: (value) {
                     context.read<SettingsCubit>().setWifiOnlyDownload(value);
                   }),

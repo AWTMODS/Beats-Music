@@ -3,6 +3,12 @@ import 'package:beats_music/screens/widgets/setting_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:beats_music/theme_data/default.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:beats_music/services/crossfade_service.dart';
+import 'package:beats_music/widgets/settings/crossfade_settings.dart';
+import 'package:beats_music/services/equalizer_service.dart';
+import 'package:beats_music/screens/screen/equalizer_screen.dart';
+
+
 
 class PlayerSettings extends StatelessWidget {
   const PlayerSettings({super.key});
@@ -101,6 +107,8 @@ class PlayerSettings extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  activeColor: Default_Theme.accentColor2,
+                  activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                   onChanged: (value) {
                     context.read<SettingsCubit>().setAutoPlay(value);
                   }),
@@ -122,6 +130,8 @@ class PlayerSettings extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  activeColor: Default_Theme.accentColor2,
+                  activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                   onChanged: (value) {
                     context.read<SettingsCubit>().setAggressivePreload(value);
                   }),
@@ -143,30 +153,53 @@ class PlayerSettings extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  activeColor: Default_Theme.accentColor2,
+                  activeTrackColor: Default_Theme.accentColor2.withOpacity(0.5),
                   onChanged: (value) {
                     context.read<SettingsCubit>().setUseSpotifySearch(value);
                   }),
-              SwitchListTile(
-                  value: state.enableCrossfade,
-                  title: Text(
-                    "Crossfade",
-                    style: const TextStyle(
-                      color: Default_Theme.primaryColor1,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ).merge(Default_Theme.secondoryTextStyle),
+              
+              // Equalizer Navigation
+              ListTile(
+                leading: const Icon(
+                  Icons.equalizer,
+                  color: Default_Theme.accentColor2,
+                ),
+                title: Text(
+                  'Equalizer',
+                  style: const TextStyle(
+                    color: Default_Theme.primaryColor1,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ).merge(Default_Theme.secondoryTextStyle),
+                ),
+                subtitle: Text(
+                  '10 presets • 5-band manual control',
+                  style: TextStyle(
+                    color: Default_Theme.primaryColor1.withOpacity(0.5),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
                   ),
-                  subtitle: Text(
-                    "Smooth transitions between songs (2 seconds).",
-                    style: TextStyle(
-                      color: Default_Theme.primaryColor1.withOpacity(0.5),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                ),
+                trailing: const Icon(
+                  Icons.arrow_forward_ios,
+                  color: Default_Theme.primaryColor1,
+                  size: 16,
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EqualizerScreen(
+                        equalizerService: EqualizerService(),
+                      ),
                     ),
-                  ),
-                  onChanged: (value) {
-                    context.read<SettingsCubit>().setEnableCrossfade(value);
-                  }),
+                  );
+                },
+              ),
+              
+              // Enhanced Crossfade Settings with Duration Slider
+              CrossfadeSettings(crossfadeService: CrossfadeService()),
 
             ],
           );
