@@ -39,17 +39,21 @@ class About extends StatelessWidget {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
+                  shape: BoxShape.circle,
+                  color: Default_Theme.themeColor,
                   boxShadow: [
                     BoxShadow(
-                      color: Default_Theme.spotifyGreen.withOpacity(0.3),
-                      blurRadius: 20,
-                      spreadRadius: 2,
+                      color: Default_Theme.spotifyGreen.withOpacity(0.4),
+                      blurRadius: 25,
+                      spreadRadius: 5,
                     ),
                   ],
+                  border: Border.all(
+                    color: Default_Theme.spotifyGreen,
+                    width: 2,
+                  ),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
+                child: ClipOval(
                   child: Image.asset(
                     'assets/icons/beats_music_logo.png',
                     width: 120,
@@ -210,6 +214,12 @@ class About extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     _buildCreditTile(
+                      name: 'Nihal',
+                      role: 'Beta Tester',
+                      icon: MingCute.user_star_line,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCreditTile(
                       name: 'Rinshan',
                       role: 'Beta Tester',
                       icon: MingCute.user_star_line,
@@ -235,6 +245,18 @@ class About extends StatelessWidget {
                     const SizedBox(height: 12),
                     _buildCreditTile(
                       name: 'Sinan',
+                      role: 'Beta Tester',
+                      icon: MingCute.user_star_line,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCreditTile(
+                      name: 'Sahitya',
+                      role: 'Beta Tester',
+                      icon: MingCute.user_star_line,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildCreditTile(
+                      name: 'Amal Dev',
                       role: 'Beta Tester',
                       icon: MingCute.user_star_line,
                     ),
