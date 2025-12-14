@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:beats_music/services/debug_logger.dart';
+
 import 'package:beats_music/services/equalizer_service.dart';
 import 'package:beats_music/theme_data/default.dart';
 
@@ -35,22 +35,6 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
           ),
         ),
         actions: [
-          // Logs button
-          IconButton(
-            icon: const Icon(Icons.receipt_long),
-            tooltip: 'View Logs',
-            onPressed: () {
-              _showLogs(context);
-            },
-          ),
-          // Reset button
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Reset to Flat',
-            onPressed: () async {
-              await widget.equalizerService.reset();
-            },
-          ),
         ],
       ),
       body: ListenableBuilder(
@@ -192,45 +176,6 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
           );
         },
       ),
-    );
-  }
-  void _showLogs(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final logs = DebugLogger().getLogs().reversed.toList();
-        return AlertDialog(
-          backgroundColor: Default_Theme.themeColor,
-          title: const Text('Equalizer Logs', style: TextStyle(color: Colors.white)),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: logs.isEmpty
-                ? const Text('No logs available', style: TextStyle(color: Colors.white70))
-                : ListView.builder(
-                    itemCount: logs.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Text(
-                          logs[index],
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
     );
   }
 }

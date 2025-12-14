@@ -206,15 +206,24 @@ class EqualizerService extends ChangeNotifier {
       final parameters = await _androidEqualizer!.parameters;
       final bands = parameters.bands;
       
-      // Apply gains to each band (just_audio uses millibels)
+      // Apply gains to each band
       for (int i = 0; i < bands.length && i < _customGains.length; i++) {
-        final gainInMillibels = _customGains[i] * 100;
-        await bands[i].setGain(gainInMillibels);
+        final band = bands[i];
+        final minGain = parameters.minDecibels;
+        final maxGain = parameters.maxDecibels;
+        
+        // Calculate gain
+        double targetGain = _customGains[i]; 
+        
+        // Clamp to ensure we never exceed device capabilities
+        double safeGain = targetGain.clamp(minGain, maxGain);
+        
+        await band.setGain(safeGain);
       }
       
-      // DebugLogger().log('Equalizer: Applied all bands');
+      // log('Equalizer: Applied all bands');
     } catch (e) {
-      // DebugLogger().log('Error applying equalizer settings: $e');
+      // log('Error applying equalizer settings: $e');
     }
   }
   
@@ -225,10 +234,14 @@ class EqualizerService extends ChangeNotifier {
     try {
       final parameters = await _androidEqualizer!.parameters;
       final bands = parameters.bands;
+      final minGain = parameters.minDecibels;
+      final maxGain = parameters.maxDecibels;
       
       if (bandIndex < bands.length) {
-        final gainInMillibels = gain * 100;
-        await bands[bandIndex].setGain(gainInMillibels);
+        final band = bands[bandIndex];
+        
+        double safeGain = gain.clamp(minGain, maxGain);
+        await band.setGain(safeGain);
       }
     } catch (e) {
       // DebugLogger().log('Error applying band gain: $e');
