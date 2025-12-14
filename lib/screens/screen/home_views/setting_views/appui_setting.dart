@@ -3,6 +3,7 @@ import 'package:beats_music/model/source_engines.dart';
 import 'package:beats_music/repository/LastFM/lastfmapi.dart';
 import 'package:beats_music/routes_and_consts/global_str_consts.dart';
 import 'package:beats_music/screens/screen/chart/show_charts.dart';
+import 'package:beats_music/plugins/ext_charts/chart_defines.dart';
 import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:beats_music/services/db/beats_music_db_service.dart';
 import 'package:flutter/material.dart';
@@ -139,7 +140,7 @@ class _AppUISettingsState extends State<AppUISettings> {
                       .merge(Default_Theme.secondoryTextStyleMedium),
                 ),
                 collapsedIconColor: Default_Theme.primaryColor1,
-                children: chartInfoList.map((e) {
+                children: chartInfoList.map((ChartInfo e) {
                   return SwitchListTile(
                       value: state.chartMap[e.title] ?? true,
                       title: Text(
@@ -153,7 +154,7 @@ class _AppUISettingsState extends State<AppUISettings> {
                       onChanged: (b) {
                         context.read<SettingsCubit>().setChartShow(e.title, b);
                       });
-                }).toList(),
+                }).cast<Widget>().toList(),
               ),
               ExpansionTile(
                 title: Text(

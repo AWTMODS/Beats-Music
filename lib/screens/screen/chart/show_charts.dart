@@ -1,4 +1,8 @@
 import 'package:beats_music/plugins/ext_charts/kworb_charts.dart';
+import 'package:beats_music/plugins/ext_charts/chart_defines.dart';
+import 'package:beats_music/plugins/ext_charts/last_dot_fm_charts.dart';
+import 'package:beats_music/plugins/ext_charts/melon_charts.dart';
+import 'package:beats_music/plugins/ext_charts/spotify_top50_chart.dart';
 
 final List<ChartInfo> chartInfoList = [
   ChartInfo(
