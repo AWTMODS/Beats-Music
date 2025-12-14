@@ -1,8 +1,4 @@
-import 'package:beats_music/plugins/ext_charts/billboard_charts.dart';
-import 'package:beats_music/plugins/ext_charts/chart_defines.dart';
-import 'package:beats_music/plugins/ext_charts/last_dot_fm_charts.dart';
-import 'package:beats_music/plugins/ext_charts/melon_charts.dart';
-import 'package:beats_music/plugins/ext_charts/spotify_top50_chart.dart';
+import 'package:beats_music/plugins/ext_charts/kworb_charts.dart';
 
 final List<ChartInfo> chartInfoList = [
   ChartInfo(
@@ -54,29 +50,23 @@ final List<ChartInfo> chartInfoList = [
   //   url: MelonCharts.GENREOMICS_MONTHLY,
   // ),
   ChartInfo(
-      chartFunction: getBillboardChart,
-      imgUrl: billboardRandomIMGs.getImage(),
-      title: BillboardCharts.HOT_100.title,
-      url: BillboardCharts.HOT_100),
+      chartFunction: getKworbChart,
+      imgUrl: kworbRandomIMGs.getImage(),
+      title: KworbCharts.GLOBAL_DAILY.title,
+      url: KworbCharts.GLOBAL_DAILY),
   ChartInfo(
-      chartFunction: getBillboardChart,
-      imgUrl: billboardRandomIMGs.getImage(),
-      title: BillboardCharts.BILLBOARD_200.title,
-      url: BillboardCharts.BILLBOARD_200),
+      chartFunction: getKworbChart,
+      imgUrl: kworbRandomIMGs.getImage(),
+      title: KworbCharts.KOREA_DAILY.title,
+      url: KworbCharts.KOREA_DAILY),
   ChartInfo(
-      chartFunction: getBillboardChart,
-      imgUrl: billboardRandomIMGs.getImage(),
-      title: BillboardCharts.BILLBOARD_GLOBAL_200.title,
-      url: BillboardCharts.BILLBOARD_GLOBAL_200),
-
+      chartFunction: getKworbChart,
+      imgUrl: kworbRandomIMGs.getImage(),
+      title: KworbCharts.INDIA_DAILY.title,
+      url: KworbCharts.INDIA_DAILY),
   ChartInfo(
-      chartFunction: getBillboardChart,
-      imgUrl: billboardRandomIMGs.getImage(),
-      title: BillboardCharts.INDIA_SONGS.title,
-      url: BillboardCharts.INDIA_SONGS),
-  ChartInfo(
-      chartFunction: getBillboardChart,
-      imgUrl: billboardRandomIMGs.getImage(),
-      title: BillboardCharts.JAPAN_HOT_100.title,
-      url: BillboardCharts.JAPAN_HOT_100),
+      chartFunction: getKworbChart,
+      imgUrl: kworbRandomIMGs.getImage(),
+      title: KworbCharts.JAPAN_DAILY.title,
+      url: KworbCharts.JAPAN_DAILY),
 ];
