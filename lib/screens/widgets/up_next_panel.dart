@@ -13,6 +13,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'song_tile.dart';
 import 'more_bottom_sheet.dart';
+import 'package:beats_music/screens/screen/queue_manager_screen.dart';
+
 
 // Cached styles to avoid repeated merges
 class _UpNextStyles {
@@ -508,19 +510,54 @@ class _QueueInfoRow extends StatelessWidget {
               );
             },
           ),
-          BlocBuilder<SettingsCubit, SettingsState>(
-            builder: (context, state) {
-              return ToggleButton(
-                label: "Auto Play",
-                initialState: state.autoPlay,
-                onChanged: (val) async {
-                  await context.read<SettingsCubit>().setAutoPlay(val);
-                  if (val) {
-                    playerCubit.beatsMusicPlayer.check4RelatedSongs();
-                  }
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Manage Queue Button
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const QueueManagerScreen(),
+                    ),
+                  );
                 },
-              );
-            },
+                icon: const Icon(
+                  Icons.edit_rounded,
+                  size: 16,
+                  color: Default_Theme.accentColor2,
+                ),
+                label: const Text(
+                  'Manage',
+                  style: TextStyle(
+                    color: Default_Theme.accentColor2,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+              const SizedBox(width: 8),
+              BlocBuilder<SettingsCubit, SettingsState>(
+                builder: (context, state) {
+                  return ToggleButton(
+                    label: "Auto Play",
+                    initialState: state.autoPlay,
+                    onChanged: (val) async {
+                      await context.read<SettingsCubit>().setAutoPlay(val);
+                      if (val) {
+                        playerCubit.beatsMusicPlayer.check4RelatedSongs();
+                      }
+                    },
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),

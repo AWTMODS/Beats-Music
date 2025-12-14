@@ -26,6 +26,8 @@ import 'package:responsive_framework/responsive_framework.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../../blocs/mediaPlayer/beats_player_cubit.dart';
 import '../../blocs/mini_player/mini_player_bloc.dart';
+import 'package:beats_music/services/playback_speed_service.dart';
+import 'package:beats_music/widgets/player_controls/speed_control_button.dart';
 import 'player_views/fullscreen_lyrics_view.dart';
 import 'player_views/lyrics_widget.dart';
 
@@ -40,26 +42,30 @@ class _AudioPlayerViewState extends State<AudioPlayerView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final UpNextPanelController _upNextPanelController = UpNextPanelController();
+  PlayerOverlayCubit? _playerOverlayCubit; // Store for safe disposal
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    // Register the collapse callback with PlayerOverlayCubit
-    // This allows GlobalFooter to collapse the panel on back gesture
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<PlayerOverlayCubit>().registerUpNextPanelCollapse(
-              () => _upNextPanelController.collapse(),
-            );
-      }
-    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Store cubit reference and register callback (only once)
+    if (_playerOverlayCubit == null) {
+      _playerOverlayCubit = context.read<PlayerOverlayCubit>();
+      _playerOverlayCubit!.registerUpNextPanelCollapse(
+        () => _upNextPanelController.collapse(),
+      );
+    }
   }
 
   @override
   void dispose() {
-    // Unregister the collapse callback
-    context.read<PlayerOverlayCubit>().unregisterUpNextPanelCollapse();
+    // Unregister using stored reference (safe)
+    _playerOverlayCubit?.unregisterUpNextPanelCollapse();
     _tabController.dispose();
     super.dispose();
   }
@@ -901,7 +907,9 @@ class _BottomActionsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    final beatsPlayerCubit = context.read<BeatsPlayerCubit>();
+    final speedService = PlaybackSpeedService();
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -915,6 +923,7 @@ class _BottomActionsRow extends StatelessWidget {
           icon: const Icon(MingCute.alarm_1_line,
               color: Default_Theme.primaryColor1, size: 24),
         ),
+        SpeedControlButton(speedService: speedService),
         IconButton(
           onPressed: () {
             if (tabController.index == 1) {

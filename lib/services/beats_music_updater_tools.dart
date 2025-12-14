@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:beats_music/routes_and_consts/global_str_consts.dart';
 import 'package:beats_music/services/db/beats_music_db_service.dart';
 import 'package:http/http.dart' as http;
@@ -261,12 +262,23 @@ Future<String?> fetchChangelog(
     if (response.statusCode == 200) {
       return response.body;
     } else {
-      log('Changelog fetch returned status ${response.statusCode}',
+      log('Changelog fetch returned status ${response.statusCode}, trying local fallback',
           name: 'UpdaterTools');
-      return null;
+      return await _loadLocalChangelog();
     }
   } catch (e, st) {
     log('Failed to fetch changelog: $e\n$st', name: 'UpdaterTools');
+    log('Attempting local fallback for changelog...', name: 'UpdaterTools');
+    return await _loadLocalChangelog();
+  }
+}
+
+Future<String?> _loadLocalChangelog() async {
+  try {
+    // Requires 'import 'package:flutter/services.dart';'
+    return await rootBundle.loadString('assets/CHANGELOG.md');
+  } catch (e) {
+    log('Failed to load local changelog: $e', name: 'UpdaterTools');
     return null;
   }
 }

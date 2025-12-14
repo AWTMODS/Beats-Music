@@ -28,6 +28,7 @@ import '../widgets/app_drawer.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:audio_service/audio_service.dart';
+import 'statistics_screen.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -212,6 +213,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               if (state.songs.isNotEmpty) {
                                 // Precache first 3 images and preload audio for first 2 songs
                                 WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (!context.mounted) return;
                                   for (var i = 0; i < state.songs.length && i < 3; i++) {
                                     final song = state.songs[i];
                                     final imageUrl = song['image'];
@@ -274,6 +276,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               if (state.songs.isNotEmpty) {
                                 // Precache first 3 images and preload audio for first 2 songs
                                 WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (!context.mounted) return;
                                   for (var i = 0; i < state.songs.length && i < 3; i++) {
                                     final song = state.songs[i];
                                     final imageUrl = song['image'];
@@ -336,6 +339,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               if (state.songs.isNotEmpty) {
                                 // Precache first 3 images and preload audio for first 2 songs
                                 WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (!context.mounted) return;
                                   for (var i = 0; i < state.songs.length && i < 3; i++) {
                                     final song = state.songs[i];
                                     final imageUrl = song['image'];
@@ -549,6 +553,8 @@ class CustomDiscoverBar extends StatelessWidget {
       actions: const [
         NotificationIcon(),
         SizedBox(width: 8),
+        StatisticsIcon(), // Added statistics icon
+        SizedBox(width: 8),
         TimerIcon(),
         SizedBox(width: 12),
       ],
@@ -661,6 +667,24 @@ class SiteIcon extends StatelessWidget {
       },
       icon: const Icon(MingCute.flower_4_fill,
           color: Default_Theme.primaryColor1, size: 28.0),
+    );
+  }
+}
+
+class StatisticsIcon extends StatelessWidget {
+  const StatisticsIcon({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      padding: const EdgeInsets.all(5),
+      constraints: const BoxConstraints(),
+      onPressed: () {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const StatisticsScreen()));
+      },
+      icon: const Icon(MingCute.chart_bar_fill,
+          color: Default_Theme.primaryColor1, size: 30.0),
     );
   }
 }

@@ -8,16 +8,31 @@ import 'package:beats_music/screens/screen/home_views/setting_views/lastfm_setti
 import 'package:beats_music/screens/screen/home_views/setting_views/player_setting.dart';
 import 'package:beats_music/screens/screen/home_views/setting_views/updates_setting.dart';
 import 'package:beats_music/screens/screen/home_views/setting_views/donate_setting.dart';
+import 'package:beats_music/screens/screen/home_views/setting_views/cloud_sync_setting.dart';
+import 'package:beats_music/screens/screen/equalizer_screen.dart';
+import 'package:beats_music/services/equalizer_service.dart';
+import 'package:beats_music/screens/screen/home_views/setting_views/profile_edit_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:beats_music/theme_data/default.dart';
 import 'package:icons_plus/icons_plus.dart';
 
 
-class SettingsView extends StatelessWidget {
+class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
 
   @override
+  State<SettingsView> createState() => _SettingsViewState();
+}
+
+class _SettingsViewState extends State<SettingsView> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  @override
   Widget build(BuildContext context) {
+    final user = _auth.currentUser;
+    final isLoggedIn = user != null && !user.isAnonymous;
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -35,6 +50,12 @@ class SettingsView extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
+          // Profile Card (New)
+          if (isLoggedIn)
+            _buildProfileCard(user),
+          if (isLoggedIn)
+            const SizedBox(height: 24),
+            
           _buildSectionHeader("Playback"),
           _buildSectionContainer([
             settingListTile(
@@ -72,7 +93,7 @@ class SettingsView extends StatelessWidget {
           _buildSectionHeader("General"),
           _buildSectionContainer([
             settingListTile(
-                title: "Country",
+                title: "Country & Languages",
                 subtitle: "Select your country.",
                 icon: MingCute.globe_fill,
                 onTap: () {
@@ -113,6 +134,24 @@ class SettingsView extends StatelessWidget {
                     ),
                   );
                 }),
+          ]),
+          const SizedBox(height: 20),
+
+          _buildSectionHeader("Cloud & Sync"),
+          _buildSectionContainer([
+            settingListTile(
+                title: "Cloud Sync",
+                subtitle: "Auto-sync, manual sync, and sync settings.",
+                icon: MingCute.cloud_fill,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CloudSyncSettings(),
+                    ),
+                  );
+                }),
+
           ]),
           const SizedBox(height: 20),
 
@@ -226,6 +265,68 @@ class SettingsView extends StatelessWidget {
           onTap();
         }
       },
+    );
+  }
+
+  Widget _buildProfileCard(User user) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1C1E), // Dark grey background
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProfileEditScreen(),
+            ),
+          ).then((_) => setState(() {})); // Refresh when coming back
+        },
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: Colors.grey[800],
+              backgroundImage: user.photoURL != null 
+                  ? NetworkImage(user.photoURL!) 
+                  : null,
+              child: user.photoURL == null
+                  ? Text(
+                      (user.displayName ?? user.email ?? "U")[0].toUpperCase(),
+                      style: const TextStyle(fontSize: 24, color: Colors.white),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   Text(
+                    user.displayName ?? 'Music User',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'View Profile',
+                    style: TextStyle(
+                      color: Default_Theme.accentColor2,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white54),
+          ],
+        ),
+      ),
     );
   }
 }

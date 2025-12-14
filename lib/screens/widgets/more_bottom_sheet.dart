@@ -16,6 +16,8 @@ import 'package:go_router/go_router.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:beats_music/services/discovery_service.dart';
+import 'package:beats_music/model/MediaPlaylistModel.dart';
 
 void showMoreBottomSheet(
   BuildContext context,
@@ -101,6 +103,46 @@ void showMoreBottomSheet(
                       },
                     )
                   : const SizedBox.shrink(),
+              ListTile(
+                leading: const Icon(
+                  MingCute.radio_fill,
+                  color: Default_Theme.primaryColor1,
+                  size: 28,
+                ),
+                title: const Text(
+                  'Song Radio',
+                  style: TextStyle(
+                      color: Default_Theme.primaryColor1,
+                      fontFamily: "Unageo",
+                      fontSize: 17,
+                      fontWeight: FontWeight.w400),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  SnackbarService.showMessage("Generating Song Radio...");
+                  
+                  try {
+                    final radioSongs = await DiscoveryService().generateSongRadio(song);
+                    if (radioSongs.isNotEmpty) {
+                      if (context.mounted) {
+                        context
+                            .read<BeatsPlayerCubit>()
+                            .beatsMusicPlayer
+                             // Convert MediaItemModel to MediaItem if needed, or updateQueue handles it? 
+                             // updateQueue expects List<MediaItemModel> usually in this app structure based on usage
+                            .updateQueue(radioSongs, doPlay: true);
+                         
+                        SnackbarService.showMessage("Playing Song Radio",
+                            duration: const Duration(seconds: 2));
+                      }
+                    } else {
+                      SnackbarService.showMessage("Could not generate radio for this song");
+                    }
+                  } catch (e) {
+                    SnackbarService.showMessage("Error generating radio");
+                  }
+                },
+              ),
               (showPlayNext)
                   ? ListTile(
                       leading: const Icon(
@@ -274,7 +316,7 @@ void showMoreBottomSheet(
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  launchUrl(Uri.parse(song.extras?['perma_url']));
+                  launchUrl(Uri.parse(song.extras?['perma_url'] ?? ''));
                 },
               ),
               Visibility(
