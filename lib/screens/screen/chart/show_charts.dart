@@ -68,11 +68,7 @@ final List<ChartInfo> chartInfoList = [
       imgUrl: billboardRandomIMGs.getImage(),
       title: BillboardCharts.BILLBOARD_GLOBAL_200.title,
       url: BillboardCharts.BILLBOARD_GLOBAL_200),
-  ChartInfo(
-      chartFunction: getBillboardChart,
-      imgUrl: billboardRandomIMGs.getImage(),
-      title: BillboardCharts.KOREA_100.title,
-      url: BillboardCharts.KOREA_100),
+
   ChartInfo(
       chartFunction: getBillboardChart,
       imgUrl: billboardRandomIMGs.getImage(),
