@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'package:beats_music/services/debug_logger.dart';
+
 import 'package:beats_music/model/MediaPlaylistModel.dart';
 import 'package:beats_music/model/album_onl_model.dart';
 import 'package:beats_music/model/artist_onl_model.dart';
@@ -399,7 +399,7 @@ class BeatsMusicDBService {
     
     final msg = '🔽 IMPORT STARTING: Received ${playlistsData.length} playlists to import';
     log(msg, name: 'BeatsMusicDBService');
-    DebugLogger().log('BeatsMusicDBService: $msg');
+
     
     for (var playlistData in playlistsData) {
       try {
@@ -409,13 +409,13 @@ class BeatsMusicDBService {
         if (standardPlaylists.contains(playlistName)) {
           final skipMsg = '⏩ Skipping standard playlist: $playlistName';
           log(skipMsg, name: 'BeatsMusicDBService');
-          DebugLogger().log('BeatsMusicDBService: $skipMsg');
+
           continue;
         }
         
         final startMsg = '📁 Starting import for playlist: $playlistName';
         log(startMsg, name: 'BeatsMusicDBService');
-        DebugLogger().log('BeatsMusicDBService: $startMsg');
+
         
         final songs = playlistData['songs'] as List<dynamic>? ?? [];
         log('Will import playlist with ${songs.length} songs', name: 'BeatsMusicDBService');
@@ -498,13 +498,13 @@ class BeatsMusicDBService {
         if (playlist == null) {
           final errMsg = '❌ Failed to retrieve playlist after creation: $playlistName';
           log(errMsg, name: 'BeatsMusicDBService');
-          DebugLogger().log('BeatsMusicDBService: $errMsg');
+
           continue;
         }
         
         final idMsg = '✅ Retrieved playlist from DB with ID: ${playlist.isarId}';
         log(idMsg, name: 'BeatsMusicDBService');
-        DebugLogger().log('BeatsMusicDBService: $idMsg');
+
         
         // Load songs relationship (outside transaction)
         await playlist.mediaItems.load();
@@ -530,18 +530,18 @@ class BeatsMusicDBService {
         
         final successMsg = '✅ Successfully imported playlist: $playlistName with $linkedCount songs linked';
         log(successMsg, name: 'BeatsMusicDBService');
-        DebugLogger().log('BeatsMusicDBService: $successMsg');
+
         
       } catch (e, stackTrace) {
         final errMsg = '❌ Failed to import playlist: ${playlistData['playlistName']}';
         log(errMsg, error: e, stackTrace: stackTrace, name: 'BeatsMusicDBService');
-        DebugLogger().log('BeatsMusicDBService: $errMsg - $e');
+
       }
     }
     
     final doneMsg = '✅ Playlist import complete. Total processed: ${playlistsData.length}';
     log(doneMsg, name: 'BeatsMusicDBService');
-    DebugLogger().log('BeatsMusicDBService: $doneMsg');
+
   }
 
   /// Export Liked Songs for cloud sync

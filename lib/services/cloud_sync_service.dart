@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:beats_music/services/listening_statistics_service.dart';
 import 'package:beats_music/services/db/beats_music_db_service.dart';
-import 'package:beats_music/services/debug_logger.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
@@ -186,7 +186,7 @@ class CloudSyncService {
     try {
       var msg = "CloudSync: 🔽 Starting playlist download for user ${user.uid}...";
       debugPrint(msg);
-      DebugLogger().log(msg);
+
       final doc = await _firestore
           .collection('users')
           .doc(user.uid)
@@ -197,24 +197,24 @@ class CloudSyncService {
       if (!doc.exists || doc.data() == null) {
         final msg = "CloudSync: ⚠️ No cloud playlists found (document doesn't exist)";
         debugPrint(msg);
-        DebugLogger().log(msg);
+  
         return;
       }
 
       final data = doc.data()!;
       msg = "CloudSync: 📄 Received document with keys: ${data.keys.toList()}";
       debugPrint(msg);
-      DebugLogger().log(msg);
+
       
       final playlists = data['playlists'] as List<dynamic>? ?? [];
       msg = "CloudSync: 📦 Found ${playlists.length} playlists in Firebase";
       debugPrint(msg);
-      DebugLogger().log(msg);
+
       
       if (playlists.isEmpty) {
         msg = "CloudSync: ⚠️ Playlists array is empty";
         debugPrint(msg);
-        DebugLogger().log(msg);
+  
         return;
       }
 
@@ -228,23 +228,22 @@ class CloudSyncService {
         final songs = pl['songs'] as List<dynamic>? ?? [];
         msg = "CloudSync:   [$i] $name (${songs.length} songs)";
         debugPrint(msg);
-        DebugLogger().log(msg);
+  
       }
       
       msg = "CloudSync: 💾 Calling BeatsMusicDBService.importPlaylists()...";
       debugPrint(msg);
-      DebugLogger().log(msg);
+
       await BeatsMusicDBService.importPlaylists(playlistsData);
       
       msg = "CloudSync: ✅ Downloaded ${playlistsData.length} playlists successfully.";
       debugPrint(msg);
-      DebugLogger().log(msg);
+
 
     } catch (e, stackTrace) {
       var msg = "CloudSync: ❌ Playlist download failed - $e";
       debugPrint(msg);
-      DebugLogger().log(msg);
-      DebugLogger().log("CloudSync: Stack trace: $stackTrace");
+
       debugPrint("CloudSync: Stack trace: $stackTrace");
     }
   }
