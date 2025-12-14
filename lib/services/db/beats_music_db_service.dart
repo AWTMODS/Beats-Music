@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:beats_music/services/debug_logger.dart';
 import 'package:beats_music/model/MediaPlaylistModel.dart';
 import 'package:beats_music/model/album_onl_model.dart';
 import 'package:beats_music/model/artist_onl_model.dart';
@@ -8,6 +9,9 @@ import 'package:beats_music/model/chart_model.dart';
 import 'package:beats_music/model/lyrics_models.dart';
 import 'package:beats_music/model/playlist_onl_model.dart';
 import 'package:beats_music/model/songModel.dart';
+import 'package:beats_music/model/statistics/play_history.dart';
+import 'package:beats_music/model/statistics/song_statistics.dart';
+import 'package:beats_music/model/statistics/artist_statistics.dart';
 import 'package:beats_music/routes_and_consts/global_str_consts.dart';
 import 'package:beats_music/services/db/backup_validator.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -118,6 +122,9 @@ class BeatsMusicDBService {
             SavedCollectionsDBSchema,
             LyricsDBSchema,
             SearchHistoryDBSchema,
+            PlayHistoryDBSchema,
+            SongStatisticsDBSchema,
+            ArtistStatisticsDBSchema,
           ],
           directory: appDocDir,
         );
@@ -142,6 +149,9 @@ class BeatsMusicDBService {
           SavedCollectionsDBSchema,
           LyricsDBSchema,
           SearchHistoryDBSchema,
+          PlayHistoryDBSchema,
+          SongStatisticsDBSchema,
+          ArtistStatisticsDBSchema,
         ],
         directory: appSuppDir,
       );
@@ -323,6 +333,417 @@ class BeatsMusicDBService {
   static Future<void> deleteAllYTLinks() async {
     Isar isarDB = await db;
     isarDB.writeTxn(() => isarDB.ytLinkCacheDBs.clear());
+  }
+
+  /// Export user-created playlists for cloud sync
+  /// Excludes standard playlists (Downloads, Recently Played, Liked)
+  static Future<List<Map<String, dynamic>>> exportUserPlaylists() async {
+    final isar = await db;
+    final playlists = isar.mediaPlaylistDBs.where().findAllSync();
+    final playlistsInfo = isar.playlistsInfoDBs.where().findAllSync();
+    
+    List<Map<String, dynamic>> exportData = [];
+    
+    for (var playlist in playlists) {
+      // Skip standard playlists
+      if (standardPlaylists.contains(playlist.playlistName)) {
+        continue;
+      }
+      
+      // Load playlist info if exists
+      final info = playlistsInfo.firstWhere(
+        (p) => p.playlistName == playlist.playlistName,
+        orElse: () => PlaylistsInfoDB(
+          playlistName: playlist.playlistName,
+          lastUpdated: DateTime.now(),
+        ),
+      );
+      
+      // Load songs in playlist
+      await playlist.mediaItems.load();
+      final songs = playlist.mediaItems.map((song) => {
+        'title': song.title,
+        'artist': song.artist,
+        'album': song.album,
+        'artURL': song.artURL,
+        'genre': song.genre,
+        'duration': song.duration,
+        'mediaID': song.mediaID,
+        'streamingURL': song.streamingURL,
+        'source': song.source,
+        'permaURL': song.permaURL,
+        'language': song.language,
+        'isLiked': song.isLiked,
+      }).toList();
+      
+      exportData.add({
+        'playlistName': playlist.playlistName,
+        'lastUpdated': playlist.lastUpdated?.millisecondsSinceEpoch,
+        'artURL': info.artURL,
+        'description': info.description,
+        'permaURL': info.permaURL,
+        'source': info.source,
+        'artists': info.artists,
+        'isAlbum': info.isAlbum ?? false,
+        'songs': songs,
+      });
+    }
+    
+    return exportData;
+  }
+
+  /// Import playlists from cloud sync data
+  /// Merges with existing playlists (replaces if same name)
+  static Future<void> importPlaylists(List<Map<String, dynamic>> playlistsData) async {
+    final isar = await db;
+    
+    final msg = '🔽 IMPORT STARTING: Received ${playlistsData.length} playlists to import';
+    log(msg, name: 'BeatsMusicDBService');
+    DebugLogger().log('BeatsMusicDBService: $msg');
+    
+    for (var playlistData in playlistsData) {
+      try {
+        final playlistName = playlistData['playlistName'] as String;
+        
+        // Skip standard playlists
+        if (standardPlaylists.contains(playlistName)) {
+          final skipMsg = '⏩ Skipping standard playlist: $playlistName';
+          log(skipMsg, name: 'BeatsMusicDBService');
+          DebugLogger().log('BeatsMusicDBService: $skipMsg');
+          continue;
+        }
+        
+        final startMsg = '📁 Starting import for playlist: $playlistName';
+        log(startMsg, name: 'BeatsMusicDBService');
+        DebugLogger().log('BeatsMusicDBService: $startMsg');
+        
+        final songs = playlistData['songs'] as List<dynamic>? ?? [];
+        log('Will import playlist with ${songs.length} songs', name: 'BeatsMusicDBService');
+        
+        // Create playlist object OUTSIDE transaction first
+        final playlistDB = MediaPlaylistDB(
+          playlistName: playlistName,
+          lastUpdated: playlistData['lastUpdated'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(playlistData['lastUpdated'])
+              : null,
+        );
+        
+        // Transaction 1: ONLY save the playlist (nothing else!)
+        await isar.writeTxn(() async {
+          await isar.mediaPlaylistDBs.put(playlistDB);
+        });
+        log('Saved playlist to DB', name: 'BeatsMusicDBService');
+        
+        // Create playlist info OUTSIDE  transaction
+        if (playlistData['artURL'] != null || playlistData['description'] != null) {
+          final info = PlaylistsInfoDB(
+            playlistName: playlistName,
+            lastUpdated: DateTime.now(),
+            artURL: playlistData['artURL'],
+            description: playlistData['description'],
+            permaURL: playlistData['permaURL'],
+            source: playlistData['source'],
+            artists: playlistData['artists'],
+            isAlbum: playlistData['isAlbum'] ?? false,
+          );
+          
+          // Transaction 2: Save playlist info
+          await isar.writeTxn(() async {
+            await isar.playlistsInfoDBs.put(info);
+          });
+          log('Saved playlist info', name: 'BeatsMusicDBService');
+        }
+        
+        // Create all song objects OUTSIDE transaction
+        final songsToCreate = <MediaItemDB>[];
+        for (var songData in songs) {
+          // Check if exists outside transaction
+          final existingSong = isar.mediaItemDBs
+              .filter()
+              .mediaIDEqualTo(songData['mediaID'])
+              .findFirstSync();
+          
+          if (existingSong == null) {
+            songsToCreate.add(MediaItemDB(
+              title: songData['title'] ?? '',
+              artist: songData['artist'] ?? '',
+              album: songData['album'] ?? '',
+              artURL: songData['artURL'] ?? '',
+              genre: songData['genre'] ?? '',
+              duration: songData['duration'],
+              mediaID: songData['mediaID'] ?? '',
+              streamingURL: songData['streamingURL'] ?? '',
+              source: songData['source'],
+              permaURL: songData['permaURL'] ?? '',
+              language: songData['language'] ?? '',
+              isLiked: songData['isLiked'] ?? false,
+            ));
+          }
+        }
+        
+        // Transaction 3: Save all new songs at once
+        if (songsToCreate.isNotEmpty) {
+          await isar.writeTxn(() async {
+            await isar.mediaItemDBs.putAll(songsToCreate);
+          });
+          log('Saved ${songsToCreate.length} new songs', name: 'BeatsMusicDBService');
+        }
+        
+        // Now get the playlist from DB (outside transaction)
+        final playlist = isar.mediaPlaylistDBs
+            .filter()
+            .playlistNameEqualTo(playlistName)
+            .findFirstSync();
+            
+        if (playlist == null) {
+          final errMsg = '❌ Failed to retrieve playlist after creation: $playlistName';
+          log(errMsg, name: 'BeatsMusicDBService');
+          DebugLogger().log('BeatsMusicDBService: $errMsg');
+          continue;
+        }
+        
+        final idMsg = '✅ Retrieved playlist from DB with ID: ${playlist.isarId}';
+        log(idMsg, name: 'BeatsMusicDBService');
+        DebugLogger().log('BeatsMusicDBService: $idMsg');
+        
+        // Load songs relationship (outside transaction)
+        await playlist.mediaItems.load();
+        
+        // Find all songs and add them to playlist
+        int linkedCount = 0;
+        for (var songData in songs) {
+          final mediaItem = isar.mediaItemDBs
+              .filter()
+              .mediaIDEqualTo(songData['mediaID'])
+              .findFirstSync();
+              
+          if (mediaItem != null && !playlist.mediaItems.contains(mediaItem)) {
+            playlist.mediaItems.add(mediaItem);
+            linkedCount++;
+          }
+        }
+        
+        // Transaction 4: Save the relationships
+        await isar.writeTxn(() async {
+          await playlist.mediaItems.save();
+        });
+        
+        final successMsg = '✅ Successfully imported playlist: $playlistName with $linkedCount songs linked';
+        log(successMsg, name: 'BeatsMusicDBService');
+        DebugLogger().log('BeatsMusicDBService: $successMsg');
+        
+      } catch (e, stackTrace) {
+        final errMsg = '❌ Failed to import playlist: ${playlistData['playlistName']}';
+        log(errMsg, error: e, stackTrace: stackTrace, name: 'BeatsMusicDBService');
+        DebugLogger().log('BeatsMusicDBService: $errMsg - $e');
+      }
+    }
+    
+    final doneMsg = '✅ Playlist import complete. Total processed: ${playlistsData.length}';
+    log(doneMsg, name: 'BeatsMusicDBService');
+    DebugLogger().log('BeatsMusicDBService: $doneMsg');
+  }
+
+  /// Export Liked Songs for cloud sync
+  static Future<List<Map<String, dynamic>>> exportLikedSongs() async {
+    final isar = await db;
+    final liked = isar.mediaPlaylistDBs
+        .filter()
+        .playlistNameEqualTo(likedPlaylist)
+        .findFirstSync();
+    
+    if (liked == null) return [];
+    
+    await liked.mediaItems.load();
+    return liked.mediaItems.map((song) => {
+      'mediaID': song.mediaID,
+      'title': song.title,
+      'artist': song.artist,
+      'album': song.album,
+      'artURL': song.artURL,
+      'permaURL': song.permaURL,
+      'source': song.source,
+    }).toList();
+  }
+
+  /// Import Liked Songs from cloud sync
+  static Future<void> importLikedSongs(List<Map<String, dynamic>> likedSongs) async {
+    final isar = await db;
+    
+    await isar.writeTxn(() async {
+      // Get or create Liked playlist
+      var liked = isar.mediaPlaylistDBs
+          .filter()
+          .playlistNameEqualTo(likedPlaylist)
+          .findFirstSync();
+      
+      if (liked == null) {
+        liked = MediaPlaylistDB(
+          playlistName: likedPlaylist,
+          lastUpdated: DateTime.now(),
+        );
+        await isar.mediaPlaylistDBs.put(liked);
+      }
+      
+      // Import songs
+      for (var songData in likedSongs) {
+        // Check if song exists
+        final existingSong = isar.mediaItemDBs
+            .filter()
+            .mediaIDEqualTo(songData['mediaID'])
+            .findFirstSync();
+        
+        MediaItemDB mediaItem;
+        if (existingSong != null) {
+          mediaItem = existingSong..isLiked = true;
+          await isar.mediaItemDBs.put(mediaItem);
+        } else {
+          // Create new liked song
+          mediaItem = MediaItemDB(
+            title: songData['title'] ?? '',
+            artist: songData['artist'] ?? '',
+            album: songData['album'] ?? '',
+            artURL: songData['artURL'] ?? '',
+            genre: '',
+            mediaID: songData['mediaID'] ?? '',
+            streamingURL: '',
+            source: songData['source'],
+            permaURL: songData['permaURL'] ?? '',
+            language: '',
+            isLiked: true,
+          );
+          await isar.mediaItemDBs.put(mediaItem);
+        }
+        
+        // Link to Liked playlist
+        await mediaItem.mediaInPlaylistsDB.load();
+        if (!mediaItem.mediaInPlaylistsDB.contains(liked)) {
+          mediaItem.mediaInPlaylistsDB.add(liked);
+          await mediaItem.mediaInPlaylistsDB.save();
+        }
+      }
+    });
+    
+    log('Imported ${likedSongs.length} liked songs', name: 'BeatsMusicDBService');
+  }
+
+  /// Export Recently Played (last 50 tracks) for cloud sync
+  static Future<List<Map<String, dynamic>>> exportRecentlyPlayed() async {
+    final isar = await db;
+    final recentlyPlayed = isar.recentlyPlayedDBs
+        .where()
+        .sortByLastPlayedDesc()
+        .limit(50)
+        .findAllSync();
+    
+    List<Map<String, dynamic>> exportData = [];
+    for (var recent in recentlyPlayed) {
+      await recent.mediaItem.load();
+      if (recent.mediaItem.value != null) {
+        final song = recent.mediaItem.value!;
+        exportData.add({
+          'mediaID': song.mediaID,
+          'title': song.title,
+          'artist': song.artist,
+          'album': song.album,
+          'artURL': song.artURL,
+          'permaURL': song.permaURL,
+          'source': song.source,
+          'lastPlayed': recent.lastPlayed.millisecondsSinceEpoch,
+        });
+      }
+    }
+    
+    return exportData;
+  }
+
+  /// Import Recently Played from cloud sync
+  static Future<void> importRecentlyPlayed(List<Map<String, dynamic>> recentlyPlayedData) async {
+    final isar = await db;
+    
+    for (var playData in recentlyPlayedData) {
+      try {
+        await isar.writeTxn(() async {
+          // Check if song exists
+          var existingSong = isar.mediaItemDBs
+              .filter()
+              .mediaIDEqualTo(playData['mediaID'])
+              .findFirstSync();
+          
+          if (existingSong == null) {
+            // Create song entry
+            existingSong = MediaItemDB(
+              title: playData['title'] ?? '',
+              artist: playData['artist'] ?? '',
+              album: playData['album'] ?? '',
+              artURL: playData['artURL'] ?? '',
+              genre: '',
+              mediaID: playData['mediaID'] ?? '',
+              streamingURL: '',
+              source: playData['source'],
+              permaURL: playData['permaURL'] ?? '',
+              language: '',
+              isLiked: false,
+            );
+            await isar.mediaItemDBs.put(existingSong);
+          }
+          
+          // Add to recently played
+          final recentEntry = RecentlyPlayedDB(
+            lastPlayed: DateTime.fromMillisecondsSinceEpoch(playData['lastPlayed']),
+          );
+          await isar.recentlyPlayedDBs.put(recentEntry);
+          recentEntry.mediaItem.value = existingSong;
+          await recentEntry.mediaItem.save();
+        });
+      } catch (e) {
+        log('Failed to import recently played item', error: e, name: 'BeatsMusicDBService');
+      }
+    }
+    
+    log('Imported ${recentlyPlayedData.length} recently played tracks', name: 'BeatsMusicDBService');
+  }
+
+  /// Export Downloads list (metadata only) for cloud sync
+  static Future<List<Map<String, dynamic>>> exportDownloadsList() async {
+    final isar = await db;
+    final downloads = isar.downloadDBs.where().findAllSync();
+    
+    List<Map<String, dynamic>> exportData = [];
+    for (var download in downloads) {
+      // Don't include file paths, only metadata for re-download
+      exportData.add({
+        'mediaId': download.mediaId,
+        'fileName': download.fileName,
+        'lastDownloaded': download.lastDownloaded?.millisecondsSinceEpoch,
+      });
+    }
+    
+    return exportData;
+  }
+
+  /// Import Downloads list from cloud sync
+  /// Note: This only imports the LIST of what was downloaded, not the actual files
+  /// Users will need to re-download the songs
+  static Future<void> importDownloadsList(List<Map<String, dynamic>> downloadsData) async {
+    // For now, we'll just log this. The actual implementation would require
+    // showing a "Previously Downloaded" section in the UI with a re-download option
+    // Store in memory for the UI to access
+    _pendingRestorableDownloads = downloadsData;
+    
+    log('Found ${downloadsData.length} previously downloaded songs. Stored for restoration.', 
+        name: 'BeatsMusicDBService');
+  }
+
+  // Temporary storage for downloads found in cloud backup
+  static List<Map<String, dynamic>> _pendingRestorableDownloads = [];
+  
+  static List<Map<String, dynamic>> getPendingRestorableDownloads() {
+    return List.from(_pendingRestorableDownloads);
+  }
+
+  static void clearPendingRestorableDownloads() {
+    _pendingRestorableDownloads.clear();
   }
 
   static Future<void> putSearchHistory(String searchQuery) async {
