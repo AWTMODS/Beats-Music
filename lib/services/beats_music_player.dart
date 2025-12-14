@@ -14,9 +14,11 @@ import 'package:easy_debounce/easy_throttle.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:beats_music/model/songModel.dart';
-import '../model/MediaPlaylistModel.dart';
+import 'package:beats_music/model/MediaPlaylistModel.dart';
 import 'package:beats_music/services/discord_service.dart';
 import 'package:beats_music/services/player/recently_played_tracker.dart';
+import 'package:beats_music/services/equalizer_service.dart';
+import 'package:beats_music/services/listening_statistics_service.dart';
 
 class BeatsMusicPlayer extends BaseAudioHandler
     with SeekHandler, QueueHandler {
@@ -60,13 +62,34 @@ class BeatsMusicPlayer extends BaseAudioHandler
   BehaviorSubject<String> get queueTitle => _queueManager.queueTitle;
 
   BeatsMusicPlayer() {
-    audioPlayer = AudioPlayer(
-      handleInterruptions: true,
-      androidApplyAudioAttributes: true,
-      handleAudioSessionActivation: true,
-    );
+    // Create equalizer BEFORE AudioPlayer
+    final equalizerService = EqualizerService();
+    final androidEq = equalizerService.createAndroidEqualizer();
+    
+    // Create AudioPlayer with equalizer in pipeline (Android only)
+    if (androidEq != null) {
+      audioPlayer = AudioPlayer(
+        handleInterruptions: true,
+        androidApplyAudioAttributes: true,
+        handleAudioSessionActivation: true,
+        audioPipeline: AudioPipeline(
+          androidAudioEffects: [androidEq],
+        ),
+      );
+    } else {
+      audioPlayer = AudioPlayer(
+        handleInterruptions: true,
+        androidApplyAudioAttributes: true,
+        handleAudioSessionActivation: true,
+      );
+    }
+    
     _initializeModules();
     _initializePlayer();
+    
+    // Initialize equalizer after player is created
+    equalizerService.initializeAfterPlayerCreated();
+    
     // Initialize recently played tracker with default threshold
     _recentlyPlayedTracker = RecentlyPlayedTracker(
       audioPlayer,
@@ -118,16 +141,24 @@ class BeatsMusicPlayer extends BaseAudioHandler
 
   void _initializePlayer() {
     audioPlayer.setVolume(1);
+    audioPlayer.setSpeed(1.0);
+    
     _playbackEventSubscription =
         audioPlayer.playbackEventStream.listen(_broadcastPlayerEvent);
     audioPlayer.setLoopMode(LoopMode.off);
 
-    // Enhanced error handling for player events
-    _playerStateSubscription = audioPlayer.playerStateStream.listen((state) {
+    // Enhanced error handling for player events + statistics tracking
+    _playerStateSubscription = audioPlayer.playerStateStream.listen((state) async {
       if (state.processingState == ProcessingState.idle &&
           state.playing == false &&
           _errorHandler.lastError.value != null) {
         _handlePlaybackFailure();
+      }
+      
+      // Track statistics when song completes
+      if (state.processingState == ProcessingState.completed) {
+        final statisticsService = ListeningStatisticsService();
+        await statisticsService.trackSongEnd(wasCompleted: true);
       }
     });
 
@@ -143,13 +174,24 @@ class BeatsMusicPlayer extends BaseAudioHandler
         item = item.copyWith(artUri: artUri);
         return item;
       },
-    ).whereType<MediaItem>().listen((item) {
+    ).whereType<MediaItem>().listen((item) async {
       // Only update if the media item has actually changed (compare id and artUri)
       final currentItem = mediaItem.value;
       if (currentItem == null ||
           currentItem.id != item.id ||
           currentItem.artUri != item.artUri) {
+            
+        // Track end of previous song (if skipped)
+        final statisticsService = ListeningStatisticsService();
+        await statisticsService.trackSongEnd(
+          wasCompleted: false,
+          durationOverride: audioPlayer.position.inSeconds,
+        );
+        
         mediaItem.add(item);
+        
+        // Track statistics when song starts
+        statisticsService.trackSongStart(item);
       }
     });
 
@@ -277,7 +319,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
         _queueManager.queue.value[_queueManager.currentPlayingIdx]);
   }
 
-  /// Preload a specific song (e.g. for trending list)
+  /// Preload a song's audio source for faster playback
   Future<void> preloadSong(MediaItem mediaItem) async {
     await _preloadManager.preloadSong(mediaItem);
   }
@@ -555,6 +597,14 @@ class BeatsMusicPlayer extends BaseAudioHandler
         .copyWith(processingState: AudioProcessingState.idle));
     await playbackState.firstWhere(
         (state) => state.processingState == AudioProcessingState.idle);
+        
+    // Track stats before stopping
+    final statisticsService = ListeningStatisticsService();
+    await statisticsService.trackSongEnd(
+      wasCompleted: false,
+      durationOverride: audioPlayer.position.inSeconds,
+    );
+        
     await audioPlayer.stop();
     DiscordService.clearPresence();
     await super.stop();
