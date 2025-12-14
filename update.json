@@ -1,21 +1,21 @@
 {
     "platform_releases": {
         "android": {
-            "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.0.0/app-release.apk",
-            "filename": "beats-music-v1.0.0+100-android.apk",
-            "description": "Android APK for Beats Music v1.0.0"
+            "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.1.0/app-release.apk",
+            "filename": "beats-music-v1.1.0+101-android.apk",
+            "description": "Android APK for Beats Music v1.1.0"
         }
     },
     "release": {
         "url": "https://github.com/AWTMODS/Beats-Music/releases/latest",
-        "filename": "beats-music-v1.0.0+100.apk",
+        "filename": "beats-music-v1.1.0+101.apk",
         "description": "Latest release of Beats Music"
     },
     "metadata": {
-        "version": "1.0.0",
-        "build": "100",
-        "release_date": "2025-12-06",
+        "version": "1.1.0",
+        "build": "101",
+        "release_date": "2025-12-11",
         "release_notes_url": "https://raw.githubusercontent.com/AWTMODS/Beats-Music/main/CHANGELOG.md",
-        "minimum_supported_version": "0.0.1"
+        "minimum_supported_version": "1.0.0"
     }
 }

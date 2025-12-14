@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'package:http/http.dart' as http;
 import 'ytmusic_format.dart';
+import 'package:beats_music/secrets.dart';
 
 /// Fetches trending Hindi songs from YouTube Music
 /// Returns a list of formatted song items
@@ -11,7 +12,7 @@ Future<List<Map<String, dynamic>>> fetchHindiSongs() async {
     final Uri searchUri = Uri.https(
       'www.youtube.com',
       '/youtubei/v1/search',
-      {'key': 'AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'},
+      {'key': Secrets.YOUTUBE_API_KEY},
     );
 
     // Request body for Hindi trending songs search

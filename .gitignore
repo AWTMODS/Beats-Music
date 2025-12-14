@@ -138,3 +138,7 @@ app.*.symbols
 
 
 /assets/*.env
+
+# Secrets
+lib/secrets.dart
+android/app/google-services.json

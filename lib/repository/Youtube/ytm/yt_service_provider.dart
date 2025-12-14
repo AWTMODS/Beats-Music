@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:beats_music/services/db/beats_music_db_service.dart';
 import 'package:http/http.dart';
 import 'helpers.dart';
+import 'package:beats_music/secrets.dart';
 
 abstract class YTMusicServices {
   // Change 1: Add a Future to track the completion of the init() method.
@@ -56,7 +57,7 @@ abstract class YTMusicServices {
   static const httpsYtmDomain = 'https://music.youtube.com';
   static const baseApiEndpoint = '/youtubei/v1/';
   static const String ytmParams =
-      '?alt=json&key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30';
+      '?alt=json&key=${Secrets.YOUTUBE_API_KEY}';
   static const userAgent =
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0';
 
