@@ -43,15 +43,15 @@ class Default_Theme {
       primarySwatch: MaterialColor(
         accentColor2.value,
         {
-          50: accentColor2.withValues(alpha: 0.1),
-          100: accentColor2.withValues(alpha: 0.2),
-          200: accentColor2.withValues(alpha: 0.3),
-          300: accentColor2.withValues(alpha: 0.4),
-          400: accentColor2.withValues(alpha: 0.5),
-          500: accentColor2.withValues(alpha: 0.6),
-          600: accentColor2.withValues(alpha: 0.7),
-          700: accentColor2.withValues(alpha: 0.8),
-          800: accentColor2.withValues(alpha: 0.9),
+          50: accentColor2.withOpacity(0.1),
+          100: accentColor2.withOpacity(0.2),
+          200: accentColor2.withOpacity(0.3),
+          300: accentColor2.withOpacity(0.4),
+          400: accentColor2.withOpacity(0.5),
+          500: accentColor2.withOpacity(0.6),
+          600: accentColor2.withOpacity(0.7),
+          700: accentColor2.withOpacity(0.8),
+          800: accentColor2.withOpacity(0.9),
           900: accentColor2,
         },
       ),
@@ -89,7 +89,7 @@ class Default_Theme {
         trackColor: WidgetStateProperty.resolveWith((states) =>
             states.contains(WidgetState.selected)
                 ? accentColor1
-                : primaryColor2.withValues(alpha: 0.0)),
+                : primaryColor2.withOpacity(0.0)),
       ),
       searchBarTheme: const SearchBarThemeData(
         backgroundColor: WidgetStatePropertyAll(themeColor),

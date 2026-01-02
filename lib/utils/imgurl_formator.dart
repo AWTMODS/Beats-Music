@@ -17,6 +17,7 @@ String formatImgURL(String imgURL, ImageQuality quality) {
   ImageSource source;
   if (imgURL.contains('youtube') ||
       imgURL.contains('ytimg') ||
+      imgURL.contains('ggpht') ||
       imgURL.contains('googleusercontent')) {
     source = ImageSource.yt;
   } else if (imgURL.contains('saavn')) {
@@ -130,35 +131,33 @@ String formatYtImgURL(String imgURL, ImageQuality quality) {
   // https://lh3.googleusercontent.com/{encryptedID}=w{width}-h{height}-l90-rj
   // https://img.youtube.com/vi/VIDEO_ID/{quality}.jpg
 
+  // SAFETEY CHECK: forcing maxresdefault often fails for auto-generated playlists/mixes
+  // Only replace specific low-res ones if we are sure, otherwise respect the input or original logic
+  // Update: Removing aggressive replacement of 'hqdefault' etc to 'maxresdefault' to fix 404s
+  
   if (imgURL.contains('mqdefault')) {
-    imgURL = imgURL.replaceAll('mqdefault', 'maxresdefault');
-  } else if (imgURL.contains('hqdefault')) {
-    imgURL = imgURL.replaceAll('hqdefault', 'maxresdefault');
-  } else if (imgURL.contains('sddefault')) {
-    imgURL = imgURL.replaceAll('sddefault', 'maxresdefault');
-  } else if (imgURL.contains('default')) {
-    imgURL = imgURL.replaceAll('default', 'maxresdefault');
+      // MQ is very low res, upgrade to HQ which is usually safe
+      imgURL = imgURL.replaceAll('mqdefault', 'hqdefault');
   }
-
+  
+  // Note: We are no longer aggressively upgrading to maxresdefault because many tracks/mixes don't have it.
+  
   Pattern pattern = RegExp(r'w\d+-h\d+');
 
   switch (quality) {
     case ImageQuality.low:
       {
         return imgURL
-            .replaceAll('maxresdefault', 'mqdefault')
             .replaceAll(pattern, 'w200-h200');
       }
     case ImageQuality.medium:
       {
         return imgURL
-            .replaceAll('maxresdefault', 'sddefault')
             .replaceAll(pattern, 'w400-h400');
       }
     case ImageQuality.high:
       {
         return imgURL
-            .replaceAll('maxresdefault', 'maxresdefault')
             .replaceAll(pattern, 'w600-h600');
       }
   }

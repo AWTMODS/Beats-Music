@@ -84,9 +84,10 @@ Future<void> cacheYtStreams({
   required AudioOnlyStreamInfo hURL,
   required AudioOnlyStreamInfo lURL,
 }) async {
+  // Increase cache expiration to 5.5 hours (YouTube URLs usually last 6 hours)
   final expireAt = RegExp('expire=(.*?)&')
-          .firstMatch(lURL.url.toString())!
-          .group(1) ??
+          .firstMatch(lURL.url.toString())
+          ?.group(1) ??
       (DateTime.now().millisecondsSinceEpoch ~/ 1000 + 3600 * 5.5).toString();
 
   try {

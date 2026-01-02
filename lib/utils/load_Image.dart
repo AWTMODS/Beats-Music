@@ -2,6 +2,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:beats_music/theme_data/default.dart';
+import 'package:beats_music/services/beats_cache_manager.dart';
 import 'package:http/http.dart' as http;
 
 Image loadImage(coverImageUrl,
@@ -50,9 +51,17 @@ CachedNetworkImage loadImageCached(coverImageURL,
     {placeholderPath = "assets/icons/beats_music_logo.png",
     fit = BoxFit.cover}) {
   ImageProvider<Object> placeHolder = AssetImage(placeholderPath);
+  
+  // Add User-Agent header
+  final Map<String, String> httpHeaders = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  };
+
   return CachedNetworkImage(
     imageUrl: coverImageURL,
-    memCacheWidth: 500,
+    httpHeaders: httpHeaders,
+    cacheManager: BeatsCacheManager.instance, // Custom Cache Manager
+    memCacheWidth: 600, // High Quality Memory Cache (Smooth + Sharp)
     // memCacheHeight: 500,
     placeholder: (context, url) => Image(
       image: const AssetImage("assets/icons/lazy_loading.png"),
@@ -62,7 +71,7 @@ CachedNetworkImage loadImageCached(coverImageURL,
       image: placeHolder,
       fit: fit,
     ),
-    fadeInDuration: const Duration(milliseconds: 700),
+    fadeInDuration: const Duration(milliseconds: 300),
     fit: fit,
   );
 }
@@ -94,13 +103,29 @@ class _LoadImageCachedState extends State<LoadImageCached> {
         fit: widget.fit,
       );
     }
+    
+    // Add User-Agent header to avoid 403 Forbidden on some servers
+    final Map<String, String> httpHeaders = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    };
+
     return CachedNetworkImage(
       imageUrl: widget.imageUrl,
+      httpHeaders: httpHeaders,
+      cacheManager: BeatsCacheManager.instance, // Custom Cache Manager to save storage
+      memCacheWidth: 600, // High Quality Memory Cache
       placeholder: (context, url) => Image(
         image: const AssetImage("assets/icons/lazy_loading.png"),
         fit: widget.fit,
       ),
-      errorWidget: (context, url, error) => widget.fallbackUrl == null
+      errorWidget: (context, url, error) {
+        // Log image load errors for debugging
+        debugPrint('Image Load Error for $url: $error');
+        if (widget.fallbackUrl != null && widget.fallbackUrl!.isNotEmpty) {
+           debugPrint('Attempting fallback: ${widget.fallbackUrl}');
+        }
+        
+        return widget.fallbackUrl == null
           ? Image(
               image: AssetImage(widget.placeholderUrl),
               fit: widget.fit,
@@ -108,18 +133,24 @@ class _LoadImageCachedState extends State<LoadImageCached> {
           : CachedNetworkImage(
               // now using fallback url
               imageUrl: widget.fallbackUrl!,
-              memCacheWidth: 500,
+              httpHeaders: httpHeaders,
+              cacheManager: BeatsCacheManager.instance,
+              memCacheWidth: 600,
               placeholder: (context, url) => Image(
                 image: const AssetImage("assets/icons/lazy_loading.png"),
                 fit: widget.fit,
               ),
-              errorWidget: (context, url, error) => Image(
-                image: AssetImage(widget.placeholderUrl),
-                fit: widget.fit,
-              ),
+              errorWidget: (context, url, error) {
+                debugPrint('Fallback Image Load Error for ${widget.fallbackUrl}: $error');
+                return Image(
+                  image: AssetImage(widget.placeholderUrl),
+                  fit: widget.fit,
+                );
+              },
               fadeInDuration: const Duration(milliseconds: 300),
               fit: widget.fit,
-            ),
+            );
+      },
       fadeInDuration: const Duration(milliseconds: 300),
       fit: widget.fit,
     );
