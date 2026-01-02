@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'package:beats_music/blocs/mediaPlayer/beats_player_cubit.dart';
 import 'package:beats_music/theme_data/default.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:beats_music/blocs/settings_cubit/cubit/settings_cubit.dart';
+import 'package:beats_music/blocs/mediaPlayer/beats_player_cubit.dart';
 
 class VolumeDragController extends StatefulWidget {
   final Widget child;
@@ -134,34 +135,40 @@ class _VolumeDragControllerState extends State<VolumeDragController> {
                             ),
                             RotatedBox(
                               quarterTurns: -1,
-                              child: SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  inactiveTrackColor: Default_Theme
-                                      .primaryColor2
-                                      .withOpacity(0.3),
-                                  thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 6.0),
-                                  overlayShape: const RoundSliderOverlayShape(
-                                      overlayRadius: 16.0),
-                                  trackShape:
-                                      const RoundedRectSliderTrackShape(),
-                                  trackHeight: 10.0,
-                                ),
-                                child: Slider(
-                                  value: _volume,
-                                  onChanged: (value) {
-                                    // update local UI, audio player and keep the
-                                    // volume controller visible while interacting
-                                    setVolume(value);
-                                    _startTimer();
-                                  },
-                                  onChangeEnd: (value) {
-                                    // ensure hide timer restarts when user lifts finger
-                                    _startTimer();
-                                  },
-                                  min: 0.0,
-                                  max: 1.0,
-                                ),
+                              child: BlocBuilder<SettingsCubit, SettingsState>(
+                                builder: (context, state) {
+                                  return SliderTheme(
+                                    data: SliderTheme.of(context).copyWith(
+                                      activeTrackColor: state.dynamicAccentColor,
+                                      thumbColor: state.dynamicAccentColor,
+                                      inactiveTrackColor: Default_Theme
+                                          .primaryColor2
+                                          .withOpacity(0.3),
+                                      thumbShape: const RoundSliderThumbShape(
+                                          enabledThumbRadius: 6.0),
+                                      overlayShape: const RoundSliderOverlayShape(
+                                          overlayRadius: 16.0),
+                                      trackShape:
+                                          const RoundedRectSliderTrackShape(),
+                                      trackHeight: 10.0,
+                                    ),
+                                    child: Slider(
+                                      value: _volume,
+                                      onChanged: (value) {
+                                        // update local UI, audio player and keep the
+                                        // volume controller visible while interacting
+                                        setVolume(value);
+                                        _startTimer();
+                                      },
+                                      onChangeEnd: (value) {
+                                        // ensure hide timer restarts when user lifts finger
+                                        _startTimer();
+                                      },
+                                      min: 0.0,
+                                      max: 1.0,
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ],

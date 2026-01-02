@@ -1,5 +1,6 @@
 import 'package:beats_music/blocs/add_to_playlist/cubit/add_to_playlist_cubit.dart';
 import 'package:beats_music/blocs/downloader/cubit/downloader_cubit.dart';
+import 'package:beats_music/blocs/downloader/cubit/downloader_cubit.dart';
 import 'package:beats_music/blocs/mediaPlayer/beats_player_cubit.dart';
 import 'package:beats_music/model/songModel.dart';
 import 'package:beats_music/routes_and_consts/global_str_consts.dart';

@@ -10,6 +10,7 @@ import 'package:beats_music/utils/imgurl_formator.dart';
 import 'package:beats_music/utils/load_Image.dart';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:icons_plus/icons_plus.dart';
@@ -80,9 +81,11 @@ class MiniPlayerCard extends StatelessWidget {
       },
       onHorizontalDragEnd: (details) {
         if (details.primaryVelocity! < -10) {
+          HapticFeedback.lightImpact();
           context.read<BeatsPlayerCubit>().beatsMusicPlayer.skipToNext();
         }
         if (details.primaryVelocity! > 10) {
+          HapticFeedback.lightImpact();
           context.read<BeatsPlayerCubit>().beatsMusicPlayer.skipToPrevious();
         }
       },
@@ -176,6 +179,7 @@ class MiniPlayerCard extends StatelessWidget {
                             size: 28,
                           ),
                           onPressed: () {
+                            HapticFeedback.lightImpact();
                             context
                                 .read<BeatsPlayerCubit>()
                                 .beatsMusicPlayer
@@ -210,6 +214,7 @@ class MiniPlayerCard extends StatelessWidget {
                                 size: 28,
                               ),
                               onPressed: () {
+                                HapticFeedback.mediumImpact();
                                 state.isPlaying
                                     ? context
                                         .read<BeatsPlayerCubit>()
@@ -228,6 +233,7 @@ class MiniPlayerCard extends StatelessWidget {
                             size: 28,
                           ),
                           onPressed: () {
+                            HapticFeedback.lightImpact();
                             context
                                 .read<BeatsPlayerCubit>()
                                 .beatsMusicPlayer

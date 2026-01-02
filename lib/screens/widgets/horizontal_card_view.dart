@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:developer';
 import 'package:beats_music/blocs/mediaPlayer/beats_player_cubit.dart';
 import 'package:beats_music/screens/screen/home_views/youtube_views/playlist.dart';
+import 'package:beats_music/model/songModel.dart';
+import 'package:beats_music/model/youtube_vid_model.dart';
 import 'package:beats_music/screens/widgets/square_card.dart';
 import 'package:beats_music/theme_data/default.dart';
-import 'package:beats_music/utils/external_list_importer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:icons_plus/icons_plus.dart';
@@ -94,16 +96,12 @@ class HorizontalCardView extends StatelessWidget {
                               );
                               break;
                             case "video":
-                              ExternalMediaImporter.ytMediaImporter(
-                                      'https://youtu.be/${(data["items"][i]["id"] as String).replaceAll("youtube", "")}')
-                                  .then((value) async {
-                                if (value != null) {
-                                  await context
-                                      .read<BeatsPlayerCubit>()
-                                      .beatsMusicPlayer
-                                      .updateQueue([value], doPlay: true);
-                                }
-                              });
+                              final item = data["items"][i];
+                              final songModel = fromYtVidSongMap2MediaItem(item);
+                              context
+                                  .read<BeatsPlayerCubit>()
+                                  .beatsMusicPlayer
+                                  .updateQueue([songModel], doPlay: true);
                               break;
                             default:
                           }
