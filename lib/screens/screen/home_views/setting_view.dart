@@ -11,6 +11,7 @@ import 'package:beats_music/screens/screen/home_views/setting_views/donate_setti
 import 'package:beats_music/screens/screen/home_views/setting_views/cloud_sync_setting.dart';
 import 'package:beats_music/screens/screen/equalizer_screen.dart';
 import 'package:beats_music/services/equalizer_service.dart';
+import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:beats_music/screens/screen/home_views/setting_views/profile_edit_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -204,6 +205,8 @@ class _SettingsViewState extends State<SettingsView> {
                   );
                 }),
           ]),
+          const SizedBox(height: 20),
+
           const SizedBox(height: 40),
         ],
       ),

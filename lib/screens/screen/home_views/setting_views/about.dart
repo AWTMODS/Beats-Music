@@ -308,6 +308,50 @@ class About extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
+
+              // Telegram Channel Button
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF229ED9), Color(0xFF0088CC)], // Telegram Blue
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      launchUrl(
+                        Uri.parse('https://t.me/beats_music_player'),
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(FontAwesome.telegram_brand, color: Colors.white, size: 20),
+                          SizedBox(width: 12),
+                          Text(
+                            'Join Channel for Updates',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               
               // Support Button
               Container(
@@ -357,7 +401,7 @@ class About extends StatelessWidget {
               
               // Footer
               Text(
-                '© 2024 Aadith C V',
+                '© 2025 Beats Music',
                 style: TextStyle(
                   color: Default_Theme.primaryColor2.withOpacity(0.6),
                   fontSize: 12,

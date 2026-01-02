@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:ui';
 import 'package:beats_music/model/source_engines.dart';
 import 'package:beats_music/routes_and_consts/global_str_consts.dart';
 import 'package:beats_music/services/db/beats_music_db_service.dart';
@@ -323,5 +324,9 @@ class SettingsCubit extends Cubit<SettingsState> {
   void setShowTamilTrending(bool value) {
     BeatsMusicDBService.putSettingBool("showTamilTrending", value);
     emit(state.copyWith(showTamilTrending: value));
+  }
+
+  void updateDynamicAccentColor(Color color) {
+    emit(state.copyWith(dynamicAccentColor: color));
   }
 }

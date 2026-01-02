@@ -28,6 +28,7 @@ class SettingsState extends Equatable {
   bool showMalayalamTrending;
   bool showHindiTrending;
   bool showTamilTrending;
+  Color dynamicAccentColor;
   SettingsState({
     required this.autoUpdateNotify,
     required this.autoSlideCharts,
@@ -55,6 +56,7 @@ class SettingsState extends Equatable {
     required this.showMalayalamTrending,
     required this.showHindiTrending,
     required this.showTamilTrending,
+    required this.dynamicAccentColor,
   });
 
   SettingsState copyWith({
@@ -84,6 +86,7 @@ class SettingsState extends Equatable {
     bool? showMalayalamTrending,
     bool? showHindiTrending,
     bool? showTamilTrending,
+    Color? dynamicAccentColor,
   }) {
     return SettingsState(
       autoUpdateNotify: autoUpdateNotify ?? this.autoUpdateNotify,
@@ -114,6 +117,7 @@ class SettingsState extends Equatable {
           showMalayalamTrending ?? this.showMalayalamTrending,
       showHindiTrending: showHindiTrending ?? this.showHindiTrending,
       showTamilTrending: showTamilTrending ?? this.showTamilTrending,
+      dynamicAccentColor: dynamicAccentColor ?? this.dynamicAccentColor,
     );
   }
 
@@ -145,6 +149,7 @@ class SettingsState extends Equatable {
         showMalayalamTrending,
         showHindiTrending,
         showTamilTrending,
+        dynamicAccentColor,
       ];
 }
 
@@ -177,5 +182,6 @@ class SettingsInitial extends SettingsState {
           showMalayalamTrending: true,
           showHindiTrending: true,
           showTamilTrending: true,
+          dynamicAccentColor: const Color(0xFF1DB954), // Default Spotify green
         );
 }
