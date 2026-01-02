@@ -43,8 +43,8 @@ class BeatsMusicDBCubit extends Cubit<MediadbState> {
     }
   }
 
-  Future<bool> isLiked(MediaItem mediaItem) {
-    // bool res = true;
+  Future<bool> isLiked(MediaItem? mediaItem) async {
+    if (mediaItem == null) return false;
     return BeatsMusicDBService.isMediaLiked(MediaItem2MediaItemDB(mediaItem));
   }
 

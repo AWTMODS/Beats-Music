@@ -35,19 +35,9 @@ class AuthService {
       
       // Trigger Cloud Sync Download (Restore)
       if (userCredential.user != null) {
-        debugPrint("AuthService: Sign in successful. Triggering Cloud Restore...");
-        // Non-blocking sync to avoid freezing UI? 
-        // Or blocking to ensure data is there? Blocking is safer for UX ("Loading Profile...").
-        final syncService = CloudSyncService();
-        await syncService.downloadStats();
-        await syncService.downloadPlaylists();
-        await syncService.downloadLikedSongs();
-        await syncService.downloadRecentlyPlayed();
-        await syncService.downloadDownloadsList();
-        
-        // Start auto-sync timer
-        AutoSyncService().startAutoSync();
-        debugPrint("AuthService: Auto-sync started");
+        // Trigger Cloud Sync Download (Restore) - BACKGROUND
+        // Fix for Pixel 5a hang: Don't block UI waiting for full sync
+        _restoreDataInBackground();
       }
       
       return userCredential;
@@ -72,13 +62,15 @@ class AuthService {
     try {
       if (_auth.currentUser != null && !_auth.currentUser!.isAnonymous) {
           debugPrint("AuthService: Signing out. Backing up data...");
-          // Backup before logout
+          // Backup before logout - parallelize for speed
           final syncService = CloudSyncService();
-          await syncService.uploadStats();
-          await syncService.uploadPlaylists();
-          await syncService.uploadLikedSongs();
-          await syncService.uploadRecentlyPlayed();
-          await syncService.uploadDownloadsList();
+          await Future.wait([
+            syncService.uploadStats(),
+            syncService.uploadPlaylists(),
+            syncService.uploadLikedSongs(),
+            syncService.uploadRecentlyPlayed(),
+            syncService.uploadDownloadsList(),
+          ]);
           
           // Stop auto-sync
           AutoSyncService().stopAutoSync();
@@ -94,5 +86,26 @@ class AuthService {
     // Clear local stats to ensure privacy for next user
     debugPrint("AuthService: Clearing local stats...");
     await ListeningStatisticsService().clearAllStatistics();
+  }
+
+  Future<void> _restoreDataInBackground() async {
+    debugPrint("AuthService: Sign in successful. Triggering Cloud Restore (Background)...");
+    try {
+        final syncService = CloudSyncService();
+        // Run independently in background so UI doesn't hang
+        await Future.wait([
+          syncService.downloadStats(),
+          syncService.downloadPlaylists(),
+          syncService.downloadLikedSongs(),
+          syncService.downloadRecentlyPlayed(),
+          syncService.downloadDownloadsList(),
+        ]);
+        
+        // Start auto-sync timer
+        AutoSyncService().startAutoSync();
+        debugPrint("AuthService: Background Auto-sync started");
+    } catch (e) {
+        debugPrint("AuthService: Background sync error: $e");
+    }
   }
 }

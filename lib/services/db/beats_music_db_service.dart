@@ -1395,6 +1395,80 @@ class BeatsMusicDBService {
     }
   }
 
+
+  // ------------------ Rich Search History ------------------
+  static const _richSearchHistoryKey = 'rich_search_history';
+
+  static Future<List<MediaItemModel>> getRichSearchHistory() async {
+    final jsonStr = await getSettingStr(_richSearchHistoryKey);
+    if (jsonStr == null || jsonStr.isEmpty) return [];
+
+    try {
+      final List<dynamic> jsonList = jsonDecode(jsonStr);
+      return jsonList.map((e) {
+        final map = e as Map<String, dynamic>;
+        
+        // Handle extras
+        Map<String, dynamic>? extras;
+        if (map['extras'] != null) {
+          extras = Map<String, dynamic>.from(map['extras']);
+        }
+
+        return MediaItemModel(
+          id: map['id'],
+          title: map['title'],
+          artist: map['artist'],
+          album: map['album'],
+          artUri: map['artUri'] != null ? Uri.parse(map['artUri']) : null,
+          duration: map['duration'] != null
+              ? Duration(milliseconds: map['duration'])
+              : null,
+          genre: map['genre'],
+          extras: extras,
+        );
+      }).toList();
+    } catch (e) {
+      log("Error parsing rich search history: $e", name: "DB");
+      return [];
+    }
+  }
+
+  static Future<void> addToRichSearchHistory(MediaItemModel item) async {
+    final history = await getRichSearchHistory();
+    // Remove if exists
+    history.removeWhere((element) => element.id == item.id);
+    // Add to top
+    history.insert(0, item);
+    // Limit to 20
+    if (history.length > 20) {
+      history.removeLast();
+    }
+    await _saveRichSearchHistory(history);
+  }
+
+  static Future<void> removeFromRichSearchHistory(String id) async {
+    final history = await getRichSearchHistory();
+    history.removeWhere((element) => element.id == id);
+    await _saveRichSearchHistory(history);
+  }
+
+  static Future<void> _saveRichSearchHistory(
+      List<MediaItemModel> history) async {
+    final jsonList = history.map((e) {
+      return {
+        'id': e.id,
+        'title': e.title,
+        'artist': e.artist,
+        'album': e.album,
+        'artUri': e.artUri?.toString(),
+        'duration': e.duration?.inMilliseconds,
+        'genre': e.genre,
+        'extras': e.extras,
+      };
+    }).toList();
+    await putSettingStr(_richSearchHistoryKey, jsonEncode(jsonList));
+  }
+
   static Future<Stream<AppSettingsBoolDB?>?> getWatcher4SettingBool(
       String key) async {
     Isar isarDB = await db;
