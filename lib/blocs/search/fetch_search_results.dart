@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:http/http.dart' as http;
+import 'dart:async';
 import 'dart:developer';
 import 'package:beats_music/model/playlist_onl_model.dart';
 import 'package:beats_music/model/spotifyModel.dart';
@@ -48,6 +49,7 @@ class FetchSearchResultsState extends Equatable {
   final SourceEngine? sourceEngine;
   final ResultTypes resultType;
   final bool hasReachedMax;
+  final String? errorMessage;
   const FetchSearchResultsState({
     required this.loadingState,
     required this.mediaItems,
@@ -57,6 +59,7 @@ class FetchSearchResultsState extends Equatable {
     required this.hasReachedMax,
     required this.resultType,
     this.sourceEngine,
+    this.errorMessage,
   });
 
   @override
@@ -69,6 +72,7 @@ class FetchSearchResultsState extends Equatable {
         playlistItems,
         sourceEngine,
         resultType,
+        errorMessage,
       ];
 
   FetchSearchResultsState copyWith({
@@ -80,6 +84,7 @@ class FetchSearchResultsState extends Equatable {
     ResultTypes? resultType,
     SourceEngine? sourceEngine,
     bool? hasReachedMax,
+    String? errorMessage,
   }) {
     return FetchSearchResultsState(
       loadingState: loadingState ?? this.loadingState,
@@ -90,6 +95,7 @@ class FetchSearchResultsState extends Equatable {
       resultType: resultType ?? this.resultType,
       sourceEngine: sourceEngine ?? this.sourceEngine,
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+      errorMessage: errorMessage, // Error messages are transient, so we overwrite or explicit null
     );
   }
 }
@@ -175,6 +181,7 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
 
     last_YTM_search.query = query;
     emit(FetchSearchResultsLoading(resultType: resultType));
+    try {
     switch (resultType) {
       case ResultTypes.songs:
         final searchResults = await YTMusic().searchYtm(query, type: "songs");
@@ -267,6 +274,14 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
         log("Got results: ${artists.length}", name: "FetchSearchRes");
         break;
     }
+    } catch (e) {
+      log("Error in YTM Search: $e", name: "FetchSearchRes");
+      emit(state.copyWith(
+        loadingState: LoadingState.loaded,
+        mediaItems: [],
+        errorMessage: "Failed to search YouTube Music. Check connection.",
+      ));
+    }
 
     log("got all searches ${last_YTM_search.mediaItemList.length}",
         name: "FetchSearchRes");
@@ -279,6 +294,7 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
     last_YTV_search.query = query;
     emit(FetchSearchResultsLoading(resultType: resultType));
 
+    try {
     switch (resultType) {
       case ResultTypes.playlists:
         final res =
@@ -311,6 +327,14 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
             name: "FetchSearchRes");
         break;
     }
+    } catch (e) {
+      log("Error in YTV Search: $e", name: "FetchSearchRes");
+      emit(state.copyWith(
+        loadingState: LoadingState.loaded,
+        mediaItems: [],
+        errorMessage: "Failed to search YouTube. Check connection.",
+      ));
+    }
   }
 
   Future<void> searchJISTracks(
@@ -318,6 +342,7 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
     bool loadMore = false,
     ResultTypes resultType = ResultTypes.songs,
   }) async {
+    try {
     switch (resultType) {
       case ResultTypes.songs:
         if (!loadMore) {
@@ -389,6 +414,14 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
         ));
         break;
     }
+    } catch (e) {
+      log("Error in JioSaavn Search: $e", name: "FetchSearchRes");
+      emit(state.copyWith(
+        loadingState: LoadingState.loaded,
+        mediaItems: [],
+        errorMessage: "Failed to search JioSaavn. Check connection.",
+      ));
+    }
   }
 
   Future<void> searchSpotifyTracks(
@@ -400,6 +433,7 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
     last_Spotify_search.query = query;
     emit(FetchSearchResultsLoading(resultType: resultType));
     
+    try {
     // Check if query is a Spotify URL
     if (query.contains('open.spotify.com/track/')) {
       try {
@@ -527,6 +561,16 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
           sourceEngine: SourceEngine.eng_Spotify,
         ));
       }
+      }
+    } catch (error) {
+      log("Error searching Spotify: $error", name: "FetchSearchRes");
+      emit(state.copyWith(
+          mediaItems: [],
+          loadingState: LoadingState.loaded,
+          hasReachedMax: true,
+          resultType: ResultTypes.songs,
+          sourceEngine: SourceEngine.eng_Spotify,
+          errorMessage: "Failed to search Spotify. Check connection."));
     }
   }
 
@@ -606,13 +650,35 @@ class FetchSearchResultsCubit extends Cubit<FetchSearchResultsState> {
       }
   }
 
-  /// Helper for safe state emission
+  /// Timer for throttling state emissions
+  Timer? _throttleTimer;
+  bool _pendingUpdate = false;
+  List<MediaItemModel>? _lastItems;
+
+  /// Helper for safe state emission with throttling
   void emiitState(List<MediaItemModel> allItems) {
-     if (!isClosed) {
-       emit(state.copyWith(
-         mediaItems: List<MediaItemModel>.from(allItems),
-       ));
-     }
+    _lastItems = allItems;
+    
+    if (_throttleTimer?.isActive ?? false) {
+      _pendingUpdate = true;
+      return;
+    }
+    
+    _performEmit();
+  }
+
+  void _performEmit() {
+    if (isClosed || _lastItems == null) return;
+    
+    emit(state.copyWith(mediaItems: List<MediaItemModel>.from(_lastItems!)));
+    _pendingUpdate = false;
+    
+    _throttleTimer = Timer(const Duration(milliseconds: 500), () {
+      _throttleTimer = null;
+      if (_pendingUpdate && !isClosed) {
+        _performEmit();
+      }
+    });
   }
 
   /// Quickly scrape the og:image from a Spotify URL

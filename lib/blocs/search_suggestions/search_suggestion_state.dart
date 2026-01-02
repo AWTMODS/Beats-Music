@@ -4,23 +4,29 @@ part of 'search_suggestion_bloc.dart';
 class SearchSuggestionState extends Equatable {
   final List<String> suggestionList;
   final List<Map<String, String>> dbSuggestionList;
-  const SearchSuggestionState(this.suggestionList, this.dbSuggestionList);
+  final List<MediaItemModel> richSuggestionList;
+  
+  const SearchSuggestionState(this.suggestionList, this.dbSuggestionList, {this.richSuggestionList = const []});
 
   @override
   List<Object> get props => [
         suggestionList,
         dbSuggestionList,
+        richSuggestionList,
         dbSuggestionList.length,
-        suggestionList.length
+        suggestionList.length,
+        richSuggestionList.length
       ];
 
   SearchSuggestionState copyWith({
     List<String>? suggestionList,
     List<Map<String, String>>? dbSuggestionList,
+    List<MediaItemModel>? richSuggestionList,
   }) {
     return SearchSuggestionState(
       suggestionList ?? this.suggestionList,
       dbSuggestionList ?? this.dbSuggestionList,
+      richSuggestionList: richSuggestionList ?? this.richSuggestionList,
     );
   }
 }
@@ -31,6 +37,8 @@ final class SearchSuggestionLoading extends SearchSuggestionState {
 
 final class SearchSuggestionLoaded extends SearchSuggestionState {
   const SearchSuggestionLoaded(
-      List<String> suggestionList, List<Map<String, String>> dbSuggestionList)
-      : super(suggestionList, dbSuggestionList);
+      List<String> suggestionList, 
+      List<Map<String, String>> dbSuggestionList,
+      {List<MediaItemModel> richSuggestionList = const []})
+      : super(suggestionList, dbSuggestionList, richSuggestionList: richSuggestionList);
 }
