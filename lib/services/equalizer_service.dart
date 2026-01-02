@@ -160,11 +160,13 @@ class EqualizerService extends ChangeNotifier {
     _currentPreset = presetName;
     _customGains = List.from(preset.gains);
     
+    // Notify immediate UI update
+    notifyListeners();
+    
     if (_isEnabled) {
-      await _applyCurrentSettings();
+      _applyCurrentSettings();
     }
     
-    notifyListeners();
     // DebugLogger().log('Equalizer: Applied preset $presetName');
     
     try {
@@ -183,11 +185,13 @@ class EqualizerService extends ChangeNotifier {
     _customGains[bandIndex] = gain.clamp(-15.0, 15.0);
     _currentPreset = 'Custom';
     
-    if (_isEnabled) {
-      await _applyBandGain(bandIndex, gain);
-    }
-    
+    // Notify immediate UI update (responsiveness)
     notifyListeners();
+    
+    if (_isEnabled) {
+      // Fire and forget - don't await platform call to block UI
+      _applyBandGain(bandIndex, gain);
+    }
     
     try {
       final prefs = await SharedPreferences.getInstance();

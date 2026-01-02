@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:beats_music/services/equalizer_service.dart';
@@ -180,7 +181,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
   }
 }
 
-class _BandSlider extends StatelessWidget {
+class _BandSlider extends StatefulWidget {
   final String label;
   final double value;
   final ValueChanged<double> onChanged;
@@ -194,6 +195,48 @@ class _BandSlider extends StatelessWidget {
   });
 
   @override
+  State<_BandSlider> createState() => _BandSliderState();
+}
+
+class _BandSliderState extends State<_BandSlider> {
+  late double _localValue;
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _localValue = widget.value;
+  }
+
+  @override
+  void didUpdateWidget(_BandSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only update local value from parent if we're not currently dragging/debouncing
+    // or if the change is significant (e.g. preset change)
+    if (_debounceTimer == null && (widget.value - _localValue).abs() > 0.1) {
+      _localValue = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  void _handleChanged(double newValue) {
+    setState(() {
+      _localValue = newValue;
+    });
+
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 100), () {
+      widget.onChanged(newValue);
+      _debounceTimer = null;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -204,9 +247,9 @@ class _BandSlider extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                label,
+                widget.label,
                 style: TextStyle(
-                  color: enabled
+                  color: widget.enabled
                       ? Default_Theme.primaryColor1
                       : Default_Theme.primaryColor1.withOpacity(0.4),
                   fontSize: 14,
@@ -214,9 +257,9 @@ class _BandSlider extends StatelessWidget {
                 ),
               ),
               Text(
-                '${value.toStringAsFixed(1)} dB',
+                '${_localValue.toStringAsFixed(1)} dB',
                 style: TextStyle(
-                  color: enabled
+                  color: widget.enabled
                       ? Default_Theme.accentColor2
                       : Default_Theme.primaryColor1.withOpacity(0.4),
                   fontSize: 14,
@@ -228,11 +271,11 @@ class _BandSlider extends StatelessWidget {
           const SizedBox(height: 8),
           SliderTheme(
             data: SliderThemeData(
-              activeTrackColor: enabled
+              activeTrackColor: widget.enabled
                   ? Default_Theme.accentColor2
                   : Default_Theme.primaryColor1.withOpacity(0.2),
               inactiveTrackColor: Default_Theme.primaryColor1.withOpacity(0.1),
-              thumbColor: enabled
+              thumbColor: widget.enabled
                   ? Default_Theme.accentColor2
                   : Default_Theme.primaryColor1.withOpacity(0.3),
               overlayColor: Default_Theme.accentColor2.withOpacity(0.2),
@@ -240,12 +283,12 @@ class _BandSlider extends StatelessWidget {
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
             ),
             child: Slider(
-              value: value,
+              value: _localValue,
               min: -15.0,
               max: 15.0,
               divisions: 60,
-              label: '${value.toStringAsFixed(1)} dB',
-              onChanged: enabled ? onChanged : null,
+              label: '${_localValue.toStringAsFixed(1)} dB',
+              onChanged: widget.enabled ? _handleChanged : null,
             ),
           ),
         ],
