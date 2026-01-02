@@ -142,3 +142,17 @@ app.*.symbols
 # Secrets
 lib/secrets.dart
 android/app/google-services.json
+
+# Local Gradle Cache
+.gradle_home/
+
+# Java Crash Logs
+*.log
+hs_err_pid*.log
+replay_pid*.log
+
+# Temporary System Files
+.tmp/
+
+# Release Artifacts
+BeatsMusicRelease/

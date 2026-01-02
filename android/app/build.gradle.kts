@@ -102,8 +102,8 @@ android {
         }
     }
     lint {
-        checkReleaseBuilds = false
-        abortOnError = false
+        checkReleaseBuilds = true
+        abortOnError = true // Enforce strict alignment with safe coding standards
     }
 }
 
