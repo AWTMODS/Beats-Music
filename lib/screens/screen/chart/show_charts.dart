@@ -55,22 +55,22 @@ final List<ChartInfo> chartInfoList = [
   // ),
   ChartInfo(
       chartFunction: getKworbChart,
-      imgUrl: kworbRandomIMGs.getImage(),
+      imgUrl: KworbChartLinks.GLOBAL_DAILY_IMG,
       title: KworbCharts.GLOBAL_DAILY.title,
       url: KworbCharts.GLOBAL_DAILY),
   ChartInfo(
       chartFunction: getKworbChart,
-      imgUrl: kworbRandomIMGs.getImage(),
+      imgUrl: KworbChartLinks.KOREA_DAILY_IMG,
       title: KworbCharts.KOREA_DAILY.title,
       url: KworbCharts.KOREA_DAILY),
   ChartInfo(
       chartFunction: getKworbChart,
-      imgUrl: kworbRandomIMGs.getImage(),
+      imgUrl: KworbChartLinks.INDIA_DAILY_IMG,
       title: KworbCharts.INDIA_DAILY.title,
       url: KworbCharts.INDIA_DAILY),
   ChartInfo(
       chartFunction: getKworbChart,
-      imgUrl: kworbRandomIMGs.getImage(),
+      imgUrl: KworbChartLinks.JAPAN_DAILY_IMG,
       title: KworbCharts.JAPAN_DAILY.title,
       url: KworbCharts.JAPAN_DAILY),
 ];

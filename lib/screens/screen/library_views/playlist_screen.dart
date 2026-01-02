@@ -42,6 +42,18 @@ class PlaylistView extends StatelessWidget {
     return adjustedHsl.toColor();
   }
 
+  String _formatTitle(String title) {
+    if (title == 'recently_played') return "Recently Played";
+    if (title == 'your_top_mix') return "Your Top Mix";
+    if (title == 'discover_weekly') return "Discover Weekly";
+    if (title == 'release_radar') return "Release Radar";
+    if (title == '_DOWNLOADS') return "Downloads";
+    if (title.startsWith('daily_mix_')) {
+      return title.replaceAll('daily_mix_', 'Daily Mix ').replaceAll('_', ' ');
+    }
+    return title;
+  }
+
   List<Color> getFBColor(BuildContext context) {
     // get foreground and background color from current playlist pallete
     Color? color = context
@@ -120,7 +132,7 @@ class PlaylistView extends StatelessWidget {
                             final bool isCollapsed = percentage < 0.4;
 
                             final span = TextSpan(
-                              text: state.mediaPlaylist.playlistName,
+                              text: _formatTitle(state.mediaPlaylist.playlistName),
                               style:
                                   Default_Theme.secondoryTextStyleMedium.merge(
                                 TextStyle(
@@ -147,7 +159,7 @@ class PlaylistView extends StatelessWidget {
                                   left: horizontalPadding,
                                   bottom: isCollapsed ? 16 : 10),
                               title: Text(
-                                state.mediaPlaylist.playlistName,
+                                _formatTitle(state.mediaPlaylist.playlistName),
                                 maxLines: isCollapsed ? 1 : 3,
                                 style: Default_Theme.secondoryTextStyleMedium
                                     .merge(

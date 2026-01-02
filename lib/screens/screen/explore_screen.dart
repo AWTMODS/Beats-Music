@@ -1,5 +1,5 @@
-import 'dart:developer';
 import 'package:go_router/go_router.dart';
+import 'package:beats_music/model/youtube_vid_model.dart';
 import 'package:beats_music/blocs/explore/cubit/explore_cubits.dart';
 import 'package:beats_music/blocs/internet_connectivity/cubit/connectivity_cubit.dart';
 import 'package:beats_music/blocs/lastdotfm/lastdotfm_cubit.dart';
@@ -10,6 +10,9 @@ import 'package:beats_music/model/MediaPlaylistModel.dart';
 import 'package:beats_music/screens/screen/library_views/cubit/current_playlist_cubit.dart';
 import 'package:beats_music/screens/screen/home_views/recents_view.dart';
 import 'package:beats_music/screens/screen/home_views/setting_views/about.dart';
+import 'package:beats_music/blocs/explore/cubit/recommendation_cubit.dart';
+import 'package:beats_music/blocs/explore/cubit/recommendation_state.dart';
+import 'package:beats_music/services/beats_music_player.dart';
 import 'package:beats_music/screens/widgets/more_bottom_sheet.dart';
 import 'package:beats_music/screens/widgets/sign_board_widget.dart';
 import 'package:beats_music/screens/widgets/song_tile.dart';
@@ -22,6 +25,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'chart/carousal_widget.dart';
 import '../widgets/horizontal_card_view.dart';
+import '../widgets/shimmer_loaders.dart';
 import '../widgets/tabList_widget.dart';
 import '../widgets/quick_access_card.dart';
 import '../widgets/app_drawer.dart';
@@ -60,7 +64,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         }
         return (await lFMData);
       } catch (e) {
-        log(e.toString(), name: "ExploreScreen");
+        debugPrint("ExploreScreen Error: $e");
       }
     }
     return const MediaPlaylist(mediaItems: [], playlistName: "");
@@ -93,6 +97,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ),
           BlocProvider(
             create: (context) => TamilSongsCubit(),
+            lazy: false,
+          ),
+          BlocProvider(
+            create: (context) => RecommendationCubit(),
             lazy: false,
           ),
         ],
@@ -198,6 +206,42 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         child: CaraouselWidget(),
                       ),
                       const SizedBox(height: 24),
+                      // Smart Discovery Section
+                      BlocBuilder<RecommendationCubit, RecommendationState>(
+                        builder: (context, state) {
+                          if (state is RecommendationLoading) {
+                            return const ExploreSkeleton(title: 'Made For You');
+                          }
+                          if (state is RecommendationSuccess) {
+                            // Convert MediaItems back to map format for HorizontalCardView
+                            final songs = state.recommendations.map((item) {
+                              return {
+                                'id': item.id,
+                                'title': item.title,
+                                'artist': item.artist,
+                                'subtitle': item.artist ?? 'Recommended',
+                                'image': item.artUri.toString(),
+                                'url': item.extras?['url'],
+                                'source': item.extras?['source'] ?? 'youtube',
+                                'type': 'video',
+                                'duration': item.duration?.inSeconds.toString(),
+                              };
+                            }).toList();
+
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: HorizontalCardView(
+                                data: {
+                                  'title': 'Made For You',
+                                  'items': songs,
+                                },
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      const SizedBox(height: 24),
                       // Trending Malayalam Songs Section
                       BlocBuilder<SettingsCubit, SettingsState>(
                         builder: (context, settingsState) {
@@ -208,7 +252,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               MalayalamSongsState>(
                             builder: (context, state) {
                               if (state.isLoading && state.songs.isEmpty) {
-                                return const SizedBox.shrink();
+                                return const ExploreSkeleton(
+                                    title: 'Trending Malayalam Songs');
                               }
                               if (state.songs.isNotEmpty) {
                                 // Precache first 3 images and preload audio for first 2 songs
@@ -229,19 +274,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                     // Preload audio (first 2 songs only)
                                     if (i < 2) {
                                       try {
-                                        final mediaItem = MediaItem(
-                                          id: song['id'] ?? 'unknown',
-                                          title: song['title'] ?? 'Unknown',
-                                          artist: song['artist'] ?? song['subtitle'] ?? 'Unknown Artist',
-                                          artUri: Uri.parse(song['image'] ?? ''),
-                                          extras: {
-                                            'url': song['url'] ?? '',
-                                            'source': song['provider'] ?? 'youtube',
-                                          },
-                                        );
+                                        final mediaItem = fromYtVidSongMap2MediaItem(song);
                                         context.read<BeatsPlayerCubit>().beatsMusicPlayer.preloadSong(mediaItem);
                                       } catch (e) {
-                                        log('Error preloading audio: $e', name: 'ExploreScreen');
+                                        debugPrint('Error preloading audio: $e');
                                       }
                                     }
                                   }
@@ -271,7 +307,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           return BlocBuilder<HindiSongsCubit, HindiSongsState>(
                             builder: (context, state) {
                               if (state.isLoading && state.songs.isEmpty) {
-                                return const SizedBox.shrink();
+                                return const ExploreSkeleton(
+                                    title: 'Trending Hindi Songs');
                               }
                               if (state.songs.isNotEmpty) {
                                 // Precache first 3 images and preload audio for first 2 songs
@@ -292,19 +329,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                     // Preload audio (first 2 songs only)
                                     if (i < 2) {
                                       try {
-                                        final mediaItem = MediaItem(
-                                          id: song['id'] ?? 'unknown',
-                                          title: song['title'] ?? 'Unknown',
-                                          artist: song['artist'] ?? song['subtitle'] ?? 'Unknown Artist',
-                                          artUri: Uri.parse(song['image'] ?? ''),
-                                          extras: {
-                                            'url': song['url'] ?? '',
-                                            'source': song['provider'] ?? 'youtube',
-                                          },
-                                        );
+                                        final mediaItem = fromYtVidSongMap2MediaItem(song);
                                         context.read<BeatsPlayerCubit>().beatsMusicPlayer.preloadSong(mediaItem);
                                       } catch (e) {
-                                        log('Error preloading audio: $e', name: 'ExploreScreen');
+                                        debugPrint('Error preloading audio: $e');
                                       }
                                     }
                                   }
@@ -334,7 +362,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           return BlocBuilder<TamilSongsCubit, TamilSongsState>(
                             builder: (context, state) {
                               if (state.isLoading && state.songs.isEmpty) {
-                                return const SizedBox.shrink();
+                                return const ExploreSkeleton(
+                                    title: 'Trending Tamil Songs');
                               }
                               if (state.songs.isNotEmpty) {
                                 // Precache first 3 images and preload audio for first 2 songs
@@ -355,19 +384,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                     // Preload audio (first 2 songs only)
                                     if (i < 2) {
                                       try {
-                                        final mediaItem = MediaItem(
-                                          id: song['id'] ?? 'unknown',
-                                          title: song['title'] ?? 'Unknown',
-                                          artist: song['artist'] ?? song['subtitle'] ?? 'Unknown Artist',
-                                          artUri: Uri.parse(song['image'] ?? ''),
-                                          extras: {
-                                            'url': song['url'] ?? '',
-                                            'source': song['provider'] ?? 'youtube',
-                                          },
-                                        );
+                                        final mediaItem = fromYtVidSongMap2MediaItem(song);
                                         context.read<BeatsPlayerCubit>().beatsMusicPlayer.preloadSong(mediaItem);
                                       } catch (e) {
-                                        log('Error preloading audio: $e', name: 'ExploreScreen');
+                                        debugPrint('Error preloading audio: $e');
                                       }
                                     }
                                   }
@@ -494,7 +514,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                     icon: MingCute.wifi_off_line,
                                   );
                                 }
-                                return const SizedBox();
+                                return const ExploreSkeleton();
                               },
                             );
                           }
@@ -688,3 +708,4 @@ class StatisticsIcon extends StatelessWidget {
     );
   }
 }
+

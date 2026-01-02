@@ -53,13 +53,35 @@ class LibraryScreen extends StatelessWidget {
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   customDiscoverBar(context),
-                  const SliverFillRemaining(
-                    // Use SliverFillRemaining to center content
+                  SliverFillRemaining(
+                    hasScrollBody: false,
                     child: Center(
-                      child: SignBoardWidget(
-                        message:
-                            "Your library is feeling lonely. Add some tunes to brighten it up!",
-                        icon: MingCute.playlist_fill,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SignBoardWidget(
+                            message:
+                                "Your library is feeling lonely. Add some tunes to brighten it up!",
+                            icon: MingCute.playlist_fill,
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              context.goNamed(GlobalStrConsts.exploreScreen);
+                            },
+                            icon: const Icon(MingCute.search_2_line),
+                            label: const Text("Start Exploring"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Default_Theme.accentColor1,
+                              foregroundColor: Default_Theme.themeColor,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

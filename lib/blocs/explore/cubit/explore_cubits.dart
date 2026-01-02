@@ -15,6 +15,7 @@ import 'package:beats_music/utils/country_info.dart';
 import 'package:beats_music/model/MediaPlaylistModel.dart';
 import 'package:beats_music/model/chart_model.dart';
 import 'package:beats_music/plugins/ext_charts/chart_defines.dart';
+import 'package:beats_music/plugins/ext_charts/kworb_charts.dart';
 import 'package:beats_music/repository/Youtube/yt_charts_home.dart';
 import 'package:beats_music/screens/screen/chart/show_charts.dart';
 import 'package:beats_music/services/db/beats_music_db_service.dart';
@@ -144,52 +145,81 @@ class FetchChartCubit extends Cubit<FetchChartState> {
   }
 
   Future<void> fetchCharts() async {
-    String _path = (await getApplicationSupportDirectory()).path;
-    BackgroundIsolateBinaryMessenger.ensureInitialized(
-      ServicesBinding.rootIsolateToken!,
-    );
-    await BeatsMusicDBService.db;
-    final chartList = await Isolate.run<List<ChartModel>>(() async {
-      log(_path, name: "Isolate Path");
-      List<ChartModel> _chartList = List.empty(growable: true);
-      ChartModel chart;
-      final db = await Isar.open(
-        [
-          ChartsCacheDBSchema,
-        ],
-        directory: _path,
-      );
-      for (var i in chartInfoList) {
-        final chartCacheDB = db.chartsCacheDBs
-            .where()
-            .filter()
-            .chartNameEqualTo(i.title)
-            .findFirstSync();
-        bool _shouldFetch = (chartCacheDB?.lastUpdated
-                    .difference(DateTime.now())
-                    .inHours
-                    .abs() ??
-                80) >
-            16;
-        log("Last Updated - ${(chartCacheDB?.lastUpdated.difference(DateTime.now()).inHours)?.abs()} Hours before ",
-            name: "Isolate");
+    try {
+       final db = await BeatsMusicDBService.db;
+       List<ChartModel> _chartList = List.empty(growable: true);
+       ChartModel chart;
+       
+       // Force clear charts cache once to ensure users get the update
+       // We can use a shared preference or just a one-time DB flag, 
+       // but for this specific "Fix", checking for placeholders is good, 
+       // but let's be more aggressive: if it's "Spotify India Daily", force it.
+       
+       // Process charts in parallel to speed up total sync time
+       await Future.wait(chartInfoList.map((i) async {
+         try {
+            final chartCacheDB = db.chartsCacheDBs
+                .filter()
+                .chartNameEqualTo(i.title)
+                .findFirstSync();
+                
+            bool hasPlaceholder = chartCacheDB?.chartItems.any((item) => 
+                item.artURL != null && item.artURL!.contains("ui-avatars.com")) ?? false;
 
-        if (_shouldFetch) {
-          chart = await i.chartFunction(i.url);
-          if ((chart.chartItems?.isNotEmpty) ?? false) {
-            db.writeTxnSync(() =>
-                db.chartsCacheDBs.putSync(chartModelToChartCacheDB(chart)));
-          }
-          log("Chart Fetched - ${chart.chartName}", name: "Isolate");
-          _chartList.add(chart);
-        }
+            bool _shouldFetch = (chartCacheDB?.lastUpdated
+                        .difference(DateTime.now())
+                        .inHours
+                        .abs() ??
+                    80) >
+                16 || hasPlaceholder;
+
+            // Force update for reported charts
+            if ((i.title.contains("India") || i.title.contains("Korea") || i.title.contains("Global")) && chartCacheDB != null) {
+                 // But only if we detect placeholders to prevent loops, though we already check hasPlaceholder.
+                 // Let's rely on hasPlaceholder for intelligence, but logic above uses OR.
+                 // So if hasPlaceholder is true, it fetches.
+            }
+            
+            log("Chart ${i.title}: Should Fetch? $_shouldFetch", name: "FetchChart");
+
+            if (_shouldFetch) {
+              chart = await i.chartFunction(i.url);
+              
+              if ((chart.chartItems?.isNotEmpty) ?? false) {
+                 // 1. Initial Save (Fast - Placeholders only)
+                 db.writeTxnSync(() =>
+                    db.chartsCacheDBs.putSync(chartModelToChartCacheDB(chart)));
+                 
+                 // Initial UI Update
+                 emit(state.copyWith(isFetched: false)); 
+                 emit(state.copyWith(isFetched: true));
+                 
+                 // 2. Progressive Enrichment (Background)
+                 if (i.title.contains("Spotify")) {
+                    await enrichChartItems(chart.chartItems!, onUpdate: () {
+                        // Re-save updated batch to DB
+                        db.writeTxnSync(() =>
+                            db.chartsCacheDBs.putSync(chartModelToChartCacheDB(chart)));
+                        // Trigger UI refresh
+                        emit(state.copyWith(isFetched: false)); 
+                        emit(state.copyWith(isFetched: true));
+                    });
+                 }
+                 
+                 log("Chart Fully Fetched - ${chart.chartName}", name: "FetchChart");
+              }
+              _chartList.add(chart);
+            }
+         } catch (e) {
+            log("Error processing chart ${i.title}: $e", name: "FetchChart");
+         }
+       }));
+      
+      if (_chartList.isNotEmpty) {
+        emit(state.copyWith(isFetched: true));
       }
-      db.close();
-      return _chartList;
-    });
-
-    if (chartList.isNotEmpty) {
-      emit(state.copyWith(isFetched: true));
+    } catch (e) {
+      log("Error fetching charts: $e", name: "FetchChart");
     }
   }
 }

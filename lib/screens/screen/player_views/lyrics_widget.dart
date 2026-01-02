@@ -48,7 +48,7 @@ class LyricsWidget extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
+                  color: Colors.black.withOpacity(0.6),
                   shape: BoxShape.circle,
                 ),
                 child: Tooltip(
@@ -75,7 +75,7 @@ class LyricsWidget extends StatelessWidget {
                       MingCute.fullscreen_fill,
                       size: 20,
                     ),
-                    color: Default_Theme.primaryColor1.withValues(alpha: 0.9),
+                    color: Default_Theme.primaryColor1.withOpacity(0.9),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -217,13 +217,13 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
 
   int _findCurrentLyricIndex() {
     for (int i = 0; i < widget.state.lyrics.parsedLyrics!.lyrics.length; i++) {
-      if (widget.state.lyrics.parsedLyrics!.lyrics[i].start.inSeconds <=
-          duration.inSeconds) {
+      if (widget.state.lyrics.parsedLyrics!.lyrics[i].start.inMilliseconds <=
+          duration.inMilliseconds) {
         if (i >= widget.state.lyrics.parsedLyrics!.lyrics.length - 1) {
           return i;
         } else if (widget
-                .state.lyrics.parsedLyrics!.lyrics[i + 1].start.inSeconds >
-            duration.inSeconds) {
+                .state.lyrics.parsedLyrics!.lyrics[i + 1].start.inMilliseconds >
+            duration.inMilliseconds) {
           return i;
         }
       }
@@ -232,24 +232,25 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
   }
 
   bool isEndVisible() {
-    return _itemPositionsListener.itemPositions.value.last.index ==
-        widget.state.lyrics.parsedLyrics!.lyrics.length - 1;
+    if (_itemPositionsListener.itemPositions.value.isEmpty) return false;
+    return _itemPositionsListener.itemPositions.value.last.index >=
+        (widget.state.lyrics.parsedLyrics?.lyrics.length ?? 1) - 1;
   }
 
   bool isIdxVisible(int index) {
+    if (_itemPositionsListener.itemPositions.value.isEmpty) return false;
     return _itemPositionsListener.itemPositions.value
-        .where((element) => element.index == index)
-        .isNotEmpty;
+        .any((element) => element.index == index);
   }
 
   bool isCurrentLyric(int index) {
-    if (widget.state.lyrics.parsedLyrics!.lyrics[index].start.inSeconds <=
-        duration.inSeconds) {
-      if (index >= widget.state.lyrics.parsedLyrics!.lyrics.length - 1) {
+    final lyrics = widget.state.lyrics.parsedLyrics?.lyrics;
+    if (lyrics == null || index < 0 || index >= lyrics.length) return false;
+
+    if (lyrics[index].start.inMilliseconds <= duration.inMilliseconds) {
+      if (index >= lyrics.length - 1) {
         return true;
-      } else if (widget
-              .state.lyrics.parsedLyrics!.lyrics[index + 1].start.inSeconds >
-          duration.inSeconds) {
+      } else if (lyrics[index + 1].start.inMilliseconds > duration.inMilliseconds) {
         return true;
       }
     }
@@ -288,17 +289,26 @@ class _SyncedLyricsWidgetState extends State<SyncedLyricsWidget> {
         itemCount: widget.state.lyrics.parsedLyrics!.lyrics.length,
         padding: const EdgeInsets.symmetric(vertical: 30),
         itemBuilder: (context, index) {
-          return Text(
-            widget.state.lyrics.parsedLyrics!.lyrics[index].text,
-            textAlign: TextAlign.center,
-            style: Default_Theme.secondoryTextStyle.merge(TextStyle(
-              fontSize: 18,
-              fontFamily: 'NotoSans',
-              fontWeight: FontWeight.bold,
-              color: isCurrentLyric(index)
-                  ? Colors.white
-                  : Default_Theme.primaryColor2.withOpacity(0.4),
-            )),
+          return GestureDetector(
+            onTap: () {
+              context.read<BeatsPlayerCubit>().beatsMusicPlayer.audioPlayer.seek(
+                  widget.state.lyrics.parsedLyrics!.lyrics[index].start);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                widget.state.lyrics.parsedLyrics!.lyrics[index].text,
+                textAlign: TextAlign.center,
+                style: Default_Theme.secondoryTextStyle.merge(TextStyle(
+                  fontSize: 18,
+                  fontFamily: 'NotoSans',
+                  fontWeight: FontWeight.bold,
+                  color: isCurrentLyric(index)
+                      ? Colors.white
+                      : Default_Theme.primaryColor2.withOpacity(0.4),
+                )),
+              ),
+            ),
           );
         },
       ),

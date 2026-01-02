@@ -19,6 +19,9 @@ import 'package:beats_music/theme_data/default.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:beats_music/utils/load_Image.dart';
+import 'package:beats_music/model/songModel.dart';
+import 'package:beats_music/screens/widgets/shimmer_loaders.dart';
 
 class SearchScreen extends StatefulWidget {
   final String searchQuery;
@@ -276,17 +279,29 @@ class _SearchScreenState extends State<SearchScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: _isSearching
-                      ? BlocBuilder<FetchSearchResultsCubit, FetchSearchResultsState>(
-                          builder: (context, state) {
-                            if (state is FetchSearchResultsLoading) {
-                              return const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(40),
-                                  child: CircularProgressIndicator(
-                                    color: Default_Theme.accentColor2,
+                      ? BlocListener<FetchSearchResultsCubit, FetchSearchResultsState>(
+                          listener: (context, state) {
+                            if (state.errorMessage != null &&
+                                state.errorMessage!.isNotEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    state.errorMessage!,
+                                    style: const TextStyle(color: Colors.white),
                                   ),
+                                  backgroundColor: Colors.red,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10)),
                                 ),
                               );
+                            }
+                          },
+                          child: BlocBuilder<FetchSearchResultsCubit,
+                              FetchSearchResultsState>(
+                          builder: (context, state) {
+                            if (state is FetchSearchResultsLoading) {
+                              return const SearchSkeleton();
                             } else if (state.loadingState == LoadingState.loaded) {
                               if (state.resultType == ResultTypes.songs &&
                                   state.mediaItems.isNotEmpty) {
@@ -296,6 +311,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                       SongCardWidget(
                                         song: item,
                                         onTap: () {
+                                          context.read<SearchSuggestionBloc>().add(SearchSuggestionAddRich(item));
                                           // Add all search results to queue, starting from clicked song
                                           final clickedIndex = state.mediaItems.indexOf(item);
                                           final queueList = [
@@ -324,7 +340,8 @@ class _SearchScreenState extends State<SearchScreen> {
                               return _buildSearchHistory();
                             }
                           },
-                        )
+                        ),
+                      )
                       : _buildSearchHistory(),
                 ),
               ),
@@ -338,83 +355,119 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildSearchHistory() {
     return BlocBuilder<SearchSuggestionBloc, SearchSuggestionState>(
       builder: (context, state) {
-        if (state is SearchSuggestionLoaded && state.dbSuggestionList.isNotEmpty) {
+        if (state is SearchSuggestionLoaded && 
+            (state.richSuggestionList.isNotEmpty || state.dbSuggestionList.isNotEmpty)) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Recent Searches",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Default_Theme.primaryColor1,
-                    ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  "Recents",
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Default_Theme.primaryColor1,
                   ),
-                  TextButton(
-                    onPressed: () {
-                      // Clear all logic - assuming the bloc supports clearing all or we loop through
-                      // Ideally, the bloc should have a ClearAll event.
-                      // For now, we'll clear them one by one or if bloc supports it.
-                      // Checking SearchSuggestionBloc... assuming we need to implement or use existing.
-                      // If no clear all event, we might need to add it or just clear visible ones.
-                      // Let's assume we can iterate and clear for now, or better, add a ClearAll event if possible.
-                      // Since I can't see the bloc code fully, I'll try to clear visible ones.
-                      for (var e in state.dbSuggestionList) {
-                         context.read<SearchSuggestionBloc>().add(
-                                SearchSuggestionClear(e.values.first));
-                      }
-                    },
-                    child: Text(
-                      "Clear All",
-                      style: TextStyle(
-                        color: Default_Theme.primaryColor1.withOpacity(0.6),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-              const SizedBox(height: 16),
-              ListView(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: state.dbSuggestionList
-                    .map(
-                      (e) => ListTile(
-                        title: Text(
-                          e.values.first,
-                          style: const TextStyle(
-                            color: Default_Theme.primaryColor1,
-                          ).merge(Default_Theme.secondoryTextStyle),
+              const SizedBox(height: 8),
+              // Rich History List
+              if (state.richSuggestionList.isNotEmpty)
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: state.richSuggestionList.length,
+                  itemBuilder: (context, index) {
+                    final item = state.richSuggestionList[index];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: LoadImageCached(imageUrl: item.artUri.toString()),
                         ),
-                        contentPadding: const EdgeInsets.only(left: 0, right: 8),
-                        leading: Icon(
-                          MingCute.history_line,
-                          size: 22,
-                          color: Default_Theme.primaryColor1.withOpacity(0.5),
+                      ),
+                      title: Text(
+                        item.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Default_Theme.primaryColor1,
+                          fontWeight: FontWeight.w600,
                         ),
-                        trailing: IconButton(
-                          onPressed: () {
-                            context.read<SearchSuggestionBloc>().add(
-                                SearchSuggestionClear(e.values.first));
-                          },
-                          icon: Icon(
-                            MingCute.close_fill,
-                            color: Default_Theme.primaryColor1.withOpacity(0.5),
-                            size: 22,
-                          ),
+                      ),
+                      subtitle: Text(
+                        "${item.genre == 'Playlist' ? 'Playlist' : 'Song'} • ${item.artist}",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Default_Theme.primaryColor1.withOpacity(0.7),
+                          fontSize: 12,
                         ),
-                        onTap: () {
-                          _textEditingController.text = e.values.first;
-                          _performSearch(e.values.first);
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: Default_Theme.primaryColor1,
+                        ),
+                        onPressed: () {
+                          context
+                              .read<SearchSuggestionBloc>()
+                              .add(SearchSuggestionRemoveRich(item.id));
                         },
                       ),
-                    )
-                    .toList(),
-              ),
+                      onTap: () {
+                        // Play the item
+                        context.read<BeatsPlayerCubit>().beatsMusicPlayer.playMediaItem(item);
+                      },
+                    );
+                  },
+                ),
+                
+              // Fallback/Legacy Text History (only if rich list is empty or small?)
+              // For now, let's show it below if rich list is empty, or maybe hide it?
+              // User request implies replacement. Let's show text history only if rich is empty.
+              if (state.richSuggestionList.isEmpty)
+                ListView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: state.dbSuggestionList
+                      .map(
+                        (e) => ListTile(
+                          title: Text(
+                            e.values.first,
+                            style: const TextStyle(
+                              color: Default_Theme.primaryColor1,
+                            ).merge(Default_Theme.secondoryTextStyle),
+                          ),
+                          contentPadding: const EdgeInsets.only(left: 0, right: 8),
+                          leading: Icon(
+                            MingCute.history_line,
+                            size: 22,
+                            color: Default_Theme.primaryColor1.withOpacity(0.5),
+                          ),
+                          trailing: IconButton(
+                            onPressed: () {
+                              context.read<SearchSuggestionBloc>().add(
+                                  SearchSuggestionClear(e.values.first));
+                            },
+                            icon: Icon(
+                              MingCute.close_fill,
+                              color: Default_Theme.primaryColor1.withOpacity(0.5),
+                              size: 22,
+                            ),
+                          ),
+                          onTap: () {
+                            _textEditingController.text = e.values.first;
+                            _performSearch(e.values.first);
+                          },
+                        ),
+                      )
+                      .toList(),
+                ),
             ],
           );
         } else {
