@@ -1,4 +1,4 @@
-import 'dart:developer';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:beats_music/routes_and_consts/global_conts.dart';
@@ -19,10 +19,16 @@ import 'package:beats_music/services/discord_service.dart';
 import 'package:beats_music/services/player/recently_played_tracker.dart';
 import 'package:beats_music/services/equalizer_service.dart';
 import 'package:beats_music/services/listening_statistics_service.dart';
+import 'package:beats_music/services/crossfade_service.dart';
 
 class BeatsMusicPlayer extends BaseAudioHandler
     with SeekHandler, QueueHandler {
   late AudioPlayer audioPlayer;
+  late AudioPlayer audioPlayer2;
+  late AudioPlayer _activePlayer;
+  late AudioPlayer _nextPlayer;
+  
+  final CrossfadeService _crossfadeService = CrossfadeService();
 
   // Modular components
   late AudioSourceManager _audioSourceManager;
@@ -65,36 +71,31 @@ class BeatsMusicPlayer extends BaseAudioHandler
     // Create equalizer BEFORE AudioPlayer
     final equalizerService = EqualizerService();
     final androidEq = equalizerService.createAndroidEqualizer();
+
+    // Initialize both players
+    audioPlayer = _createPlayer(androidEq);
+    audioPlayer2 = _createPlayer(androidEq);
     
-    // Create AudioPlayer with equalizer in pipeline (Android only)
-    if (androidEq != null) {
-      audioPlayer = AudioPlayer(
-        handleInterruptions: true,
-        androidApplyAudioAttributes: true,
-        handleAudioSessionActivation: true,
-        audioPipeline: AudioPipeline(
-          androidAudioEffects: [androidEq],
-        ),
-      );
-    } else {
-      audioPlayer = AudioPlayer(
-        handleInterruptions: true,
-        androidApplyAudioAttributes: true,
-        handleAudioSessionActivation: true,
-      );
-    }
-    
+    _activePlayer = audioPlayer;
+    _nextPlayer = audioPlayer2;
+
     _initializeModules();
-    _initializePlayer();
+    _initializePlayer(audioPlayer);
+    _initializePlayer(audioPlayer2);
     
     // Initialize equalizer after player is created
     equalizerService.initializeAfterPlayerCreated();
     
     // Initialize recently played tracker with default threshold
     _recentlyPlayedTracker = RecentlyPlayedTracker(
-      audioPlayer,
+      _activePlayer,
       () => _queueManager.currentMediaItem,
     );
+
+    // Refresh shuffle list when queue changes - delegate to queue manager
+    _queueSubscription = _queueManager.queue.listen((e) {
+      queue.add(e); // Sync with base audio handler queue
+    });
   }
 
   /// Configure how many continuous seconds are required before a track is
@@ -135,20 +136,47 @@ class BeatsMusicPlayer extends BaseAudioHandler
     _relatedSongsManager.onAddQueueItems =
         (items, {bool atLast = false}) => addQueueItems(items, atLast: atLast);
 
-    _preloadManager.onGetAudioSource =
-        (mediaItem) => getAudioSource(mediaItem);
+    _preloadManager.onPrepareSource = (mediaItem) => _audioSourceManager
+        .ensureSourcePrepared(mediaItem,
+            isConnected: _connectivityManager.isConnected.value);
+
+    _preloadManager.onGetAudioSource = (mediaItem) => getAudioSource(mediaItem);
   }
 
-  void _initializePlayer() {
-    audioPlayer.setVolume(1);
-    audioPlayer.setSpeed(1.0);
+  AudioPlayer _createPlayer(dynamic androidEq) {
+    final player = androidEq != null
+        ? AudioPlayer(
+            handleInterruptions: true,
+            androidApplyAudioAttributes: true,
+            handleAudioSessionActivation: true,
+            audioPipeline: AudioPipeline(androidAudioEffects: [androidEq]),
+          )
+        : AudioPlayer(
+            handleInterruptions: true,
+            androidApplyAudioAttributes: true,
+            handleAudioSessionActivation: true,
+          );
+    player.setAutomaticallyWaitsToMinimizeStalling(true);
+    return player;
+  }
+
+  void _initializePlayer(AudioPlayer player) {
+    player.setVolume(1);
+    player.setSpeed(1.0);
     
-    _playbackEventSubscription =
-        audioPlayer.playbackEventStream.listen(_broadcastPlayerEvent);
-    audioPlayer.setLoopMode(LoopMode.off);
+    // Only the active player should broadcast its events to the system handler
+    player.playbackEventStream.listen((event) {
+      if (player == _activePlayer) {
+        _broadcastPlayerEvent(event);
+      }
+    });
+
+    player.setLoopMode(LoopMode.off);
 
     // Enhanced error handling for player events + statistics tracking
-    _playerStateSubscription = audioPlayer.playerStateStream.listen((state) async {
+    player.playerStateStream.listen((state) async {
+      if (player != _activePlayer) return;
+
       if (state.processingState == ProcessingState.idle &&
           state.playing == false &&
           _errorHandler.lastError.value != null) {
@@ -163,34 +191,42 @@ class BeatsMusicPlayer extends BaseAudioHandler
     });
 
     // Update the current media item when the audio player changes to the next
-    _mediaItemSubscription = Rx.combineLatest2(
-      audioPlayer.sequenceStream,
-      audioPlayer.currentIndexStream,
+    Rx.combineLatest2(
+      player.sequenceStream,
+      player.currentIndexStream,
       (sequence, index) {
-        if (sequence.isEmpty) return null;
-        MediaItem item = sequence[index ?? 0].tag as MediaItem;
-        final artUri = Uri.parse(
-            formatImgURL(item.artUri.toString(), ImageQuality.medium));
-        item = item.copyWith(artUri: artUri);
-        return item;
+        if (player != _activePlayer) return null;
+        try {
+          if (sequence.isEmpty || index == null || index < 0 || index >= sequence.length) {
+            return null;
+          }
+          final source = sequence[index];
+          if (source.tag is! MediaItem) return null;
+          
+          MediaItem item = source.tag as MediaItem;
+          final artUri = Uri.parse(
+              formatImgURL(item.artUri.toString(), ImageQuality.medium));
+          item = item.copyWith(artUri: artUri);
+          return item;
+        } catch (e) {
+          return null;
+        }
       },
-    ).whereType<MediaItem>().listen((item) async {
-      // Only update if the media item has actually changed (compare id and artUri)
+    ).listen((item) async {
+      if (player != _activePlayer || item == null) return;
+      
       final currentItem = mediaItem.value;
       if (currentItem == null ||
           currentItem.id != item.id ||
           currentItem.artUri != item.artUri) {
             
-        // Track end of previous song (if skipped)
         final statisticsService = ListeningStatisticsService();
         await statisticsService.trackSongEnd(
           wasCompleted: false,
-          durationOverride: audioPlayer.position.inSeconds,
+          durationOverride: player.position.inSeconds,
         );
         
         mediaItem.add(item);
-        
-        // Track statistics when song starts
         statisticsService.trackSongStart(item);
       }
     });
@@ -198,25 +234,34 @@ class BeatsMusicPlayer extends BaseAudioHandler
     // Trigger skipToNext when the current song ends.
     final endingOffset =
         Platform.isWindows ? 200 : (Platform.isLinux ? 700 : 200);
-    _positionSubscription = audioPlayer.positionStream.listen((event) {
-      //check if the current queue is empty and if it is, add related songs
+    player.positionStream.listen((event) {
+      if (player != _activePlayer) return;
+
       EasyThrottle.throttle('loadRelatedSongs', const Duration(seconds: 5),
           () async => check4RelatedSongs());
-      if (((audioPlayer.duration != null &&
-              audioPlayer.duration?.inSeconds != 0 &&
+          
+      // CROSSFADE LOGIC
+      if (_crossfadeService.isEnabled &&
+          player.duration != null &&
+          player.duration!.inSeconds > 10 && // Only crossfade longer tracks
+          event.inMilliseconds >
+              player.duration!.inMilliseconds - (_crossfadeService.duration.inMilliseconds + 500)) {
+        
+        EasyThrottle.throttle('initiate-crossfade', const Duration(seconds: 2), () {
+          _initiateCrossfade();
+        });
+        return;
+      }
+
+      if (((player.duration != null &&
+              player.duration?.inSeconds != 0 &&
               event.inMilliseconds >
-                  audioPlayer.duration!.inMilliseconds - endingOffset)) &&
+                  player.duration!.inMilliseconds - endingOffset)) &&
           loopMode.value != LoopMode.one &&
           _queueManager.queue.value.isNotEmpty) {
-        // Add safety check for queue
         EasyThrottle.throttle('skipNext', const Duration(milliseconds: 2000),
             () async => skipToNext());
       }
-    });
-
-    // Refresh shuffle list when queue changes - delegate to queue manager
-    _queueSubscription = _queueManager.queue.listen((e) {
-      queue.add(e); // Sync with base audio handler queue
     });
   }
 
@@ -243,15 +288,14 @@ class BeatsMusicPlayer extends BaseAudioHandler
       final currentItem =
           _queueManager.queue.value[_queueManager.currentPlayingIdx];
       final currentPosition = audioPlayer.position;
-      log('Retrying current track: ${currentItem.title} at position $currentPosition',
-          name: 'beatsMusicPlayer');
+      debugPrint('Retrying current track: ${currentItem.title} at position $currentPosition');
 
       try {
         _errorHandler.clearError(); // Clear previous error
         await playMediaItem(currentItem,
             doPlay: true, initialPosition: currentPosition);
       } catch (e) {
-        log('Retry failed: $e', name: 'beatsMusicPlayer');
+        debugPrint('Retry failed: $e');
         _errorHandler.handleError(
             PlayerErrorType.playbackError, 'Retry failed: $e', currentItem, e);
       }
@@ -283,15 +327,19 @@ class BeatsMusicPlayer extends BaseAudioHandler
         MediaAction.seek,
       },
       androidCompactActionIndices: const [0, 1, 2],
-      updatePosition: audioPlayer.position,
+      updatePosition: _activePlayer.position,
       playing: isPlaying,
-      bufferedPosition: audioPlayer.bufferedPosition,
-      speed: audioPlayer.speed,
+      bufferedPosition: _activePlayer.bufferedPosition,
+      speed: _activePlayer.speed,
     ));
 
-    DiscordService.updatePresence(
-      mediaItem: currentMedia,
-      isPlaying: isPlaying,
+    EasyThrottle.throttle(
+      'discord-presence',
+      const Duration(seconds: 10),
+      () => DiscordService.updatePresence(
+        mediaItem: currentMedia,
+        isPlaying: isPlaying,
+      ),
     );
 
     // Check if we should preload next song(s)
@@ -303,6 +351,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
           currentMedia: _queueManager.currentMediaItem,
           nextMedia: _queueManager.nextMediaItem,
           next2Media: _queueManager.next2MediaItem,
+          next3Media: _queueManager.next3MediaItem,
           currentPosition: event.updatePosition,
           totalDuration: event.duration,
         );
@@ -327,16 +376,79 @@ class BeatsMusicPlayer extends BaseAudioHandler
   @override
   Future<void> play() async {
     if (_isDisposed) {
-      log('Cannot play: player is disposed', name: 'beatsMusicPlayer');
+      debugPrint('Cannot play: player is disposed');
       return;
     }
-    await audioPlayer.play();
+    await _activePlayer.play();
+  }
+
+  bool _isCrossfading = false;
+  Future<void> _initiateCrossfade() async {
+    if (_isCrossfading) return;
+    if (_queueManager.nextMediaItem == null) return;
+
+    _isCrossfading = true;
+    debugPrint('--- INITIATING CROSSFADE ---');
+
+    final nextMedia = _queueManager.nextMediaItem!;
+    final crossfadeDuration = _crossfadeService.duration;
+
+    try {
+      // 1. Prepare next player
+      final source = await _audioSourceManager.getAudioSource(nextMedia,
+          isConnected: _connectivityManager.isConnected.value);
+      if (source == null) {
+        _isCrossfading = false;
+        return;
+      }
+
+      await _nextPlayer.setAudioSource(source);
+      
+      // 2. Start overlapping playback
+      _nextPlayer.setVolume(0);
+      await _nextPlayer.play();
+
+      // 3. Ramp volumes
+      final steps = 20;
+      final stepDuration = Duration(milliseconds: crossfadeDuration.inMilliseconds ~/ steps);
+      
+      for (var i = 1; i <= steps; i++) {
+        final rampUp = i / steps;
+        final rampDown = 1.0 - rampUp;
+        
+        _activePlayer.setVolume(rampDown);
+        _nextPlayer.setVolume(rampUp);
+        
+        await Future.delayed(stepDuration);
+      }
+
+      // 4. Swap and cleanup
+      await _activePlayer.stop();
+      _activePlayer.setVolume(1); // Reset for next time
+
+      final temp = _activePlayer;
+      _activePlayer = _nextPlayer;
+      _nextPlayer = temp;
+
+      // Update tracker with the now active player
+      _recentlyPlayedTracker.updatePlayer(_activePlayer);
+
+      // Update pointers in queue manager since we manually handled the transition
+      _queueManager.skipToNextOnly();
+      
+      // Notify listeners about the new player state
+      _broadcastPlayerEvent(_activePlayer.playbackEvent);
+
+    } catch (e) {
+      debugPrint('Error during crossfade: $e');
+    } finally {
+      _isCrossfading = false;
+    }
   }
 
   Future<void> check4RelatedSongs() async {
     if (_queueManager.currentMediaItem == null) {
-      log('No current media item available for related songs check',
-          name: 'beatsMusicPlayer');
+      debugPrint('No current media item available for related songs check');
       return;
     }
 
@@ -350,33 +462,30 @@ class BeatsMusicPlayer extends BaseAudioHandler
 
   @override
   Future<void> seek(Duration position) async {
-    audioPlayer.seek(position);
+    _activePlayer.seek(position);
   }
 
   Future<void> seekNSecForward(Duration n) async {
-    if ((audioPlayer.duration ?? const Duration(seconds: 0)) >=
-        audioPlayer.position + n) {
-      await audioPlayer.seek(audioPlayer.position + n);
+    if ((_activePlayer.duration ?? const Duration(seconds: 0)) >=
+        _activePlayer.position + n) {
+      await _activePlayer.seek(_activePlayer.position + n);
     } else {
-      await audioPlayer
-          .seek(audioPlayer.duration ?? const Duration(seconds: 0));
+      await _activePlayer
+          .seek(_activePlayer.duration ?? const Duration(seconds: 0));
     }
   }
 
   Future<void> seekNSecBackward(Duration n) async {
-    if (audioPlayer.position - n >= const Duration(seconds: 0)) {
-      await audioPlayer.seek(audioPlayer.position - n);
+    if (_activePlayer.position - n >= const Duration(seconds: 0)) {
+      await _activePlayer.seek(_activePlayer.position - n);
     } else {
-      await audioPlayer.seek(const Duration(seconds: 0));
+      await _activePlayer.seek(const Duration(seconds: 0));
     }
   }
 
   void setLoopMode(LoopMode loopMode) {
-    if (loopMode == LoopMode.one) {
-      audioPlayer.setLoopMode(LoopMode.one);
-    } else {
-      audioPlayer.setLoopMode(LoopMode.off);
-    }
+    _activePlayer.setLoopMode(loopMode);
+    _nextPlayer.setLoopMode(loopMode);
     this.loopMode.add(loopMode);
   }
 
@@ -396,16 +505,16 @@ class BeatsMusicPlayer extends BaseAudioHandler
   @override
   Future<void> pause() async {
     if (_isDisposed) {
-      log('Cannot pause: player is disposed', name: 'beatsMusicPlayer');
+      debugPrint('Cannot pause: player is disposed');
       return;
     }
-    await audioPlayer.pause();
+    await _activePlayer.pause();
     // If the audio player is playing, pause it [Temporary bug]
-    if (audioPlayer.playing) {
-      audioPlayer.pause();
+    if (_activePlayer.playing) {
+      _activePlayer.pause();
     }
 
-    log("paused", name: "beatsMusicPlayer");
+    debugPrint("paused");
   }
 
   Future<AudioSource> getAudioSource(MediaItem mediaItem) async {
@@ -422,8 +531,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
 
       return audioSource;
     } catch (e) {
-      log('Error getting audio source for ${mediaItem.title}: $e',
-          name: "beatsMusicPlayer");
+      debugPrint('Error getting audio source for ${mediaItem.title}: $e');
 
       final errorType = _errorHandler.categorizeError(e);
       String errorMessage;
@@ -468,23 +576,23 @@ class BeatsMusicPlayer extends BaseAudioHandler
       await pause();
       await seek(initialPosition ?? Duration.zero);
 
-      await audioPlayer.setAudioSource(audioSource);
+      await _activePlayer.setAudioSource(audioSource);
       // Protect against hanging load calls (observed on Android when DNS fails).
       try {
         // Wait up to 12 seconds for load, otherwise treat as network error.
-        await audioPlayer.load().timeout(const Duration(seconds: 12));
+        await _activePlayer.load().timeout(const Duration(seconds: 12));
       } on TimeoutException catch (e) {
-        log('audioPlayer.load() timed out: $e', name: 'beatsMusicPlayer');
+        debugPrint('audioPlayer.load() timed out: $e');
         final currentItem = _queueManager.currentMediaItem;
         _errorHandler.handleError(PlayerErrorType.networkError,
             'Network timeout while loading track', currentItem, e);
         try {
-          await audioPlayer.stop();
+          await _activePlayer.stop();
         } catch (_) {}
         rethrow;
       }
 
-      if (!audioPlayer.playing) {
+      if (!_activePlayer.playing) {
         await play();
       }
 
@@ -492,9 +600,9 @@ class BeatsMusicPlayer extends BaseAudioHandler
       _errorHandler.clearError();
       _errorHandler.clearRetryAttempts(mediaId);
 
-      log('Successfully started playback for $mediaId', name: "beatsMusicPlayer");
+      debugPrint('Successfully started playback for $mediaId');
     } catch (e) {
-      log("Error in playAudioSource: $e", name: "beatsMusicPlayer");
+      debugPrint("Error in playAudioSource: $e");
 
       PlayerErrorType errorType;
       String errorMessage;
@@ -534,16 +642,16 @@ class BeatsMusicPlayer extends BaseAudioHandler
   Future<void> playMediaItem(MediaItem mediaItem,
       {bool doPlay = true, Duration? initialPosition}) async {
     try {
-      log('Attempting to play: ${mediaItem.title}', name: "beatsMusicPlayer");
+      debugPrint('Attempting to play: ${mediaItem.title}');
 
       // Check if we have a preloaded source
       AudioSource? audioSource = _preloadManager.getPreloadedSource(mediaItem.id);
       
       if (audioSource != null) {
-        log('Using preloaded source for: ${mediaItem.title}', name: "beatsMusicPlayer");
+        debugPrint('Using preloaded source for: ${mediaItem.title}');
         await _preloadManager.clearNextPreload();
       } else {
-        log('Fetching audio source for: ${mediaItem.title}', name: "beatsMusicPlayer");
+        debugPrint('Fetching audio source for: ${mediaItem.title}');
         audioSource = await getAudioSource(mediaItem);
       }
       await playAudioSource(
@@ -551,14 +659,13 @@ class BeatsMusicPlayer extends BaseAudioHandler
           mediaId: mediaItem.id,
           initialPosition: initialPosition);
 
-      if (doPlay && !audioPlayer.playing) {
+      if (doPlay && !_activePlayer.playing) {
         await play();
       }
 
       await check4RelatedSongs();
     } catch (e) {
-      log('Failed to play media item ${mediaItem.title}: $e',
-          name: "beatsMusicPlayer");
+      debugPrint('Failed to play media item ${mediaItem.title}: $e');
 
       // Don't rethrow here, let the error handling system manage it
       // The error was already handled in getAudioSource or playAudioSource
@@ -568,18 +675,23 @@ class BeatsMusicPlayer extends BaseAudioHandler
   Future<void> _prepare4play({int idx = 0, bool doPlay = false}) async {
     final currentItem = _queueManager.currentMediaItem;
     if (currentItem == null) {
-      log('Cannot prepare4play: no current media item', name: 'beatsMusicPlayer');
+      debugPrint('Cannot prepare4play: no current media item');
       return;
     }
+
+    // Explicitly broadcast the media item change to ensure UI updates immediately (fix for first song image)
+    mediaItem.add(currentItem);
 
     await playMediaItem(currentItem, doPlay: doPlay);
   }
 
+
+
   @override
   Future<void> rewind() async {
-    if (audioPlayer.processingState == ProcessingState.ready) {
-      await audioPlayer.seek(Duration.zero);
-    } else if (audioPlayer.processingState == ProcessingState.completed) {
+    if (_activePlayer.processingState == ProcessingState.ready) {
+      await _activePlayer.seek(Duration.zero);
+    } else if (_activePlayer.processingState == ProcessingState.completed) {
       await _prepare4play(idx: _queueManager.currentPlayingIdx);
     }
   }
@@ -602,10 +714,11 @@ class BeatsMusicPlayer extends BaseAudioHandler
     final statisticsService = ListeningStatisticsService();
     await statisticsService.trackSongEnd(
       wasCompleted: false,
-      durationOverride: audioPlayer.position.inSeconds,
+      durationOverride: _activePlayer.position.inSeconds,
     );
         
-    await audioPlayer.stop();
+    await _activePlayer.stop();
+    await _nextPlayer.stop();
     DiscordService.clearPresence();
     await super.stop();
   }
@@ -632,7 +745,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
     if (_isDisposed) return; // Prevent multiple cleanup calls
     _isDisposed = true;
 
-    log('Cleaning up player resources', name: 'beatsMusicPlayer');
+    debugPrint('Cleaning up player resources');
 
     // Cancel all stream subscriptions
     await _playbackEventSubscription?.cancel();
@@ -657,8 +770,10 @@ class BeatsMusicPlayer extends BaseAudioHandler
     try {
       await audioPlayer.stop();
       await audioPlayer.dispose();
+      await audioPlayer2.stop();
+      await audioPlayer2.dispose();
     } catch (e) {
-      log('Error disposing audio player: $e', name: 'beatsMusicPlayer');
+      debugPrint('Error disposing audio players: $e');
     }
 
     // Close behavior subjects
@@ -667,7 +782,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
       await isOffline.close();
       await loopMode.close();
     } catch (e) {
-      log('Error closing behavior subjects: $e', name: 'beatsMusicPlayer');
+      debugPrint('Error closing behavior subjects: $e');
     }
 
     await super.stop();
@@ -679,8 +794,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
     try {
       await super.insertQueueItem(index, mediaItem);
     } catch (e) {
-      log('Error syncing insertQueueItem with audio service: $e',
-          name: 'beatsMusicPlayer');
+      debugPrint('Error syncing insertQueueItem with audio service: $e');
     }
   }
 

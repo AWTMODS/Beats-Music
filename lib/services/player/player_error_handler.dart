@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:async';
@@ -104,7 +105,7 @@ class PlayerErrorHandler {
     );
 
     lastError.add(error);
-    log('Player error: $error', name: 'PlayerErrorHandler');
+    debugPrint('Player error: $error');
 
     // Show user-friendly error message
     String userMessage = _getUserFriendlyErrorMessage(type, message);
@@ -128,8 +129,7 @@ class PlayerErrorHandler {
         break;
       default:
         // For unknown errors (like MPV warnings), don't retry as they might be harmless
-        log('Non-retriable error encountered: $error',
-            name: 'PlayerErrorHandler');
+        debugPrint('Non-retriable error encountered: $error');
         break;
     }
   }
@@ -155,8 +155,7 @@ class PlayerErrorHandler {
     if (currentItem == null) return;
 
     if (_totalRetryCount >= 10) {
-      log('Total retry limit reached (10), skipping to next for ${currentItem.title}',
-          name: 'PlayerErrorHandler');
+      debugPrint('Total retry limit reached (10), skipping to next for ${currentItem.title}');
       _skipToNextOnError(currentItem);
       return;
     }
@@ -165,8 +164,7 @@ class PlayerErrorHandler {
     final attempts = _retryAttempts[itemId] ?? 0;
 
     if (attempts >= _retryConfig.maxRetries) {
-      log('Max retry attempts reached for ${currentItem.title}',
-          name: 'PlayerErrorHandler');
+      debugPrint('Max retry attempts reached for ${currentItem.title}');
       _skipToNextOnError(currentItem);
       return;
     }
@@ -178,8 +176,7 @@ class PlayerErrorHandler {
 
     _reconnectionTimer?.cancel();
     _reconnectionTimer = Timer(delay, () async {
-      log('Retrying playback for ${currentItem.title} (attempt ${attempts + 1})',
-          name: 'PlayerErrorHandler');
+      debugPrint('Retrying playback for ${currentItem.title} (attempt ${attempts + 1})');
       onRetryCurrentTrack?.call();
     });
   }
@@ -211,7 +208,7 @@ class PlayerErrorHandler {
         connected = await checkNetworkConnectivity!.call();
       } catch (e) {
         connected = false;
-        log('Connectivity check failed: $e', name: 'PlayerErrorHandler');
+        debugPrint('Connectivity check failed: $e');
       }
 
       if (!connected) {
@@ -233,7 +230,7 @@ class PlayerErrorHandler {
     try {
       onSkipToNext?.call();
     } catch (e) {
-      log('Error while calling onSkipToNext: $e', name: 'PlayerErrorHandler');
+      debugPrint('Error while calling onSkipToNext: $e');
     }
     _autoSkipPerformed = true;
   }

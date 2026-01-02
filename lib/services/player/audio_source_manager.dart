@@ -1,4 +1,4 @@
-import 'dart:developer';
+import 'package:flutter/foundation.dart';
 import 'package:beats_music/model/songModel.dart';
 import 'package:beats_music/model/saavnModel.dart';
 import 'package:beats_music/routes_and_consts/global_str_consts.dart';
@@ -9,6 +9,9 @@ import 'package:beats_music/repository/Spotify/spotify_downloader_api.dart';
 import 'package:beats_music/repository/Spotify/aswin_sparky_api.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'dart:io';
 
 class AudioSourceManager {
   // Cache for audio sources to prevent redundant fetching
@@ -16,16 +19,14 @@ class AudioSourceManager {
   
   // Method to clear cache for a specific song ID (useful if playback fails)
   void clearCachedSource(String mediaId) {
-    if (_audioSourceCache.containsKey(mediaId)) {
-      _audioSourceCache.remove(mediaId);
-      log('Cleared cached source for: $mediaId', name: "AudioSourceManager");
-    }
+    _audioSourceCache.remove(mediaId);
+    debugPrint('Cleared audio source cache for: $mediaId');
   }
 
   // Clear entire cache
   void clearAllCache() {
     _audioSourceCache.clear();
-    log('Cleared all audio source cache', name: "AudioSourceManager");
+    debugPrint('Cleared all audio source cache');
   }
 
   Future<AudioSource> getAudioSource(MediaItem mediaItem,
@@ -35,7 +36,7 @@ class AudioSourceManager {
       final _down = await BeatsMusicDBService.getDownloadDB(
           mediaItem2MediaItemModel(mediaItem));
       if (_down != null) {
-        log("Playing Offline: ${mediaItem.title}", name: "AudioSourceManager");
+        debugPrint("Playing Offline: ${mediaItem.title}");
         SnackbarService.showMessage("Playing Offline",
             duration: const Duration(seconds: 1));
 
@@ -47,8 +48,7 @@ class AudioSourceManager {
       
       // Check cache for online sources
       if (_audioSourceCache.containsKey(mediaItem.id)) {
-        log("Returning cached audio source for: ${mediaItem.title}", 
-            name: "AudioSourceManager");
+        debugPrint("Returning cached audio source for: ${mediaItem.title}");
         return _audioSourceCache[mediaItem.id]!;
       }
 
@@ -63,8 +63,7 @@ class AudioSourceManager {
       if (mediaItem.extras?["needs_url_fetch"] == 'true' && 
           mediaItem.extras?["spotify_link"] != null) {
         try {
-          log("Fetching Spotify download URL for: ${mediaItem.title}", 
-              name: "AudioSourceManager");
+          debugPrint("Fetching Spotify download URL for: ${mediaItem.title}");
           
           // Fetch download URL from Aswin Sparky API
           final trackData = await AswinSparkyAPI().getTrackFromUrl(
@@ -72,19 +71,18 @@ class AudioSourceManager {
           
           if (trackData != null && trackData['download'] != null) {
             final downloadUrl = trackData['download'];
-            log('Got Spotify download URL, playing: ${mediaItem.title}', 
-                name: "AudioSourceManager");
+            debugPrint('Got Spotify download URL, playing: ${mediaItem.title}');
             
-            audioSource = AudioSource.uri(Uri.parse(downloadUrl), tag: mediaItem);
+            audioSource = await _wrapWithCache(Uri.parse(downloadUrl), mediaItem);
             // Cache the result
             _audioSourceCache[mediaItem.id] = audioSource;
             return audioSource;
           } else {
-            log('Failed to get Spotify download URL', name: "AudioSourceManager");
+            debugPrint('Failed to get Spotify download URL');
             throw Exception('Failed to get Spotify download URL');
           }
         } catch (e) {
-          log('Error fetching Spotify URL: $e', name: "AudioSourceManager");
+          debugPrint('Error fetching Spotify URL: $e');
           throw Exception('Failed to fetch Spotify audio: $e');
         }
       }
@@ -92,29 +90,25 @@ class AudioSourceManager {
       // Try Spotify first if available (old implementation)
       if (mediaItem.extras?["spotifyId"] != null) {
         try {
-          log("Attempting Spotify playback for: ${mediaItem.title}", 
-              name: "AudioSourceManager");
+          debugPrint("Attempting Spotify playback for: ${mediaItem.title}");
           
           final spotifyUrl = await SpotifyDownloaderAPI.getDirectDownloadUrl(
               mediaItem.extras!["spotifyId"]);
           
           if (spotifyUrl != null && spotifyUrl.isNotEmpty) {
-            log('Playing from Spotify: ${mediaItem.title}', 
-                name: "AudioSourceManager");
+            debugPrint('Playing from Spotify: ${mediaItem.title}');
             SnackbarService.showMessage("Playing from Spotify",
                 duration: const Duration(seconds: 1));
             
-            audioSource = AudioSource.uri(Uri.parse(spotifyUrl), tag: mediaItem);
+            audioSource = await _wrapWithCache(Uri.parse(spotifyUrl), mediaItem);
             // Cache the result
             _audioSourceCache[mediaItem.id] = audioSource;
             return audioSource;
           } else {
-            log('Spotify URL not available, falling back to other sources', 
-                name: "AudioSourceManager");
+            debugPrint('Spotify URL not available, falling back to other sources');
           }
         } catch (e) {
-          log('Spotify playback failed, falling back: $e', 
-              name: "AudioSourceManager");
+          debugPrint('Spotify playback failed, falling back: $e');
         }
       }
 
@@ -126,8 +120,15 @@ class AudioSourceManager {
         quality = quality.toLowerCase();
         final id = mediaItem.id.replaceAll("youtube", '');
 
-        audioSource =
-            YouTubeAudioSource(videoId: id, quality: quality, tag: mediaItem);
+        // Resolve URL first to enable LockCachingAudioSource
+        try {
+          final ytSource = YouTubeAudioSource(videoId: id, quality: quality, tag: mediaItem);
+          final streamInfo = await ytSource.getStreamInfo();
+          audioSource = await _wrapWithCache(streamInfo.url, mediaItem);
+        } catch (e) {
+          debugPrint('Failed to resolve YouTube URL for caching, using direct source: $e');
+          audioSource = YouTubeAudioSource(videoId: id, quality: quality, tag: mediaItem);
+        }
             
         // Note: YouTubeAudioSource handles its own stream extraction and caching internally usually,
         // but we can cache the object wrapper.
@@ -147,19 +148,55 @@ class AudioSourceManager {
           throw Exception('Failed to get stream URL');
         }
 
-        log('Playing: $kurl', name: "AudioSourceManager");
-        audioSource = AudioSource.uri(Uri.parse(kurl), tag: mediaItem);
+        debugPrint('Playing: $kurl');
+        audioSource = await _wrapWithCache(Uri.parse(kurl), mediaItem);
         // Cache the result
         _audioSourceCache[mediaItem.id] = audioSource;
       }
 
       return audioSource;
     } catch (e) {
-      log('Error getting audio source for ${mediaItem.title}: $e',
-          name: "AudioSourceManager");
+      debugPrint('Error getting audio source for ${mediaItem.title}: $e');
       // Clear cache if we failed and maybe had a bad cached entry (though we check cache first)
       clearCachedSource(mediaItem.id);
       rethrow;
+    }
+  }
+
+  /// Trigger stream resolution and caching without returning the source
+  /// Useful for pre-fetching URLs in the background.
+  Future<void> ensureSourcePrepared(MediaItem mediaItem,
+      {required bool isConnected}) async {
+    try {
+      final source = await getAudioSource(mediaItem, isConnected: isConnected);
+      if (source is YouTubeAudioSource) {
+        debugPrint('Pre-resolving YouTube stream for: ${mediaItem.title}');
+        await source.getStreamInfo();
+      }
+      // For LockCachingAudioSource, we don't need to do extra work here 
+      // as it buffers when the player starts loading it.
+    } catch (e) {
+      debugPrint('Failed to prepare source for ${mediaItem.title}: $e');
+    }
+  }
+
+  /// Helper to wrap a URI with LockCachingAudioSource for local stream caching
+  Future<AudioSource> _wrapWithCache(Uri uri, MediaItem tag) async {
+    try {
+      final cacheDir = await getTemporaryDirectory();
+      // Use mediaId to create a unique cache file
+      final cachePath = p.join(cacheDir.path, 'audio_cache', '${tag.id}.cache');
+      
+      final cacheFile = File(cachePath);
+      if (!await cacheFile.parent.exists()) {
+        await cacheFile.parent.create(recursive: true);
+      }
+
+      debugPrint('Using LockCachingAudioSource for: ${tag.title}');
+      return LockCachingAudioSource(uri, cacheFile: cacheFile, tag: tag);
+    } catch (e) {
+      debugPrint('Error creating LockCachingAudioSource: $e. Falling back to normal UriSource.');
+      return AudioSource.uri(uri, tag: tag);
     }
   }
 }

@@ -1,6 +1,6 @@
-import 'dart:developer';
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 
 class ConnectivityManager {
@@ -38,7 +38,7 @@ class ConnectivityManager {
           final result = await InternetAddress.lookup('google.com');
           nowConnected = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
         } catch (e2) {
-          log('DNS lookup fallback failed: $e2', name: 'ConnectivityManager');
+          debugPrint('DNS lookup fallback failed: $e2');
           nowConnected = false;
         }
       }
@@ -47,12 +47,12 @@ class ConnectivityManager {
       isConnected.add(nowConnected);
 
       if (!wasConnected && nowConnected) {
-        log('Network reconnected', name: 'ConnectivityManager');
+        debugPrint('Network reconnected');
         onNetworkReconnected?.call();
       }
     } catch (e) {
       isConnected.add(false);
-      log('Network connectivity check failed: $e', name: 'ConnectivityManager');
+      debugPrint('Network connectivity check failed: $e');
     }
   }
 

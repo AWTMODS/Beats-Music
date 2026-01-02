@@ -9,7 +9,7 @@ import 'package:beats_music/model/songModel.dart';
 /// the Recently Played DB only when the item has been played continuously
 /// for at least [thresholdSeconds]. Default threshold is 15 seconds.
 class RecentlyPlayedTracker {
-  final AudioPlayer _audioPlayer;
+  AudioPlayer _audioPlayer;
   final MediaItem? Function() _getCurrentMediaItem;
 
   int _thresholdSeconds;
@@ -31,9 +31,20 @@ class RecentlyPlayedTracker {
     double percentThreshold = 0.4,
   })  : _thresholdSeconds = thresholdSeconds,
         _percentThreshold = percentThreshold {
-    // Subscribe to player state and position streams
+    _subscribe();
+  }
+
+  void _subscribe() {
+    _playerStateSub?.cancel();
+    _positionSub?.cancel();
     _playerStateSub = _audioPlayer.playerStateStream.listen(_onPlayerState);
     _positionSub = _audioPlayer.positionStream.listen(_onPosition);
+  }
+
+  /// Update the player instance being tracked (useful for crossfade swaps)
+  void updatePlayer(AudioPlayer newPlayer) {
+    _audioPlayer = newPlayer;
+    _subscribe();
   }
 
   void _onPlayerState(PlayerState state) {

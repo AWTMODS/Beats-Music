@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:flutter/foundation.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../model/MediaPlaylistModel.dart';
@@ -49,7 +50,7 @@ class QueueManager {
 
   Future<void> skipToNext() async {
     if (queue.value.isEmpty) {
-      log('Cannot skip to next: queue is empty', name: 'QueueManager');
+      debugPrint('Cannot skip to next: queue is empty');
       return;
     }
 
@@ -74,7 +75,7 @@ class QueueManager {
 
   Future<void> skipToPrevious() async {
     if (queue.value.isEmpty) {
-      log('Cannot skip to previous: queue is empty', name: 'QueueManager');
+      debugPrint('Cannot skip to previous: queue is empty');
       return;
     }
 
@@ -99,14 +100,31 @@ class QueueManager {
 
   Future<void> skipToQueueItem(int index) async {
     if (index >= queue.value.length) {
-      log("skipToQueueItem: Invalid index $index, queue length: ${queue.value.length}",
-          name: "QueueManager");
+      debugPrint(
+          "skipToQueueItem: Invalid index $index, queue length: ${queue.value.length}");
       return;
     }
 
     currentPlayingIdx = index;
     await _prepare4play(idx: index, doPlay: true);
-    log("skipToQueueItem: Moved to index $index", name: "QueueManager");
+    debugPrint("skipToQueueItem: Moved to index $index");
+  }
+
+  /// Updates the queue pointers to the next item WITHOUT triggering playback.
+  /// Used for manual crossfade management.
+  void skipToNextOnly() {
+    if (queue.value.isEmpty) return;
+
+    if (!shuffleMode.value) {
+      if (currentPlayingIdx < (queue.value.length - 1)) {
+        currentPlayingIdx++;
+      }
+    } else {
+      if (shuffleIdx < (shuffleList.length - 1)) {
+        shuffleIdx++;
+        currentPlayingIdx = shuffleList[shuffleIdx];
+      }
+    }
   }
 
   Future<void> addQueueItem(MediaItem mediaItem) async {
@@ -123,7 +141,15 @@ class QueueManager {
 
   Future<void> updateQueue(List<MediaItem> newQueue,
       {bool doPlay = false}) async {
-    queue.add(newQueue);
+    // Deduplicate the new queue itself
+    final Set<String> seenIds = {};
+    final List<MediaItem> deduplicatedQueue = [];
+    for (var item in newQueue) {
+      if (seenIds.add(item.id)) {
+        deduplicatedQueue.add(item);
+      }
+    }
+    queue.add(deduplicatedQueue);
     await _prepare4play(idx: 0, doPlay: doPlay);
   }
 
@@ -134,9 +160,21 @@ class QueueManager {
         await addQueueItem(mediaItem);
       }
     } else {
-      final newQueue = List<MediaItem>.from(queue.value)..addAll(mediaItems);
-      queue.add(newQueue);
-      queueTitle.add("Queue");
+      final currentQueue = queue.value;
+      final Set<String> existingIds = currentQueue.map((e) => e.id).toSet();
+      
+      final List<MediaItem> newItems = [];
+      for (var item in mediaItems) {
+        if (existingIds.add(item.id)) {
+          newItems.add(item);
+        }
+      }
+
+      if (newItems.isNotEmpty) {
+        final newQueue = List<MediaItem>.from(currentQueue)..addAll(newItems);
+        queue.add(newQueue);
+        queueTitle.add("Queue");
+      }
     }
   }
 
@@ -185,7 +223,7 @@ class QueueManager {
   }
 
   Future<void> moveQueueItem(int oldIndex, int newIndex) async {
-    log("Moving from $oldIndex to $newIndex", name: "QueueManager");
+    debugPrint("Moving from $oldIndex to $newIndex");
     final newQueue = List<MediaItem>.from(queue.value);
     if (oldIndex < newIndex) {
       newIndex--;
@@ -248,15 +286,27 @@ class QueueManager {
     return null;
   }
 
+  MediaItem? get next3MediaItem {
+    if (shuffleMode.value) {
+      if (shuffleIdx + 3 < shuffleList.length) {
+        return queue.value[shuffleList[shuffleIdx + 3]];
+      }
+    } else {
+      if (currentPlayingIdx + 3 < queue.value.length) {
+        return queue.value[currentPlayingIdx + 3];
+      }
+    }
+    return null;
+  }
+
   Future<void> _prepare4play({int idx = 0, bool doPlay = false}) async {
     if (queue.value.isEmpty) {
-      log('Cannot prepare4play: queue is empty', name: 'QueueManager');
+      debugPrint('Cannot prepare4play: queue is empty');
       return;
     }
 
     if (idx >= queue.value.length) {
-      log('Index $idx is out of bounds, queue length: ${queue.value.length}',
-          name: 'QueueManager');
+      debugPrint('Index $idx is out of bounds, queue length: ${queue.value.length}');
       idx = queue.value.length - 1;
     }
 
