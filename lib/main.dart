@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'dart:io' as io;
 import 'package:beats_music/blocs/downloader/cubit/downloader_cubit.dart';
 import 'package:beats_music/blocs/global_events/global_events_cubit.dart';
@@ -118,7 +119,11 @@ void setupPlayerCubit() {
 }
 
 Future<void> initServices() async {
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint("Firebase init failed (expected on Windows without options): $e");
+  }
   String appDocPath = (await getApplicationDocumentsDirectory()).path;
   String appSuppPath = (await getApplicationSupportDirectory()).path;
   BeatsMusicDBService(appDocPath: appDocPath, appSuppPath: appSuppPath);
@@ -127,6 +132,7 @@ Future<void> initServices() async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   GestureBinding.instance.resamplingEnabled = true;
   if (io.Platform.isLinux || io.Platform.isWindows) {
     JustAudioMediaKit.ensureInitialized(
@@ -140,7 +146,15 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   final bool seenPermission = prefs.getBool('seen_permission') ?? false;
   final bool loginSkipped = prefs.getBool('login_skipped') ?? false;
-  final bool isLoggedIn = FirebaseAuth.instance.currentUser != null; // Firebase init is done above
+  
+  bool isLoggedIn = false;
+  try {
+    if (Firebase.apps.isNotEmpty) {
+      isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    }
+  } catch (e) {
+    debugPrint("Firebase Auth check failed (Safe skip for Windows): $e");
+  }
   
   if (!seenPermission) {
     GlobalRoutes.initialRoute = GlobalRoutes.PERMISSION;
