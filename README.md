@@ -34,6 +34,9 @@ Beats Music is an experimental open-source music player designed to bring you ad
 - [x] 💿 Play Automatic Related Songs
 - [x] 🎸 Share your playlists with others
 - [x] 🆎 Multi-Language support
+- [x] 📢 Official Telegram Channel Integration
+- [x] ⚡ High Performance Image & Cache Engine
+- [x] 🧠 Smart Trending Algorithm (Randomized Discovery)
 - [ ] 🎼 AI-Generated Playlist
 - [ ] 💡 AI-Based Recommendations
 

@@ -156,3 +156,5 @@ replay_pid*.log
 
 # Release Artifacts
 BeatsMusicRelease/
+build_log.txt
+installers/*.exe

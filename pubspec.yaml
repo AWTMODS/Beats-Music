@@ -3,7 +3,7 @@ description: An Open source Free Music Player.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.1.0+101
+version: 1.2.0+103
 
 environment:
   sdk: '>=3.0.6 <4.0.0'
@@ -32,6 +32,8 @@ dependencies:
   rxdart: ^0.28.0
   go_router: ^16.2.4
   easy_debounce: ^2.0.3
+  shimmer: ^3.0.0
+  lottie: ^3.1.2
   #get: ^4.6.6
 
   isar_community: 
@@ -67,10 +69,10 @@ dependencies:
   dart_discord_rpc: ^0.0.2
 
   # Firebase Dependencies (Phase 3)
-  firebase_core: ^3.6.0
-  firebase_auth: ^5.3.1
-  cloud_firestore: ^5.4.4
-  google_sign_in: ^6.2.1
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.4.1
+  cloud_firestore: ^5.6.1
+  google_sign_in: ^6.2.2
 
   mime: ^2.0.0
 
@@ -88,9 +90,11 @@ dependencies:
 
   
 
-dependency_overrides:
-  ffi: ^1.1.2  # Override to make dart_discord_rpc work
 
+
+
+dependency_overrides:
+  ffi: ^1.1.2
 
 dev_dependencies:
   flutter_test:
