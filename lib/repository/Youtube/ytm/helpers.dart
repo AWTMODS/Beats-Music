@@ -8,7 +8,6 @@ Future<Map<String, String>> initializeHeaders({String language = 'en'}) async {
     'accept': '*/*',
     'accept-encoding': 'gzip, deflate',
     'content-type': 'application/json',
-    'content-encoding': 'gzip',
     "Origin": "https://music.youtube.com",
     'cookie': 'CONSENT=YES+1',
     'Accept-Language': language,

@@ -1,9 +1,12 @@
 import 'dart:developer';
+import 'dart:convert';
+import 'package:beats_music/secrets.dart';
 
 import 'package:beats_music/model/chart_model.dart';
 import 'package:beats_music/plugins/ext_charts/chart_defines.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' show parse;
+import 'package:beats_music/repository/Youtube/yt_music_api.dart';
 
 // Placeholder images for charts since Kworb doesn't provide them in the table
 const List<String> kworbIMGs = [
@@ -16,6 +19,11 @@ class KworbChartLinks {
   static const String INDIA_DAILY = 'https://kworb.net/spotify/country/in_daily.html';
   static const String JAPAN_DAILY = 'https://kworb.net/spotify/country/jp_daily.html';
   static const String KOREA_DAILY = 'https://kworb.net/spotify/country/kr_daily.html';
+
+  static const String GLOBAL_DAILY_IMG = "https://charts-images.scdn.co/assets/locale_en/regional/daily/region_global_default.jpg";
+  static const String INDIA_DAILY_IMG = "https://charts-images.scdn.co/assets/locale_en/regional/daily/region_in_default.jpg";
+  static const String JAPAN_DAILY_IMG = "https://charts-images.scdn.co/assets/locale_en/regional/daily/region_jp_default.jpg";
+  static const String KOREA_DAILY_IMG = "https://charts-images.scdn.co/assets/locale_en/regional/daily/region_kr_default.jpg";
 }
 
 class KworbCharts {
@@ -128,8 +136,10 @@ Future<ChartModel> getKworbChart(ChartURL url) async {
           chartItems: chartItems,
           url: url.url,
           lastUpdated: DateTime.now());
-          
-      log('Kworb Charts: ${chart.chartItems!.length} tracks', name: "Kworb");
+
+      // Return immediately so UI shows the list
+      // Enrichment will be handled by the Cubit progressively
+      log('Kworb Charts: ${chart.chartItems!.length} tracks (Enrichment pending)', name: "Kworb");
       return chart;
     } else {
       throw Exception("Failed to load page: ${response.statusCode}");
@@ -138,4 +148,138 @@ Future<ChartModel> getKworbChart(ChartURL url) async {
     log('Error while getting data from:${url.url}', name: "Kworb");
     throw Exception("Error: $e");
   }
+}
+
+// Made public for external progressive calling
+Future<void> enrichChartItems(List<ChartItemModel> items, {Function()? onUpdate}) async {
+  try {
+    // Process in batches to avoid rate limiting
+    int batchSize = 12; // Increased to reduce UI rebuild frequency
+    for (var i = 0; i < items.length; i += batchSize) {
+      int end = (i + batchSize < items.length) ? i + batchSize : items.length;
+      List<Future<void>> batch = [];
+      
+      for (var j = i; j < end; j++) {
+        batch.add(_fetchMetadataSimple(items, j));
+      }
+      
+      await Future.wait(batch);
+      
+      // Notify listener (Cubit) to update UI
+      if (onUpdate != null) {
+          onUpdate();
+      }
+      
+      // Delay between batches to yield to UI thread
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+  } catch (e) {
+    log("Error enriching charts: $e", name: "KworbCharts");
+  }
+}
+
+Future<void> _fetchMetadataSimple(List<ChartItemModel> items, int index) async {
+  try {
+    final item = items[index];
+    
+    // 1. Clean Query (Title + Artist)
+    var cleanName = (item.name ?? "")
+        .replaceAll(RegExp(r'\(From.*?\)', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\|.*'), '')
+        .replaceAll(RegExp(r'\-.*'), '')
+        .trim();
+        
+    if (cleanName.length < 3) cleanName = item.name ?? "";
+    
+    // Attempt 1: Title + Artist
+    String query = "$cleanName ${item.subtitle ?? ""}";
+    String? thumb = await _performYtmSearch(query);
+
+    // Attempt 2: Title Only (Fallback)
+    if (thumb == null) {
+       thumb = await _performYtmSearch(cleanName);
+    }
+
+    if (thumb != null) {
+      items[index] = ChartItemModel(
+          name: item.name,
+          subtitle: item.subtitle,
+          imageUrl: thumb
+      );
+    }
+  } catch (e) {
+    log("Failed to fetch image for ${items[index].name}: $e", name: "KworbCharts");
+  }
+}
+
+Future<String?> _performYtmSearch(String query) async {
+  try {
+    final Uri searchUri = Uri.https(
+      'www.youtube.com',
+      '/youtubei/v1/search',
+      {'key': Secrets.YOUTUBE_API_KEY},
+    );
+
+    final Map<String, dynamic> requestBody = {
+      "context": {
+        "client": {
+          "clientName": "WEB_REMIX",
+          "clientVersion": "1.20231122.01.00",
+          "hl": "en",
+          "gl": "US",
+        }
+      },
+      "query": query,
+      // Removed params to allow broader search (inc. "Top Result" card)
+    };
+
+    final response = await http.post(
+      searchUri,
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+      body: jsonEncode(requestBody),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      
+      final List<dynamic>? contents = data['contents']?['tabbedSearchResultsRenderer']
+          ?['tabs']?[0]?['tabRenderer']?['content']?['sectionListRenderer']
+          ?['contents'];
+
+      if (contents == null) return null;
+
+      for (var section in contents) {
+        // Check MusicShelf (Songs)
+        final musicShelf = section['musicShelfRenderer'];
+        if (musicShelf != null) {
+             final List<dynamic>? shelfContents = musicShelf['contents'];
+             if (shelfContents != null && shelfContents.isNotEmpty) {
+                final item = shelfContents.first;
+                final renderer = item['musicResponsiveListItemRenderer'];
+                if (renderer != null) {
+                   final thumb = renderer['thumbnail']?['musicThumbnailRenderer']?['thumbnail']?['thumbnails']?.last?['url'];
+                   if (thumb != null) {
+                      return (thumb as String).replaceAll(RegExp(r'w\d+-h\d+'), 'w544-h544');
+                   }
+                }
+             }
+        }
+        
+        // Check generic "Top Result" card (often has the best image)
+        final cardShelf = section['musicCardShelfRenderer'];
+        if (cardShelf != null) {
+            final thumb = cardShelf['thumbnail']?['musicThumbnailRenderer']?['thumbnail']?['thumbnails']?.last?['url'];
+             if (thumb != null) {
+                return (thumb as String).replaceAll(RegExp(r'w\d+-h\d+'), 'w544-h544');
+             }
+        }
+      }
+    }
+  } catch (e) {
+    log("Search failed for '$query': $e", name: "KworbCharts");
+  }
+  return null;
 }

@@ -23,7 +23,7 @@ List formatChartItems(List itemsList) {
             'youtube${e['gridPlaylistRenderer']['navigationEndpoint']['watchEndpoint']['playlistId']}',
         'firstItemId':
             'youtube${e['gridPlaylistRenderer']['navigationEndpoint']['watchEndpoint']['videoId']}',
-        'image': e['gridPlaylistRenderer']['thumbnail']['thumbnails'][0]['url'],
+        'image': e['gridPlaylistRenderer']['thumbnail']['thumbnails'].last['url'],
         'images': e['gridPlaylistRenderer']['thumbnail']['thumbnails']
             .map((e) => e['url'])
             .toList(),
@@ -51,8 +51,7 @@ List formatItems(List itemsList) {
             'youtube${e['compactStationRenderer']['navigationEndpoint']['watchEndpoint']['playlistId']}',
         'firstItemId':
             'youtube${e['compactStationRenderer']['navigationEndpoint']['watchEndpoint']['videoId']}',
-        'image': e['compactStationRenderer']['thumbnail']['thumbnails'][0]
-            ['url'],
+        'image': e['compactStationRenderer']['thumbnail']['thumbnails'].last['url'],
         'images': [
           e['compactStationRenderer']['thumbnail']['thumbnails'][0]['url'],
           e['compactStationRenderer']['thumbnail']['thumbnails'][1]['url'],
@@ -157,7 +156,7 @@ Future<List> formatHomeSections(List items) async {
           //     'youtube${e['lockupViewModel']['navigationEndpoint']['watchPlaylistEndpoint']['videoId']}',
           'image': e['lockupViewModel']['contentImage']
                   ['collectionThumbnailViewModel']['primaryThumbnail']
-              ['thumbnailViewModel']['image']['sources'][0]['url'],
+              ['thumbnailViewModel']['image']['sources'].last['url'],
           'isWide': (e['lockupViewModel']['contentImage']
                           ['collectionThumbnailViewModel']['primaryThumbnail']
                       ['thumbnailViewModel']['image']['sources'][0]['width'] !=
@@ -185,8 +184,7 @@ Future<List> formatHomeSections(List items) async {
               'youtube${e['gridPlaylistRenderer']['navigationEndpoint']['watchEndpoint']['playlistId']}',
           'firstItemId':
               'youtube${e['gridPlaylistRenderer']['navigationEndpoint']['watchEndpoint']['videoId']}',
-          'image': e['gridPlaylistRenderer']['thumbnail']['thumbnails'][0]
-              ['url'],
+          'image': e['gridPlaylistRenderer']['thumbnail']['thumbnails'].last['url'],
           'isWide': false,
           'images': e['gridPlaylistRenderer']['thumbnail']['thumbnails']
               .map((e) => e['url'])

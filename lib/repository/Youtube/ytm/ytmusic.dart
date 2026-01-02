@@ -29,7 +29,7 @@ class YTMusic extends YTMusicServices
                 ? item["artists"].map((e) => e?["name"] ?? "Unknown").toList().join(", ")
                 : "Unknown",
           "videoId": item["videoId"],
-          "thumbnail": item["thumbnails"].first["url"],
+          "thumbnail": item["thumbnails"].last["url"],
           "duration": item["duration"],
           "type": item["type"],
           "artist_map": item['artists'],
@@ -59,7 +59,7 @@ class YTMusic extends YTMusicServices
                 ? item["artists"].map((e) => e?["name"] ?? "Unknown").toList().join(", ")
                 : "Unknown",
           "videoId": item["videoId"],
-          "thumbnail": item["thumbnails"].first["url"],
+          "thumbnail": item["thumbnails"].last["url"],
           "duration": item["duration"],
           "type": item["type"],
           "perma_url": "https://music.youtube.com/watch?v=${item["videoId"]}",
@@ -119,7 +119,7 @@ class YTMusic extends YTMusicServices
                         .toList()
                         .join("")
                     : "Unknown",
-            "thumbnail": item["thumbnails"].first["url"],
+            "thumbnail": item["thumbnails"].last["url"],
             "perma_url": "https://music.youtube.com/watch?v=${item["videoId"]}",
           });
         } catch (e) {
@@ -144,7 +144,7 @@ class YTMusic extends YTMusicServices
         "title": artistDetails["header"]["title"],
         "subtitle": artistDetails["header"]["subtitle"],
         "description": artistDetails["header"]["description"],
-        "thumbnail": artistDetails["header"]["thumbnails"].first["url"],
+        "thumbnail": artistDetails["header"]["thumbnails"].last["url"],
         "playlistId": artistDetails["header"]["playlistId"],
         "channelId": artistDetails["header"]["channelId"],
         "browseId": browseId,
@@ -167,7 +167,7 @@ class YTMusic extends YTMusicServices
       "title": artistDetails["header"]["title"],
       "subtitle": artistDetails["header"]["subtitle"],
       "description": artistDetails["header"]["description"],
-      "thumbnail": artistDetails["header"]["thumbnails"].first["url"],
+      "thumbnail": artistDetails["header"]["thumbnails"].last["url"],
       "playlistId": artistDetails["header"]["playlistId"],
       "channelId": artistDetails["header"]["channelId"],
       "browseId": browseId,
@@ -213,7 +213,7 @@ class YTMusic extends YTMusicServices
                     .toList()
                 : [],
             "videoId": item["videoId"],
-            "thumbnail": item["thumbnails"].first["url"],
+            "thumbnail": item["thumbnails"].last["url"],
             "duration": item["duration"],
             "type": item["type"],
             "perma_url": "https://music.youtube.com/watch?v=${item["videoId"]}",
@@ -252,7 +252,7 @@ class YTMusic extends YTMusicServices
           albumsList.add({
             "title": item["title"],
             "artists": albums['header']['title'],
-            "thumbnail": item["thumbnails"].first["url"],
+            "thumbnail": item["thumbnails"].last["url"],
             "type": item["type"],
             "browseId": item["endpoint"]["browseId"],
             "perma_url":
@@ -295,7 +295,7 @@ class YTMusic extends YTMusicServices
                     .toList()
                 : [],
             "videoId": item["videoId"],
-            "thumbnail": item["thumbnails"].first["url"],
+            "thumbnail": item["thumbnails"].last["url"],
             "duration": item["duration"],
             "type": item["type"],
             "perma_url": "https://music.youtube.com/watch?v=${item["videoId"]}",
@@ -317,7 +317,7 @@ class YTMusic extends YTMusicServices
           artists.add({
             "title": item["title"],
             "subtitle": item["subtitle"],
-            "thumbnail": item["thumbnails"].first["url"],
+            "thumbnail": item["thumbnails"].last["url"],
             "browseId": item["endpoint"]["browseId"],
             "type": item["type"],
             "perma_url":
@@ -348,7 +348,7 @@ class YTMusic extends YTMusicServices
                         })
                     .toList()
                 : [],
-            "thumbnail": item["thumbnails"].first["url"],
+            "thumbnail": item["thumbnails"].last["url"],
             "type": item["type"],
             "browseId": item["endpoint"]["browseId"],
             "perma_url":
@@ -370,7 +370,7 @@ class YTMusic extends YTMusicServices
           playlists.add({
             "title": item["title"],
             "subtitle": item["subtitle"],
-            "thumbnail": item["thumbnails"].first["url"],
+            "thumbnail": item["thumbnails"].last["url"],
             "type": item["type"],
             "playlistId": item["playlistId"],
             "browseId": item["endpoint"]["browseId"],

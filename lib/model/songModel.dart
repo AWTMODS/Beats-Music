@@ -79,8 +79,8 @@ MediaItemDB MediaItem2MediaItemDB(MediaItem mediaItem) {
       genre: mediaItem.genre ?? "Unknown",
       mediaID: mediaItem.id,
       duration: mediaItem.duration?.inSeconds,
-      streamingURL: mediaItem.extras?["url"],
-      permaURL: mediaItem.extras?["perma_url"],
+      streamingURL: mediaItem.extras?["url"] ?? "",
+      permaURL: mediaItem.extras?["perma_url"] ?? mediaItem.id,
       language: mediaItem.extras?["language"] ?? "Unknown",
       isLiked: false,
       source: mediaItem.extras?["source"] ?? "Saavn");
