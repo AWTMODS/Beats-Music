@@ -1,0 +1,101 @@
+name: "CI / Build & Check"
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - 'CHANGELOG.md'
+      - 'CONTRIBUTING.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'fastlane/**'
+      - '.github/FUNDING.yml'
+      - 'ghpage/**'
+
+jobs:
+  # ==========================================
+  # JOB 1: FAST CHECK (Syntax & Errors only)
+  # ==========================================
+  check:
+    name: Code Analysis
+    runs-on: ubuntu-latest 
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.4'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Static Code Analysis
+        run: flutter analyze --no-fatal-infos
+
+  # ==========================================
+  # JOB 2: BUILD APP 
+  # ==========================================
+  build:
+    name: Build Android & Windows
+    needs: check 
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'oracle'
+          java-version: '17'
+          cache: 'gradle' 
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.4'
+          channel: 'stable'
+          cache: true 
+
+      - name: Install Dependencies
+        run: flutter pub get
+        
+      - name: Extract version from pubspec.yaml
+        shell: powershell
+        run: |
+            $vLine = Select-String -Path pubspec.yaml -Pattern '^version:\s*(\S+)' | Select-Object -First 1
+            if (-not $vLine) { Write-Error 'version not found in pubspec.yaml'; exit 1 }
+            $ver = $vLine.Matches[0].Groups[1].Value.Split('+')[0]
+            echo "VERSION=$ver" >> $env:GITHUB_ENV
+        
+      - name: Build Android App
+        run: flutter build apk --release --build-number ${{github.run_number}}
+
+      - name: Rename APK file
+        shell: powershell
+        run: Rename-Item -Path "build/app/outputs/flutter-apk/app-release.apk" -NewName "Beats_tunes_android_v$env:VERSION+${{github.run_number}}.apk"
+
+      - name: Build Windows App
+        run: flutter build windows --release --build-number ${{github.run_number}}
+
+      - name: Rename file
+        shell: powershell
+        run: Rename-Item -Path "build/windows/x64/runner/Release/Beats.exe" -NewName "Beats.exe"
+        
+      - name: ZIP build
+        shell: powershell
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -Destination build/windows/x64/Beats_tunes_windows_x64_v${{ env.VERSION }}+${{github.run_number}}.zip
+        
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: CI-Build-Artifacts
+          path: |
+            build/app/outputs/flutter-apk/Beats_tunes_android_v${{ env.VERSION }}+${{github.run_number}}.apk
+            build/windows/x64/Beats_tunes_windows_x64_v${{ env.VERSION }}+${{github.run_number}}.zip

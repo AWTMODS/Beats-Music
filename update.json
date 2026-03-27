@@ -1,0 +1,17 @@
+{
+  "android": {
+    "version": "1.4.0",
+    "build": "104",
+    "url": "https://github.com/AWTMODS/Beats-Music/releases/latest"
+  },
+  "windows": {
+    "version": "1.4.0",
+    "build": "104",
+    "url": "https://github.com/AWTMODS/Beats-Music/releases/latest"
+  },
+  "linux": {
+    "version": "1.4.0",
+    "build": "104",
+    "url": "https://github.com/AWTMODS/Beats-Music/releases/latest"
+  }
+}

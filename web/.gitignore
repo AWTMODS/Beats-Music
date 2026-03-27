@@ -1,0 +1,5 @@
+# Flutter web ignores
+build/
+.dart_tool/
+.packages
+.pub/
