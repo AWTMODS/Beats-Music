@@ -17,6 +17,10 @@
   <img alt="GitHub License" src="https://img.shields.io/github/license/AWTMODS/Beats-Music?style=for-the-badge&color=1881cc" > 
   <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/AWTMODS/Beats-Music/checkout.yml?style=for-the-badge" >
   <br>
+  <br>
+  <a href="https://trendshift.io/repositories/11533" target="_blank"><img src="https://trendshift.io/api/badge/repositories/11533" alt="Beats-Music | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+  <br>
+  <br>
   <img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" > 
   <img src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" /> 
   <img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"/>
@@ -30,17 +34,31 @@
 
 ## 🚀 Features
 
-- [x] 🚫 **Ad-Free Experience:** Zero interruptions, just pure music.
-- [x] 🦀 **Rust-Powered Plugins:** Secure, auto-updating `.bex` system for endless music sources.
-- [x] 📂 **Hybrid Library:** Play local offline music alongside online streams seamlessly.
-- [x] 🎤 **Karaoke-Style Lyrics:** Time-synced lyrics with manual offset adjustment.
-- [x] 🎛️ **Audio Perfection:** Built-in Equalizer and customizable Crossfade transitions.
-- [x] 🔄 **Smart Recovery:** Automatically finds working streams if a track goes dead.
-- [x] 📊 **Last.fm Scrobbling:** log your listening history (includes offline caching).
-- [x] 🎮 **Discord Rich Presence:** Show off your current tunes on your profile.
-- [x] 🌍 **12+ Languages:** Fully localized interface for global users.
-- [x] 🖥️ **Cross-Platform:** Native media controls for Windows, Linux, and Android.
-- [x] 💾 **Cloud Backup:** Easily export/import your library via JSON or M3U.
+### 🎵 Core Audio & Playback
+- [x] 🚫 **Ad-Free Experience:** Zero interruptions, just pure music everywhere.
+- [x] 🦀 **Rust-Powered Plugins:** Secure, auto-updating `.bex` system for infinite global music sources.
+- [x] 📂 **Hybrid Library:** Seamlessly mix local offline music and online streams in a single queue.
+- [x] 📶 **Offline Mode:** Download system to save your favorite streams and playlists for offline playback.
+- [x] 🎛️ **Audio Perfection:** Built-in Equalizer, customizable Crossfade transitions, gapless playback, and pitch/speed adjustments powered by `media_kit`.
+
+### 🎤 Engagement & Discovery
+- [x] 🎙️ **Karaoke-Style Lyrics:** Dynamic, time-synced lyrics with manual offset adjustment.
+- [x] 📈 **Global Charts & Moods:** Top songs, top artists, and curated mixes customized to you.
+- [x] 🔄 **Smart Recovery Engine:** Automatically cross-checks and replaces dead streams with working alternatives dynamically.
+- [x] 🎧 **Advanced Queue Management:** Up-next lists, related song autoplay, and drag-and-drop reordering.
+
+### 🎨 Customization & Interface
+- [x] 🌍 **12+ Languages:** Fully localized interface encompassing 12+ international languages.
+- [x] 💅 **Dynamic UI & Palettes:** UI natively adapts and extracts a vibrant color palette derived from album artwork.
+- [x] 🖥️ **Cross-Platform & Responsive:** Fluid Native media controls and adaptive UI constraints tailored specifically for Windows, Linux, and Android variants.
+- [x] ⌨️ **Keyboard Shortcuts:** Full keyboard hotkey support for power users.
+- [x] ⏱️ **Sleep Timer:** Automatic playback shutoff.
+
+### 🔌 Integrations & Sync
+- [x] ☁️ **Cloud Connectivity:** Effortlessly backup, sync, and restore your Playlists, Liked Songs, Downloads, and Statistics to the cloud.
+- [x] 📊 **Last.fm Scrobbling:** Detailed tracking of listening history (includes fallback caching for offline mode).
+- [x] 🎮 **Discord Rich Presence:** Show off your current tunes dynamically on your Discord profile using native RPC integrations.
+- [x] 💾 **Library Portability:** Directly import/export M3U, JSON playback data, and settings.
 
 ---
 
