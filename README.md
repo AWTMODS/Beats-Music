@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="./assets/docs/Beatstunes_new_banner.png" alt="Beats Banner" width="100%">
+<img src="./assets/docs/beatstunes_new_banner.png" alt="Beats Banner" width="100%">
 
-# 🌸 Beats 
+#  Beats Music 
 
 **A unified local and plugin-first streaming music player built with Flutter & Rust.**
 
@@ -142,7 +142,7 @@ Beats is a passion project built by **Aadith C V**. If you love the app and want
 </div>
 
 <p align="center"><i>Developed with ❤️ by Aadith C V</i></p>
-or=white"/></a>
+
 <a href="mailto:aadithcv@protonmail.com"><img src="https://img.shields.io/badge/ProtonMail-6D4AFF?style=for-the-badge&logo=protonmail&logoColor=white"/></a>
 
 </div>
