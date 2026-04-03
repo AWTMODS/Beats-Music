@@ -380,11 +380,11 @@
   "updateAutoNotify": "自动更新通知",
   "updateAutoNotifySubtitle": "应用启动时如有新版本将收到通知。",
   "updateCheckTitle": "检查更新",
-  "updateUpToDate": "Beats🌸 已经是最新版本！",
+  "updateUpToDate": "Beats 已经是最新版本！",
   "updateViewPreRelease": "查看最新预发布版",
   "updateCurrentVersion": "当前版本: {curr} + {build}",
   "@updateCurrentVersion": { "placeholders": { "curr": { "type": "String" }, "build": { "type": "String" } } },
-  "updateNewVersionAvailable": "Beats🌸 新版本现已可用！",
+  "updateNewVersionAvailable": "Beats 新版本现已可用！",
   "updateVersion": "版本: {ver}+{build}",
   "@updateVersion": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
   "updateDownloadNow": "立即下载",
@@ -500,7 +500,7 @@
   "aboutFollowGitHub": "在 GitHub 上关注他",
   "aboutSendInquiry": "发送商务咨询",
   "aboutCreativeHighlights": "更新与创作亮点",
-  "aboutTipQuote": "喜欢 Beats 吗？小小的打赏能让它持续绽放。🌸",
+  "aboutTipQuote": "喜欢 Beats 吗？小小的打赏能让它持续绽放。",
   "aboutTipButton": "我要赞赏",
   "aboutTipDesc": "我希望 Beats 越来越好。",
   "aboutGitHub": "GitHub",
@@ -700,7 +700,7 @@
 
   "snackbarOpeningAlbumPage": "正在打开原始专辑页面。",
 
-  "updateAvailableBody": "Beats🌸 新版本现已可用！\n\n版本：{ver}+{build}",
+  "updateAvailableBody": "Beats 新版本现已可用！\n\n版本：{ver}+{build}",
   "@updateAvailableBody": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
 
   "pluginSnackbarInstalled": "插件 \"{id}\" 安装成功",

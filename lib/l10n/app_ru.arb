@@ -380,11 +380,11 @@
   "updateAutoNotify": "Автоуведомление",
   "updateAutoNotifySubtitle": "Сообщать о наличии обновлений при запуске.",
   "updateCheckTitle": "Поиск",
-  "updateUpToDate": "Beats🌸 обновлен до последней версии!",
+  "updateUpToDate": "Beats обновлен до последней версии!",
   "updateViewPreRelease": "Посмотреть тестовые версии",
   "updateCurrentVersion": "Текущая версия: {curr} + {build}",
   "@updateCurrentVersion": { "placeholders": { "curr": { "type": "String" }, "build": { "type": "String" } } },
-  "updateNewVersionAvailable": "Доступна новая версия Beats🌸!!",
+  "updateNewVersionAvailable": "Доступна новая версия Beats!!",
   "updateVersion": "Версия: {ver}+{build}",
   "@updateVersion": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
   "updateDownloadNow": "Скачать сейчас",
@@ -500,7 +500,7 @@
   "aboutFollowGitHub": "Следить на GitHub",
   "aboutSendInquiry": "Бизнес-запрос",
   "aboutCreativeHighlights": "Обновления и творчество",
-  "aboutTipQuote": "Нравится Beats? Чаевые помогут проекту цвести. 🌸",
+  "aboutTipQuote": "Нравится Beats? Чаевые помогут проекту цвести. ",
   "aboutTipButton": "Хочу помочь",
   "aboutTipDesc": "Для развития Beats.",
   "aboutGitHub": "GitHub",
@@ -678,7 +678,7 @@
 
   "snackbarOpeningAlbumPage": "Открытие страницы альбома.",
 
-  "updateAvailableBody": "Новая версия Beats🌸!\n\nВерсия: {ver}+{build}",
+  "updateAvailableBody": "Новая версия Beats!\n\nВерсия: {ver}+{build}",
   "@updateAvailableBody": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
 
   "pluginSnackbarInstalled": "Плагин «{id}» установлен",

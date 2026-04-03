@@ -380,11 +380,11 @@
   "updateAutoNotify": "إشعار تحديث تلقائي",
   "updateAutoNotifySubtitle": "احصل على إشعار عند وجود تحديث عند بدء التطبيق.",
   "updateCheckTitle": "التحقق من التحديثات",
-  "updateUpToDate": "Beats🌸 محدث لأحدث إصدار!!!",
+  "updateUpToDate": "Beats محدث لأحدث إصدار!!!",
   "updateViewPreRelease": "عرض أحدث نسخة تجريبية",
   "updateCurrentVersion": "الإصدار الحالي: {curr} + {build}",
   "@updateCurrentVersion": { "placeholders": { "curr": { "type": "String" }, "build": { "type": "String" } } },
-  "updateNewVersionAvailable": "إصدار جديد من Beats🌸 متاح الآن!!",
+  "updateNewVersionAvailable": "إصدار جديد من Beats متاح الآن!!",
   "updateVersion": "الإصدار: {ver}+{build}",
   "@updateVersion": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
   "updateDownloadNow": "تنزيل الآن",
@@ -500,7 +500,7 @@
   "aboutFollowGitHub": "تابعه على GitHub",
   "aboutSendInquiry": "إرسال استفسار تجاري",
   "aboutCreativeHighlights": "التحديثات وأبرز الإبداعات",
-  "aboutTipQuote": "تستمتع بـ Beats؟ تلميح صغير يبقيه مزدهراً. 🌸",
+  "aboutTipQuote": "تستمتع بـ Beats؟ تلميح صغير يبقيه مزدهراً. ",
   "aboutTipButton": "سأساعد",
   "aboutTipDesc": "أريد لـ Beats أن يستمر في التحسن.",
   "aboutGitHub": "GitHub",
@@ -678,7 +678,7 @@
 
   "snackbarOpeningAlbumPage": "جاري فتح صفحة الألبوم الأصلية.",
 
-  "updateAvailableBody": "إصدار جديد من Beats🌸 متاح الآن!\n\nالإصدار: {ver}+{build}",
+  "updateAvailableBody": "إصدار جديد من Beats متاح الآن!\n\nالإصدار: {ver}+{build}",
   "@updateAvailableBody": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
 
   "pluginSnackbarInstalled": "تم تثبيت المكون \"{id}\" بنجاح",

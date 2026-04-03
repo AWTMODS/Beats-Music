@@ -380,11 +380,11 @@
   "updateAutoNotify": "アップデートの自動通知",
   "updateAutoNotifySubtitle": "新しいバージョンがある場合に通知します。",
   "updateCheckTitle": "更新の確認",
-  "updateUpToDate": "Beats🌸 は最新の状態です！",
+  "updateUpToDate": "Beats は最新の状態です！",
   "updateViewPreRelease": "最新のプレリリースを表示",
   "updateCurrentVersion": "現在のバージョン: {curr} + {build}",
   "@updateCurrentVersion": { "placeholders": { "curr": { "type": "String" }, "build": { "type": "String" } } },
-  "updateNewVersionAvailable": "Beats🌸 の新しいバージョンが利用可能です！",
+  "updateNewVersionAvailable": "Beats の新しいバージョンが利用可能です！",
   "updateVersion": "バージョン: {ver}+{build}",
   "@updateVersion": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
   "updateDownloadNow": "今すぐダウンロード",
@@ -500,7 +500,7 @@
   "aboutFollowGitHub": "GitHub でフォロー",
   "aboutSendInquiry": "ビジネスに関するお問い合わせ",
   "aboutCreativeHighlights": "アップデートとクリエイティブな活動",
-  "aboutTipQuote": "Beats を気に入っていただけましたか？応援が活動の励みになります。 🌸",
+  "aboutTipQuote": "Beats を気に入っていただけましたか？応援が活動の励みになります。 ",
   "aboutTipButton": "応援する",
   "aboutTipDesc": "アプリのさらなる改善をサポートします。",
   "aboutGitHub": "GitHub",
@@ -700,7 +700,7 @@
 
   "snackbarOpeningAlbumPage": "元のアルバムページを開きます。",
 
-  "updateAvailableBody": "Beats🌸 の新しいバージョンが利用可能です！\n\nバージョン: {ver}+{build}",
+  "updateAvailableBody": "Beats の新しいバージョンが利用可能です！\n\nバージョン: {ver}+{build}",
   "@updateAvailableBody": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
 
   "pluginSnackbarInstalled": "プラグイン \"{id}\" をインストールしました",

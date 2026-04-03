@@ -33,7 +33,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           children: [
             _buildSection(
               "Privacy Policy",
-              "Last updated: December 14, 2025\n\n"
+              "Last updated: April 3, 2026\n\n"
               "This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.",
             ),
             _buildSection(
@@ -45,7 +45,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
               "Types of Data Collected:\n\n"
               "• Personal Data: While using Our Service, We may ask You to provide Us with certain personally identifiable information that can be used to contact or identify You.\n"
               "• Usage Data: Usage Data is collected automatically when using the Service.\n\n"
-              "We use Your Personal Data to provide and improve the Service. By using the Service, You agree to the collection and use of information in accordance with this Privacy Policy.",
+              "Data Protection & Portability:\n"
+              "We take your privacy seriously. To ensure your data remains secure, all locally cached music data and preferences are automatically purged from your device upon signing out. This ensures that no sensitive playback history remains on the device once your session ends.",
             ),
             _buildSection(
               "YouTube Data",

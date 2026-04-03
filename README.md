@@ -7,7 +7,6 @@
 **A unified local and plugin-first streaming music player built with Flutter & Rust.**
 
 <p align="center">
-  <img src="https://img.shields.io/sourceforge/dt/awtmods?style=for-the-badge&logoSize=auto&label=DOWNLOADS(SF)" />
   <a href="https://github.com/AWTMODS/Beats-Music/releases/latest">
     <img alt="GitHub Downloads (total)" src="https://img.shields.io/github/downloads/AWTMODS/Beats-Music/total?style=for-the-badge&label=DOWNLOADS(GH)" >
   </a>
@@ -89,10 +88,6 @@
 <p align="center">
   <a href="https://github.com/AWTMODS/Beats-Music/releases/latest">
     <img src="https://img.shields.io/badge/GitHub_Releases-100000?style=for-the-badge&logo=github&logoColor=white" height="40"/>
-  </a>
-  &nbsp;
-  <a href="https://sourceforge.net/projects/awtmods/files/latest/download">
-    <img alt="Download Beats" src="https://a.fsdn.com/con/app/sf-download-button" height="40">
   </a>
   &nbsp;
   <a href="https://apt.izzysoft.de/fdroid/index/apk/ls.Beats.musicplayer">

@@ -380,7 +380,7 @@
   "updateAutoNotify": "Notificar automáticamente",
   "updateAutoNotifySubtitle": "Avisar al abrir si hay una nueva versión.",
   "updateCheckTitle": "Buscando",
-  "updateUpToDate": "¡Beats🌸 está actualizado!",
+  "updateUpToDate": "¡Beats está actualizado!",
   "updateViewPreRelease": "Ver última Pre-Release",
   "updateCurrentVersion": "Versión actual: {curr} + {build}",
   "@updateCurrentVersion": { "placeholders": { "curr": { "type": "String" }, "build": { "type": "String" } } },
@@ -500,7 +500,7 @@
   "aboutFollowGitHub": "Seguir en GitHub",
   "aboutSendInquiry": "Contacto comercial",
   "aboutCreativeHighlights": "Novedades y creatividad",
-  "aboutTipQuote": "¿Te gusta Beats? Una propina ayuda al proyecto. 🌸",
+  "aboutTipQuote": "¿Te gusta Beats? Una propina ayuda al proyecto. ",
   "aboutTipButton": "Quiero ayudar",
   "aboutTipDesc": "Para que Beats siga mejorando.",
   "aboutGitHub": "GitHub",
@@ -678,7 +678,7 @@
 
   "snackbarOpeningAlbumPage": "Abriendo página del álbum.",
 
-  "updateAvailableBody": "¡Nueva versión de Beats🌸!\n\nVersión: {ver}+{build}",
+  "updateAvailableBody": "¡Nueva versión de Beats!\n\nVersión: {ver}+{build}",
   "@updateAvailableBody": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
 
   "pluginSnackbarInstalled": "¡Complemento \"{id}\" instalado!",

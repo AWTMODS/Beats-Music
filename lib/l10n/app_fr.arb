@@ -380,7 +380,7 @@
   "updateAutoNotify": "Notification auto",
   "updateAutoNotifySubtitle": "Alerte si update dispo au démarrage.",
   "updateCheckTitle": "Vérification",
-  "updateUpToDate": "Beats🌸 est à jour !",
+  "updateUpToDate": "Beats est à jour !",
   "updateViewPreRelease": "Voir derniers Pre-Release",
   "updateCurrentVersion": "Version : {curr} + {build}",
   "@updateCurrentVersion": { "placeholders": { "curr": { "type": "String" }, "build": { "type": "String" } } },
@@ -500,7 +500,7 @@
   "aboutFollowGitHub": "Suivre sur GitHub",
   "aboutSendInquiry": "Demande commerciale",
   "aboutCreativeHighlights": "Actu et créations",
-  "aboutTipQuote": "Beats vous plaît ? Un don fait fleurir le projet. 🌸",
+  "aboutTipQuote": "Beats vous plaît ? Un don fait fleurir le projet. ",
   "aboutTipButton": "Je veux aider",
   "aboutTipDesc": "Pour que Beats s'améliore.",
   "aboutGitHub": "GitHub",
@@ -678,7 +678,7 @@
 
   "snackbarOpeningAlbumPage": "Ouverture page album.",
 
-  "updateAvailableBody": "Update Beats🌸 dispo !\n\nVersion : {ver}+{build}",
+  "updateAvailableBody": "Update Beats dispo !\n\nVersion : {ver}+{build}",
   "@updateAvailableBody": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
 
   "pluginSnackbarInstalled": "Extension \"{id}\" installée",

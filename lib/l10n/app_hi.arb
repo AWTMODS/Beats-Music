@@ -380,11 +380,11 @@
   "updateAutoNotify": "ऑटो अपडेट सूचना",
   "updateAutoNotifySubtitle": "ऐप खोलते ही नया अपडेट उपलब्ध होने पर जानकारी पाएँ।",
   "updateCheckTitle": "अपडेट्स चेक करें",
-  "updateUpToDate": "Beats🌸 पूरी तरह से अपडेटेड है!",
+  "updateUpToDate": "Beats पूरी तरह से अपडेटेड है!",
   "updateViewPreRelease": "नया प्री-रिलीज़ वर्शन देखें",
   "updateCurrentVersion": "वर्तमान वर्शन: {curr} + {build}",
   "@updateCurrentVersion": { "placeholders": { "curr": { "type": "String" }, "build": { "type": "String" } } },
-  "updateNewVersionAvailable": "Beats🌸 का एक नया वर्शन उपलब्ध है!",
+  "updateNewVersionAvailable": "Beats का एक नया वर्शन उपलब्ध है!",
   "updateVersion": "वर्शन: {ver}+{build}",
   "@updateVersion": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
   "updateDownloadNow": "अभी डाउनलोड करें",
@@ -500,7 +500,7 @@
   "aboutFollowGitHub": "GitHub पर फ़ॉलो करें",
   "aboutSendInquiry": "बिज़नेस के लिए संपर्क करें",
   "aboutCreativeHighlights": "अपडेट्स और रचनात्मक बातें",
-  "aboutTipQuote": "Beats पसंद आ रहा है? आपका छोटा-सा सहयोग इसे और बेहतर बनाने में मदद करेगा। 🌸",
+  "aboutTipQuote": "Beats पसंद आ रहा है? आपका छोटा-सा सहयोग इसे और बेहतर बनाने में मदद करेगा। ",
   "aboutTipButton": "मैं सहायता करना चाहता/चाहती हूँ",
   "aboutTipDesc": "Beats को और बेहतर बनाने में अपना योगदान दें।",
   "aboutGitHub": "GitHub",
@@ -700,7 +700,7 @@
 
   "snackbarOpeningAlbumPage": "मूल एल्बम का पेज खोला जा रहा है।",
 
-  "updateAvailableBody": "Beats🌸 का नया वर्शन आ गया है!\n\nवर्शन: {ver}+{build}",
+  "updateAvailableBody": "Beats का नया वर्शन आ गया है!\n\nवर्शन: {ver}+{build}",
   "@updateAvailableBody": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
 
   "pluginSnackbarInstalled": "प्लगइन \"{id}\" सफलतापूर्वक इंस्टॉल हो गया",
