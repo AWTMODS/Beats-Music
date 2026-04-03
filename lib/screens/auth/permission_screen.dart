@@ -1,6 +1,8 @@
+import 'package:beats_music/core/constants/route_paths.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:beats_music/screens/auth/login_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,10 +48,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
       await prefs.setBool('seen_permission', true);
       
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
+        context.goNamed(RoutePaths.loginScreen);
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

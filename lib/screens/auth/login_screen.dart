@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
+import 'package:beats_music/services/cloud_sync_service.dart';
+import 'package:beats_music/core/constants/route_paths.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,27 +23,38 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleGoogleSignIn() async {
     if (!_agreedToTerms) return;
     setState(() => _isLoading = true);
-    
+
     try {
-      final user = await AuthService().signInWithGoogle();
-      debugPrint("LoginScreen: Google Sign-In result: ${user?.user?.email}");
-      if (user != null) {
+      final userCredential = await AuthService().signInWithGoogle();
+      debugPrint(
+          "LoginScreen: Google Sign-In result: ${userCredential?.user?.email}");
+      if (userCredential != null) {
         // Reset skipped flag on successful login
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('login_skipped', false);
-        
-        debugPrint("LoginScreen: Navigating to Home...");
-        _navigateToHome();
+
+        debugPrint("LoginScreen: Checking user preferences...");
+        final preferences = await CloudSyncService().getUserPreferences();
+
+        if (mounted) {
+          if (preferences['languages']!.isEmpty) {
+            debugPrint("LoginScreen: New user. Navigating to Preferences...");
+            context.goNamed(RoutePaths.preferenceSelectionScreen);
+          } else {
+            debugPrint("LoginScreen: Returning user. Navigating to Home...");
+            _navigateToHome();
+          }
+        }
       } else {
         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Sign in failed or cancelled")),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error: $e")),
         );
       }
@@ -53,12 +66,13 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleGuestMode() async {
     if (!_agreedToTerms) return;
     setState(() => _isLoading = true);
-    
+
     // Save skipped state
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('login_skipped', true);
-    
-    await Future.delayed(const Duration(milliseconds: 500)); // Creating experience
+
+    await Future.delayed(
+        const Duration(milliseconds: 500)); // Creating experience
     _navigateToHome();
   }
 

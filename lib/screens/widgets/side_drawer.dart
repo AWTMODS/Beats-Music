@@ -7,6 +7,8 @@ import 'package:beats_music/screens/screen/plugin_manager_screen.dart';
 import 'package:beats_music/screens/widgets/privacy_policy_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:go_router/go_router.dart';
+import 'package:beats_music/core/constants/route_paths.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 
 class SideDrawer extends StatelessWidget {
@@ -92,11 +94,7 @@ class SideDrawer extends StatelessWidget {
                         label: "Sign In / Account",
                         onTap: () {
                           Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const LoginScreen()),
-                          );
+                          context.pushNamed(RoutePaths.loginScreen);
                         },
                       ),
                     _buildDrawerItem(

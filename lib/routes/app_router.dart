@@ -14,6 +14,8 @@ import 'package:beats_music/screens/screen/search_screen.dart';
 import 'package:beats_music/screens/screen/chart/chart_view.dart';
 import 'package:beats_music/screens/auth/login_screen.dart';
 import 'package:beats_music/screens/auth/permission_screen.dart';
+import 'package:beats_music/screens/screen/home_views/preference_selection_screen.dart';
+import 'package:beats_music/screens/screen/home_views/wrapped_view.dart';
 
 /// Canonical app router configuration.
 ///
@@ -46,6 +48,16 @@ class AppRouter {
         path: '/Permission',
         name: RoutePaths.permissionScreen,
         builder: (context, state) => const PermissionScreen(),
+      ),
+      GoRoute(
+        path: '/PreferenceSelection',
+        name: RoutePaths.preferenceSelectionScreen,
+        builder: (context, state) => const PreferenceSelectionScreen(),
+      ),
+      GoRoute(
+        path: '/Wrapped',
+        name: RoutePaths.wrappedScreen,
+        builder: (context, state) => const WrappedView(),
       ),
       StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) =>
@@ -117,6 +129,11 @@ class AppRouter {
                         );
                       },
                     ),
+                    GoRoute(
+                      name: RoutePaths.offlineScreen,
+                      path: 'Offline',
+                      builder: (context, state) => const OfflineScreen(),
+                    ),
                   ]),
             ]),
             StatefulShellBranch(routes: [
@@ -124,13 +141,6 @@ class AppRouter {
                 name: RoutePaths.localMusicScreen,
                 path: '/LocalMusic',
                 builder: (context, state) => const LocalMusicScreen(),
-              ),
-            ]),
-            StatefulShellBranch(routes: [
-              GoRoute(
-                name: RoutePaths.offlineScreen,
-                path: '/Offline',
-                builder: (context, state) => const OfflineScreen(),
               ),
             ]),
           ])

@@ -13,6 +13,8 @@ class RoutePaths {
   static const String offlineScreen = "Offline";
   static const String loginScreen = "Login";
   static const String permissionScreen = "Permission";
+  static const String preferenceSelectionScreen = "PreferenceSelection";
+  static const String wrappedScreen = "BeatsWrapped";
 
   // ── Named screens ───────────────────────────────────────────────────────────
   static const String mainScreen = "MainPage";

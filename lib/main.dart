@@ -54,10 +54,12 @@ import 'package:media_kit/media_kit.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'blocs/media_player/beats_player_cubit.dart';
+import 'package:beats_music/blocs/recommendation/cubit/recommendation_cubit.dart';
+import 'package:beats_music/services/listening_statistics_service.dart';
+import 'package:beats_music/services/beats_player.dart';
+import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:beats_music/services/discord_service.dart';
-import 'package:beats_music/services/beats_player.dart';
 import 'package:beats_music/services/db/legacy/legacy_migration_service.dart'
     as legacy_migration;
 import 'package:beats_music/screens/widgets/legacy_migration_overlay.dart';
@@ -67,10 +69,12 @@ import 'package:beats_music/screens/widgets/onboarding_overlay.dart';
 import 'package:beats_music/services/onboarding_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beats_music/core/di/service_locator.dart';
 import 'package:beats_music/services/db/dao/settings_dao.dart';
 import 'package:beats_music/services/db/db_provider.dart';
+import 'dart:ui';
 
 void processIncomingIntent(SharedMedia sharedMedia) {
   if (sharedMedia.content != null && isUrl(sharedMedia.content!)) {
@@ -114,6 +118,13 @@ Future<void> main() async {
 
   try {
     await Firebase.initializeApp();
+    
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+    
     // Small delay to allow Firebase Auth to restore the user session
     await Future.delayed(const Duration(milliseconds: 500));
   } catch (e) {
@@ -321,13 +332,13 @@ class _MyAppState extends State<MyApp> {
           create: (_) => SettingsCubit(
             SettingsRepository(SettingsDAO(DBProvider.db)),
           ),
-          lazy: false,
+          lazy: false, // Critical for theming
         ),
         BlocProvider(
           create: (_) => NotificationCubit(
             notificationDao: NotificationDAO(DBProvider.db),
           ),
-          lazy: false,
+          lazy: true,
         ),
         BlocProvider(
           create: (context) => TimerBloc(
@@ -340,15 +351,15 @@ class _MyAppState extends State<MyApp> {
         ),
         BlocProvider(
           create: (_) => CurrentPlaylistCubit(playlistDao: playlistDao),
-          lazy: false,
+          lazy: true,
         ),
         BlocProvider(
           create: (_) => RecentlyCubit(historyDao),
-          lazy: false,
+          lazy: true,
         ),
         BlocProvider(
           create: (_) => HistoryCubit(historyDao: historyDao),
-          lazy: false,
+          lazy: true,
         ),
         BlocProvider(
           create: (_) => LibraryItemsCubit(
@@ -362,7 +373,7 @@ class _MyAppState extends State<MyApp> {
         ),
         BlocProvider(
           create: (_) => AddToPlaylistCubit(),
-          lazy: false,
+          lazy: true,
         ),
         BlocProvider(
           create: (_) => SearchSuggestionBloc(
@@ -404,18 +415,25 @@ class _MyAppState extends State<MyApp> {
           create: (_) => GlobalEventsCubit(
             settingsDao: SettingsDAO(DBProvider.db),
           ),
-          lazy: false,
+          lazy: true,
         ),
         BlocProvider(
           create: (_) => PlayerOverlayCubit(),
-          lazy: false,
+          lazy: true,
         ),
         BlocProvider(
           create: (_) => ShortcutIndicatorCubit(),
-          lazy: false,
+          lazy: true,
         ),
         BlocProvider(
           create: (_) => LocalMusicCubit(),
+          lazy: true,
+        ),
+        BlocProvider(
+          create: (_) => RecommendationCubit(
+            pluginService: ServiceLocator.pluginService,
+            statsService: ListeningStatisticsService(),
+          ),
           lazy: true,
         ),
       ],
