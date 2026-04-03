@@ -12,6 +12,7 @@ import 'package:beats_music/core/constants/sentinel_values.dart';
 import 'package:beats_music/screens/widgets/create_playlist_bottomsheet.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:beats_music/utils/load_image.dart';
+import 'package:beats_music/screens/widgets/thumbnail_grid.dart';
 import 'package:icons_plus/icons_plus.dart';
 
 class AddToPlaylistScreen extends StatefulWidget {
@@ -555,14 +556,10 @@ class _PlaylistTile extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: LoadImageCached(
-                    imageUrl: playlist.coverImgUrl ?? "",
-                    fallbackUrl: playlist.coverImgUrl ?? '',
-                    fit: BoxFit.cover,
-                  ),
+                child: ThumbnailGrid(
+                  imageUrls: playlist.imageUrls,
+                  size: 50,
+                  fallbackIcon: MingCute.playlist_line,
                 ),
               ),
               const SizedBox(width: 14),
@@ -919,10 +916,10 @@ class _PlaylistAvatar extends StatelessWidget {
         ],
       ),
       child: ClipOval(
-        child: LoadImageCached(
-          imageUrl: playlist.coverImgUrl ?? "",
-          fallbackUrl: playlist.coverImgUrl ?? '',
-          fit: BoxFit.cover,
+        child: ThumbnailGrid(
+          imageUrls: playlist.imageUrls,
+          size: size,
+          fallbackIcon: MingCute.playlist_line,
         ),
       ),
     );

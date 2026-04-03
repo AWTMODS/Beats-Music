@@ -4,6 +4,8 @@ import 'package:beats_music/blocs/internet_connectivity/cubit/connectivity_cubit
 import 'package:beats_music/blocs/lastdotfm/lastdotfm_cubit.dart';
 import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
 import 'package:beats_music/blocs/notification/notification_cubit.dart';
+import 'package:beats_music/blocs/recommendation/cubit/recommendation_cubit.dart';
+import 'package:beats_music/blocs/recommendation/cubit/recommendation_state.dart';
 import 'package:beats_music/blocs/settings_cubit/cubit/settings_cubit.dart';
 import 'package:beats_music/core/di/service_locator.dart';
 import 'package:beats_music/core/models/exported.dart';
@@ -51,6 +53,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
     super.initState();
     _homeContentBloc = ContentBloc(pluginService: ServiceLocator.pluginService);
     _tryLoadHomeSections();
+    
+    // Trigger Recommendations
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _triggerRecommendations();
+    });
+  }
+
+  void _triggerRecommendations() {
+    final pluginState = context.read<PluginBloc>().state;
+    final allIds = pluginState.loadedContentResolvers.map((p) => p.manifest.id).toList();
+    if (allIds.isNotEmpty) {
+      context.read<RecommendationCubit>().fetchRecommendations(resolverPluginIds: allIds);
+    }
   }
 
   /// Only loads home sections when both settings are ready and plugins are loaded.
@@ -187,6 +202,34 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     [
                       const ShortcutGrid(),
                       const CaraouselWidget(),
+                      // AI Recommendations Section
+                      BlocBuilder<RecommendationCubit, RecommendationState>(
+                        builder: (context, state) {
+                          if (state is RecommendationLoaded && state.tracks.isNotEmpty) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 20.0),
+                              child: TabSongListWidget(
+                                list: state.tracks.map((track) {
+                                  return SongCardWidget(
+                                    song: track,
+                                    onTap: () {
+                                      context.read<BeatsPlayerCubit>().BeatsPlayer.loadPlaylist(
+                                        Playlist(tracks: state.tracks, title: state.title),
+                                        idx: state.tracks.indexOf(track),
+                                        doPlay: true,
+                                      );
+                                    },
+                                    onOptionsTap: () => showMoreBottomSheet(context, showSinglePlay: true, track),
+                                  );
+                                }).toList(),
+                                category: state.title,
+                                columnSize: 3,
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
                       BlocBuilder<SettingsCubit, SettingsState>(
                         builder: (context, state) {
                           if (state.lFMPicks) {
@@ -593,7 +636,7 @@ class StatsIcon extends StatelessWidget {
       padding: const EdgeInsets.all(5),
       constraints: const BoxConstraints(),
       onPressed: () {
-        // Show equalizer/stats
+        context.pushNamed(RoutePaths.wrappedScreen);
       },
       icon: const Icon(
         MingCute.chart_bar_fill,

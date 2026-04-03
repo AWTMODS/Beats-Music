@@ -1048,7 +1048,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateCheckTitle => '检查更新';
 
   @override
-  String get updateUpToDate => 'Beats🌸 已经是最新版本！';
+  String get updateUpToDate => 'Beats 已经是最新版本！';
 
   @override
   String get updateViewPreRelease => '查看最新预发布版';
@@ -1059,7 +1059,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get updateNewVersionAvailable => 'Beats🌸 新版本现已可用！';
+  String get updateNewVersionAvailable => 'Beats 新版本现已可用！';
 
   @override
   String updateVersion(String ver, String build) {
@@ -1364,7 +1364,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aboutCreativeHighlights => '更新与创作亮点';
 
   @override
-  String get aboutTipQuote => '喜欢 Beats 吗？小小的打赏能让它持续绽放。🌸';
+  String get aboutTipQuote => '喜欢 Beats 吗？小小的打赏能让它持续绽放。';
 
   @override
   String get aboutTipButton => '我要赞赏';
@@ -1837,7 +1837,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String updateAvailableBody(String ver, String build) {
-    return 'Beats🌸 新版本现已可用！\n\n版本：$ver+$build';
+    return 'Beats 新版本现已可用！\n\n版本：$ver+$build';
   }
 
   @override

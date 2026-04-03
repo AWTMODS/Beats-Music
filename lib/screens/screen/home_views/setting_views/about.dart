@@ -219,10 +219,10 @@ class About extends StatelessWidget {
                     _DonateItem(
                       icon: FontAwesome.bitcoin_brand,
                       label: 'BTC Address',
-                      value: '15w6uDZ7aMAo9CqMBBNX8YkNH3qGEJzuDX',
+                      value: 'bc1q2ysvmkqkzqprkplamcu4y2fuug9xsla4q6xk3g',
                       isCrypto: true,
                       onTap: () {
-                        Clipboard.setData(const ClipboardData(text: '15w6uDZ7aMAo9CqMBBNX8YkNH3qGEJzuDX'));
+                        Clipboard.setData(const ClipboardData(text: 'bc1q2ysvmkqkzqprkplamcu4y2fuug9xsla4q6xk3g'));
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('BTC Address copied to clipboard')),
                         );
@@ -231,11 +231,11 @@ class About extends StatelessWidget {
                     const SizedBox(height: 12),
                     _DonateItem(
                       icon: FontAwesome.ethereum_brand,
-                      label: 'ETH / USDT (TRC20)',
-                      value: 'TBgX4jo8byy2pjfUvWTiEbcUVbybBm7Q85',
+                      label: 'ETC Address',
+                      value: '0xe5c0b2657ba041a1904612EF4f8Fef147a65FA6D',
                       isCrypto: true,
                       onTap: () {
-                        Clipboard.setData(const ClipboardData(text: 'TBgX4jo8byy2pjfUvWTiEbcUVbybBm7Q85'));
+                        Clipboard.setData(const ClipboardData(text: '0xe5c0b2657ba041a1904612EF4f8Fef147a65FA6D'));
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Wallet Address copied to clipboard')),
                         );

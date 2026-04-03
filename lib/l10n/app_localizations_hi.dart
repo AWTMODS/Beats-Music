@@ -1138,7 +1138,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get updateCheckTitle => 'अपडेट्स चेक करें';
 
   @override
-  String get updateUpToDate => 'Beats🌸 पूरी तरह से अपडेटेड है!';
+  String get updateUpToDate => 'Beats पूरी तरह से अपडेटेड है!';
 
   @override
   String get updateViewPreRelease => 'नया प्री-रिलीज़ वर्शन देखें';
@@ -1149,7 +1149,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get updateNewVersionAvailable => 'Beats🌸 का एक नया वर्शन उपलब्ध है!';
+  String get updateNewVersionAvailable => 'Beats का एक नया वर्शन उपलब्ध है!';
 
   @override
   String updateVersion(String ver, String build) {
@@ -1465,7 +1465,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get aboutTipQuote =>
-      'Beats पसंद आ रहा है? आपका छोटा-सा सहयोग इसे और बेहतर बनाने में मदद करेगा। 🌸';
+      'Beats पसंद आ रहा है? आपका छोटा-सा सहयोग इसे और बेहतर बनाने में मदद करेगा। ';
 
   @override
   String get aboutTipButton => 'मैं सहायता करना चाहता/चाहती हूँ';
@@ -1974,7 +1974,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String updateAvailableBody(String ver, String build) {
-    return 'Beats🌸 का नया वर्शन आ गया है!\n\nवर्शन: $ver+$build';
+    return 'Beats का नया वर्शन आ गया है!\n\nवर्शन: $ver+$build';
   }
 
   @override

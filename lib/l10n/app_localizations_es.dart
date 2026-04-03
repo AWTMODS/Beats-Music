@@ -1122,7 +1122,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get updateCheckTitle => 'Buscando';
 
   @override
-  String get updateUpToDate => '¡Beats🌸 está actualizado!';
+  String get updateUpToDate => '¡Beats está actualizado!';
 
   @override
   String get updateViewPreRelease => 'Ver última Pre-Release';
@@ -1453,7 +1453,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aboutTipQuote =>
-      '¿Te gusta Beats? Una propina ayuda al proyecto. 🌸';
+      '¿Te gusta Beats? Una propina ayuda al proyecto. ';
 
   @override
   String get aboutTipButton => 'Quiero ayudar';
@@ -1945,7 +1945,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String updateAvailableBody(String ver, String build) {
-    return '¡Nueva versión de Beats🌸!\n\nVersión: $ver+$build';
+    return '¡Nueva versión de Beats!\n\nVersión: $ver+$build';
   }
 
   @override

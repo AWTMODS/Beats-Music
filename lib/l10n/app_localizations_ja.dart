@@ -1052,7 +1052,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get updateCheckTitle => '更新の確認';
 
   @override
-  String get updateUpToDate => 'Beats🌸 は最新の状態です！';
+  String get updateUpToDate => 'Beats は最新の状態です！';
 
   @override
   String get updateViewPreRelease => '最新のプレリリースを表示';
@@ -1063,7 +1063,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get updateNewVersionAvailable => 'Beats🌸 の新しいバージョンが利用可能です！';
+  String get updateNewVersionAvailable => 'Beats の新しいバージョンが利用可能です！';
 
   @override
   String updateVersion(String ver, String build) {
@@ -1368,7 +1368,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aboutCreativeHighlights => 'アップデートとクリエイティブな活動';
 
   @override
-  String get aboutTipQuote => 'Beats を気に入っていただけましたか？応援が活動の励みになります。 🌸';
+  String get aboutTipQuote => 'Beats を気に入っていただけましたか？応援が活動の励みになります。 ';
 
   @override
   String get aboutTipButton => '応援する';
@@ -1842,7 +1842,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String updateAvailableBody(String ver, String build) {
-    return 'Beats🌸 の新しいバージョンが利用可能です！\n\nバージョン: $ver+$build';
+    return 'Beats の新しいバージョンが利用可能です！\n\nバージョン: $ver+$build';
   }
 
   @override

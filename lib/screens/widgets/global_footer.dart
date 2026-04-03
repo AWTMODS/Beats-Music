@@ -191,17 +191,14 @@ class VerticalNavBar extends StatelessWidget {
         NavigationRailDestination(
             icon: const Icon(MingCute.home_4_fill), label: Text(l10n.navHome)),
         NavigationRailDestination(
-            icon: const Icon(MingCute.book_5_fill),
-            label: Text(l10n.navLibrary)),
-        NavigationRailDestination(
             icon: const Icon(MingCute.search_2_fill),
             label: Text(l10n.navSearch)),
         NavigationRailDestination(
+            icon: const Icon(MingCute.book_5_fill),
+            label: Text(l10n.navLibrary)),
+        NavigationRailDestination(
             icon: const Icon(MingCute.music_2_fill),
             label: Text(l10n.navLocal)),
-        NavigationRailDestination(
-            icon: const Icon(MingCute.folder_download_fill),
-            label: Text(l10n.navOffline)),
       ],
       selectedIndex: navigationShell.currentIndex,
       minWidth: 70, // Slightly improved touch target for desktop

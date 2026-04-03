@@ -1,3 +1,19 @@
+## [1.5.0] - 2026-04-03
+
+### New Features
+- **Visual Overhaul (Previews)**: Implemented 4-image grid thumbnails for playlists and "Downloaded Songs" section for a more modern library feel.
+- **Authentic Artists**: Replaced generic placeholders with high-quality, authentic artist portraits in preference selection.
+
+### Improvements
+- **Data Privacy & Performance**: Enhanced sign-out process with automatic local database and cache cleanup (Isar & system cache).
+- **Dynamic Data Resolution**: Upgraded library engine to handle asynchronous multi-image resolution for playlist covers.
+- **Visual Polish**: Removed unnecessary emojis and punctuation from update notifications for a cleaner UI.
+
+### Fixed
+- **Critical Navigation Fix**: Resolved issue where the login screen incorrectly appeared inside the Home tab navigation stack after sign-out.
+- **Fixed Preference Selection**: Resolved issue where artist images weren't loading and improved "Skip/Finish" button reliability.
+- **Local Storage**: Improved reliability of data purge operations when switching accounts.
+
 ## [1.4.0] - 2026-03-21
 
 
