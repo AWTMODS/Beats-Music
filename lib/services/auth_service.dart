@@ -3,6 +3,7 @@ import 'package:beats_music/services/auto_sync_service.dart';
 import 'package:beats_music/services/listening_statistics_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:beats_music/services/db/db_provider.dart';
 import 'package:flutter/material.dart';
 
 class AuthService {
@@ -83,9 +84,12 @@ class AuthService {
     await _googleSignIn.signOut();
     await _auth.signOut();
     
-    // Clear local stats to ensure privacy for next user
-    debugPrint("AuthService: Clearing local stats...");
-    await ListeningStatisticsService().clearAllStatistics();
+    // Clear local stats and library to ensure privacy for next user
+    debugPrint("AuthService: Clearing local stats and library...");
+    await Future.wait([
+      ListeningStatisticsService().clearAllStatistics(),
+      DBProvider.clearUserLocalData(),
+    ]);
   }
 
   Future<void> _restoreDataInBackground() async {

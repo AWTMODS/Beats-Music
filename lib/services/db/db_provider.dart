@@ -152,6 +152,30 @@ class DBProvider {
       log("DB reset successfully", name: "DBProvider");
     });
   }
+  
+  /// Clear user-specific local data (Playlists, History, Tracks, etc.) 
+  /// without resetting app-wide settings.
+  static Future<void> clearUserLocalData() async {
+    Isar isarDB = await db;
+    await isarDB.writeTxn(() async {
+      await isarDB.playlistEntryDBs.clear();
+      await isarDB.playlistDBs.clear();
+      await isarDB.trackDBs.clear();
+      await isarDB.playbackHistoryDBs.clear();
+      await isarDB.searchHistoryDBs.clear();
+      await isarDB.lyricsDBs.clear();
+      await isarDB.cacheEntryDBs.clear();
+      log("User local data cleared (Playlists, History, etc.)", name: "DBProvider");
+    });
+    
+    // Re-ensure standard playlists exist (otherwise UI might look broken)
+    final trackDAO = TrackDAO(db);
+    final playlistDAO = PlaylistDAO(db, trackDAO);
+    await playlistDAO.ensurePlaylist(likedPlaylist);
+    await playlistDAO.ensurePlaylist(downloadPlaylist);
+    await playlistDAO.ensurePlaylist(localMusicPlaylist);
+    await playlistDAO.ensurePlaylist(recentlyPlayedPlaylist);
+  }
 
   // ── Standard playlists (excluded from backup restore) ─────────────────────
   static const downloadPlaylist = '_DOWNLOADS';

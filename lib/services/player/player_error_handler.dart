@@ -6,6 +6,7 @@ import 'package:beats_music/core/models/exported.dart';
 import 'package:beats_music/plugins/errors/plugin_exceptions.dart';
 import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 enum PlayerErrorType {
   networkDropped,
@@ -158,6 +159,23 @@ class PlayerErrorHandler {
 
     lastError.add(error);
     dev.log('Player error processed: $error', name: 'PlayerErrorHandler');
+
+    try {
+      FirebaseCrashlytics.instance.recordError(
+        originalError ?? message,
+        null,
+        reason: 'Player Error: $type',
+        information: [
+          'Message: $message',
+          'Track ID: ${track.id}',
+          'Track Title: ${track.title}',
+          'Attempt Sequence: $_currentAttemptSequence',
+          'Retries: $_currentTrackRetries'
+        ],
+      );
+    } catch (e) {
+      dev.log('Failed to log to Crashlytics: $e', name: 'PlayerErrorHandler');
+    }
 
     if (type == PlayerErrorType.permissionError) {
       _handleTrackTotalFailure(track);

@@ -345,4 +345,100 @@ class CloudSyncService {
       debugPrint("CloudSync: Downloads download failed - $e");
     }
   }
+
+  /// Save users preference languages and artists
+  Future<void> saveUserPreferences({
+    required List<String> languages,
+    required List<String> artists,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('data')
+          .doc('preferences')
+          .set({
+        'lastUpdated': FieldValue.serverTimestamp(),
+        'languages': languages,
+        'artists': artists,
+      });
+      debugPrint("CloudSync: Saved user preferences.");
+    } catch (e) {
+      debugPrint("CloudSync: Preferences save failed - $e");
+    }
+  }
+
+  /// Get users preference languages and artists
+  Future<Map<String, List<String>>> getUserPreferences() async {
+    final user = _auth.currentUser;
+    if (user == null) return {'languages': [], 'artists': []};
+
+    try {
+      final doc = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('data')
+          .doc('preferences')
+          .get();
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        return {
+          'languages':
+              (data['languages'] as List<dynamic>?)?.cast<String>() ?? [],
+          'artists': (data['artists'] as List<dynamic>?)?.cast<String>() ?? [],
+        };
+      }
+    } catch (e) {
+      debugPrint("CloudSync: Preferences download failed - $e");
+    }
+    return {'languages': [], 'artists': []};
+  }
+
+  /// Saves a "Wrapped" snapshot for a specific month (e.g., "2026-04")
+  Future<void> saveWrappedSnapshot({
+    required String monthId,
+    required Map<String, dynamic> stats,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('wrapped_history')
+          .doc(monthId)
+          .set({
+        'month': monthId,
+        'stats': stats,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      debugPrint("CloudSync: Saved Wrapped snapshot for $monthId");
+    } catch (e) {
+      debugPrint("CloudSync: Wrapped save failed - $e");
+    }
+  }
+
+  /// Retrieves all historical Wrapped snapshots
+  Future<List<Map<String, dynamic>>> getWrappedHistory() async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    try {
+      final query = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('wrapped_history')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      return query.docs.map((doc) => doc.data()).toList();
+    } catch (e) {
+      debugPrint("CloudSync: Wrapped history download failed - $e");
+      return [];
+    }
+  }
 }

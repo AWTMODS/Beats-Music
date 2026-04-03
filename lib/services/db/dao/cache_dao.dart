@@ -1,15 +1,17 @@
 import 'dart:developer';
 
 import 'package:beats_music/services/db/global_db.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:isar_community/isar.dart';
 
 /// DAO for API response cache (TTL-aware) and API token storage.
 ///
 /// API response cache uses [CacheEntryDB] which supports TTL expiry and an
 /// optional binary blob field. API tokens (long-lived) remain in
-/// [AppSettingsStrDB] with their expiry embedded.
+/// secure storage.
 class CacheDAO {
   final Future<Isar> _db;
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   const CacheDAO(this._db);
 
@@ -117,7 +119,7 @@ class CacheDAO {
     await isar.writeTxn(() => isar.cacheEntryDBs.putAll(objects));
   }
 
-  // -- API tokens (AppSettingsStrDB) -----------------------------------------
+  // -- API tokens (Secure Storage) -----------------------------------------
 
   /// Store an API token for [apiName] with its expiry in seconds.
   ///
@@ -127,45 +129,33 @@ class CacheDAO {
     String token, {
     int expireInSeconds = 0,
   }) async {
-    final isar = await _db;
-    await isar.writeTxn(() => isar.appSettingsStrDBs.put(
-          AppSettingsStrDB(
-            settingName: apiName,
-            settingValue: token,
-            settingValue2: expireInSeconds.toString(),
-            lastUpdated: DateTime.now(),
-          ),
-        ));
+    final expireTime = expireInSeconds > 0 
+        ? DateTime.now().add(Duration(seconds: expireInSeconds)).millisecondsSinceEpoch.toString() 
+        : '0';
+    await _secureStorage.write(key: '${apiName}_token', value: token);
+    await _secureStorage.write(key: '${apiName}_expiry', value: expireTime);
   }
 
   /// Retrieve the token for [apiName] if still valid, otherwise null.
   Future<String?> getApiToken(String apiName) async {
-    final isar = await _db;
-    final record = await isar.appSettingsStrDBs
-        .filter()
-        .settingNameEqualTo(apiName)
-        .findFirst();
-    if (record == null) return null;
+    final token = await _secureStorage.read(key: '${apiName}_token');
+    if (token == null) return null;
+    
+    final expiryStr = await _secureStorage.read(key: '${apiName}_expiry');
+    final expiryMs = int.tryParse(expiryStr ?? '0') ?? 0;
+    
+    if (expiryMs == 0) return token; // never expires
 
-    final expireIn = int.tryParse(record.settingValue2 ?? '0') ?? 0;
-    if (expireIn == 0) return record.settingValue; // never expires
-
-    final age = DateTime.now()
-        .difference(
-            record.lastUpdated ?? DateTime.fromMillisecondsSinceEpoch(0))
-        .inSeconds
-        .abs();
-    if (age < expireIn - 30) return record.settingValue; // 30-s safety margin
+    if (DateTime.now().millisecondsSinceEpoch < expiryMs - 30000) {
+      return token; // 30-second safety margin
+    }
     return null; // expired
   }
 
   /// Delete the token entry for [apiName].
   Future<void> removeApiToken(String apiName) async {
-    final isar = await _db;
-    await isar.writeTxn(() => isar.appSettingsStrDBs
-        .filter()
-        .settingNameEqualTo(apiName)
-        .deleteAll());
+    await _secureStorage.delete(key: '${apiName}_token');
+    await _secureStorage.delete(key: '${apiName}_expiry');
   }
 }
 
