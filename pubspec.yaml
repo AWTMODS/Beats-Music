@@ -102,6 +102,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.3
+  integration_test:
+    sdk: flutter
 
   isar_community_generator: 
     version: ^3.3.0-dev.3
