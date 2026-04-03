@@ -25,6 +25,9 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:beats_music/blocs/library/search_cubit/library_search_cubit.dart';
 import 'package:beats_music/core/models/library_search_result.dart';
 import 'package:beats_music/screens/widgets/animated_list_item.dart';
+import 'package:beats_music/blocs/downloader/cubit/downloader_cubit.dart';
+import 'package:beats_music/utils/load_image.dart';
+import 'package:beats_music/screens/widgets/thumbnail_grid.dart';
 
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({super.key});
@@ -125,6 +128,9 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   customDiscoverBar(context),
+                  SliverToBoxAdapter(
+                    child: _buildOfflineShortcutTile(context),
+                  ),
                   SliverFillRemaining(
                     child: Center(
                       child: SignBoardWidget(
@@ -157,6 +163,10 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
                   physics: const BouncingScrollPhysics(),
                   slivers: [
                     customDiscoverBar(context),
+                    if (!_isSearching)
+                      SliverToBoxAdapter(
+                        child: _buildOfflineShortcutTile(context),
+                      ),
                     if (_isSearching)
                       SliverToBoxAdapter(
                         child: _buildSearchBar(),
@@ -454,6 +464,100 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
       ),
     );
   }
+
+  Widget _buildOfflineShortcutTile(BuildContext context) {
+    return BlocBuilder<DownloaderCubit, DownloaderState>(
+      builder: (context, state) {
+        final downloadedCount = state.downloaded.length;
+        final thumbnails = state.downloaded.take(4)
+            .map((t) => t.thumbnail?.url ?? '')
+            .where((url) => url.isNotEmpty)
+            .toList();
+        final subtitle =
+            '$downloadedCount ${downloadedCount == 1 ? 'track' : 'tracks'}';
+
+        return Padding(
+          padding: const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+          child: AnimatedListItem(
+            index: 0,
+            child: InkWell(
+              splashColor: Default_Theme.primaryColor2.withValues(alpha: 0.1),
+              hoverColor: Colors.white.withValues(alpha: 0.05),
+              highlightColor: Default_Theme.primaryColor2.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              onTap: () {
+                context.pushNamed(RoutePaths.offlineScreen);
+              },
+              child: SizedBox(
+                height: 80,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: SizedBox.square(
+                        dimension: 70,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: ThumbnailGrid(
+                          imageUrls: thumbnails,
+                          size: 70,
+                          fallbackIcon: MingCute.folder_download_fill,
+                        ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Downloaded Songs",
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: Default_Theme.secondoryTextStyle.merge(
+                              const TextStyle(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w700,
+                                color: Default_Theme.primaryColor1,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            subtitle,
+                            maxLines: 1,
+                            style: Default_Theme.secondoryTextStyle.merge(
+                              const TextStyle(
+                                fontSize: 14,
+                                overflow: TextOverflow.fade,
+                                fontWeight: FontWeight.w500,
+                                color: Default_Theme.primaryColor1,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 14),
+                      child: Icon(MingCute.right_line,
+                          size: 20,
+                          color: Default_Theme.primaryColor1
+                              .withValues(alpha: 0.3)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _ListOfPlaylists extends StatelessWidget {
@@ -557,7 +661,7 @@ class _ListOfPlaylists extends StatelessWidget {
       onMenuTap: isReorderable ? null : openMenu,
       showMenuButton: !isReorderable,
       title: playlist.playlistName,
-      coverArt: playlist.coverImgUrl ?? '',
+      imageUrls: playlist.imageUrls,
       subtitle: playlist.subTitle ?? '',
       type: _toCardType(playlist.type),
       isPinned: playlist.isPinned,

@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
 import 'package:beats_music/utils/load_image.dart';
+import 'package:beats_music/screens/widgets/thumbnail_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,7 +16,7 @@ enum LibItemTypes {
 
 class LibItemCard extends StatelessWidget {
   final String title;
-  final String coverArt;
+  final List<String> imageUrls;
   final String subtitle;
   final LibItemTypes type;
   final VoidCallback? onTap;
@@ -27,7 +28,7 @@ class LibItemCard extends StatelessWidget {
   const LibItemCard({
     Key? key,
     required this.title,
-    required this.coverArt,
+    required this.imageUrls,
     required this.subtitle,
     this.type = LibItemTypes.userPlaylist,
     this.onTap,
@@ -85,17 +86,18 @@ class LibItemCard extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: switch (type) {
-                      LibItemTypes.userPlaylist => LoadImageCached(
-                          imageUrl: coverArt, fallbackUrl: coverArt.toString()),
-                      LibItemTypes.onlPlaylist => LoadImageCached(
-                          imageUrl: coverArt, fallbackUrl: coverArt.toString()),
                       LibItemTypes.artist => ClipOval(
-                          child: LoadImageCached(
-                              imageUrl: coverArt,
-                              fallbackUrl: coverArt.toString()),
+                          child: ThumbnailGrid(
+                            imageUrls: imageUrls,
+                            size: 70,
+                            fallbackIcon: MingCute.user_3_fill,
+                          ),
                         ),
-                      LibItemTypes.album => LoadImageCached(
-                          imageUrl: coverArt, fallbackUrl: coverArt.toString()),
+                      _ => ThumbnailGrid(
+                          imageUrls: imageUrls,
+                          size: 70,
+                          fallbackIcon: MingCute.music_2_fill,
+                        ),
                     },
                   ),
                 ),

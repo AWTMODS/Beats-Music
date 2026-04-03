@@ -90,14 +90,12 @@ class LibraryItemsCubit extends Cubit<LibraryItemsState> {
         subtitle = '$trackCount ${trackCount == 1 ? 'track' : 'tracks'}';
       }
 
-      final coverUrl = await _resolveCoverUrl(p);
-
       items.add(
         PlaylistItemProperties(
           playlistName: domainPlaylist.title,
           storageKey: p.name,
           subTitle: subtitle,
-          coverImgUrl: coverUrl,
+          imageUrls: await _resolveCoverUrls(p),
           type: domainPlaylist.type,
           isPinned: p.isPinned,
           sortOrder: p.sortOrder,
@@ -109,12 +107,12 @@ class LibraryItemsCubit extends Cubit<LibraryItemsState> {
     return items;
   }
 
-  /// Resolve a cover image URL: direct thumbnail for remote, first track for user.
-  Future<String?> _resolveCoverUrl(PlaylistDB playlist) async {
+  /// Resolve cover image URLs: direct thumbnail for remote, up to 4 tracks for user.
+  Future<List<String>> _resolveCoverUrls(PlaylistDB playlist) async {
     // Try direct thumbnail first (works for all types).
     final thumb = playlist.thumbnail;
     if (thumb != null && thumb.url.isNotEmpty) {
-      return thumb.url;
+      return [thumb.url];
     }
 
     // For artists, try embedded artist thumbnail.
@@ -123,20 +121,23 @@ class LibraryItemsCubit extends Cubit<LibraryItemsState> {
         playlist.artists!.isNotEmpty) {
       final artistThumb = playlist.artists!.first.thumbnail;
       if (artistThumb != null && artistThumb.url.isNotEmpty) {
-        return artistThumb.url;
+        return [artistThumb.url];
       }
     }
 
-    // For user playlists, use first track's artwork.
+    // For user playlists, use up to first 4 track's artwork.
     if (playlist.type == PlaylistTypeDB.userPlaylist) {
       final tracks = await _playlistDao.getPlaylistTracks(playlist.id);
       if (tracks.isNotEmpty) {
-        final trackUrl = tracks.first.thumbnail?.url;
-        if (trackUrl != null && trackUrl.isNotEmpty) return trackUrl;
+        return tracks
+            .take(4)
+            .map((t) => t.thumbnail?.url ?? '')
+            .where((url) => url.isNotEmpty)
+            .toList();
       }
     }
 
-    return null;
+    return [];
   }
 
   // ── Playlist CRUD ──────────────────────────────────────────────────────────

@@ -38,7 +38,7 @@ final class LibraryItemsError extends LibraryItemsState {
 class PlaylistItemProperties extends Equatable {
   final String playlistName;
   final String storageKey;
-  final String? coverImgUrl;
+  final List<String> imageUrls;
   final String? subTitle;
   final PlaylistType type;
   final bool isPinned;
@@ -48,7 +48,7 @@ class PlaylistItemProperties extends Equatable {
   const PlaylistItemProperties({
     required this.playlistName,
     required this.storageKey,
-    this.coverImgUrl,
+    this.imageUrls = const [],
     this.subTitle,
     this.type = PlaylistType.userPlaylist,
     this.isPinned = false,
@@ -60,7 +60,7 @@ class PlaylistItemProperties extends Equatable {
   List<Object?> get props => [
         playlistName,
         storageKey,
-        coverImgUrl,
+        imageUrls,
         subTitle,
         type,
         isPinned,
