@@ -783,8 +783,10 @@ class BeatsMusicPlayer extends BaseAudioHandler
           originalTrack: track,
           replacement: replacement,
         )
-            .catchError(
-                (e) => log('Failed to auto-heal: $e', name: 'BeatsMusicPlayer')));
+            .catchError((e) {
+          log('Failed to auto-heal: $e', name: 'BeatsMusicPlayer');
+          return const SmartTrackReplacementApplyResult(updatedPlaylists: []);
+        }));
       }
 
       return (replacement, resolved);
