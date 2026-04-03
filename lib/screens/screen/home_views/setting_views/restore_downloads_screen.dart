@@ -135,11 +135,11 @@ class _RestoreDownloadsScreenState extends State<RestoreDownloadsScreen> {
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(MingCute.download_3_line, size: 64, color: Default_Theme.primaryColor1.withOpacity(0.2)),
+                    Icon(MingCute.download_3_line, size: 64, color: Default_Theme.primaryColor1.withValues(alpha: 0.2)),
                     const SizedBox(height: 16),
                     Text(
                       "No pending downloads found to restore.",
-                      style: Default_Theme.secondoryTextStyle.copyWith(color: Default_Theme.primaryColor1.withOpacity(0.5)),
+                      style: Default_Theme.secondoryTextStyle.copyWith(color: Default_Theme.primaryColor1.withValues(alpha: 0.5)),
                     ),
                   ],
                 )
@@ -153,7 +153,7 @@ class _RestoreDownloadsScreenState extends State<RestoreDownloadsScreen> {
                     final isAlreadyDownloaded = context.watch<DownloaderCubit>().isDownloaded(mediaId);
                     
                     return Card(
-                      color: Default_Theme.primaryColor1.withOpacity(0.02),
+                      color: Default_Theme.primaryColor1.withValues(alpha: 0.02),
                       margin: const EdgeInsets.only(bottom: 8),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       child: ListTile(
@@ -161,7 +161,7 @@ class _RestoreDownloadsScreenState extends State<RestoreDownloadsScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: Default_Theme.primaryColor1.withOpacity(0.05),
+                            color: Default_Theme.primaryColor1.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(MingCute.music_2_fill, color: Default_Theme.accentColor2, size: 20),
@@ -174,7 +174,7 @@ class _RestoreDownloadsScreenState extends State<RestoreDownloadsScreen> {
                         ),
                         subtitle: Text(
                           mediaId,
-                          style: Default_Theme.secondoryTextStyle.copyWith(color: Default_Theme.primaryColor1.withOpacity(0.4), fontSize: 11),
+                          style: Default_Theme.secondoryTextStyle.copyWith(color: Default_Theme.primaryColor1.withValues(alpha: 0.4), fontSize: 11),
                         ),
                         trailing: (isRestored || isAlreadyDownloaded)
                             ? const Icon(Icons.check_circle, color: Colors.green)

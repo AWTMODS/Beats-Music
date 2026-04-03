@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:beats_music/services/db/sync_adapter.dart';
-import 'package:beats_music/services/db/db_provider.dart';
 import 'package:beats_music/services/listening_statistics_service.dart';
 
 import 'package:flutter/foundation.dart';

@@ -71,9 +71,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:beats_music/core/di/service_locator.dart';
-import 'package:beats_music/services/db/dao/settings_dao.dart';
-import 'package:beats_music/services/db/db_provider.dart';
 import 'dart:ui';
 
 void processIncomingIntent(SharedMedia sharedMedia) {

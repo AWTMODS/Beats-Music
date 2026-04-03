@@ -132,7 +132,7 @@ class About extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Wrap(
+                    const Wrap(
                       spacing: 12,
                       runSpacing: 12,
                       alignment: WrapAlignment.center,
@@ -248,11 +248,11 @@ class About extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Special Thanks Card
-              _SectionCard(
+              const _SectionCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Center(
+                    Center(
                       child: Text(
                         'Special Thanks',
                         style: TextStyle(
@@ -262,7 +262,7 @@ class About extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     _ThanksItem(
                       icon: MingCute.leaf_3_fill,
                       iconColor: Default_Theme.successAccent,
@@ -270,15 +270,15 @@ class About extends StatelessWidget {
                       description: 'Inspiration & Open Source',
                       url: 'https://github.com/AWTMODS/Beats-Music',
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     _ThanksItem(
                       icon: MingCute.code_fill,
-                      iconColor: const Color(0xFF54C5F8),
+                      iconColor: Color(0xFF54C5F8),
                       name: 'Flutter',
                       description: 'UI Framework',
                       url: 'https://flutter.dev',
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     _ThanksItem(
                       icon: MingCute.music_2_fill,
                       iconColor: Colors.orangeAccent,
@@ -315,7 +315,7 @@ class About extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _LinkButton(
+                    const _LinkButton(
                       icon: MingCute.github_fill,
                       label: 'View on GitHub',
                       url: 'https://github.com/AWTMODS/Beats-Music',

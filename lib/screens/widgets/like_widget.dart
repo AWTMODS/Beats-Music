@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:icons_plus/icons_plus.dart';
 
 class LikeBtnWidget extends StatefulWidget {

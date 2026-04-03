@@ -1,6 +1,4 @@
 import 'package:beats_music/services/auto_sync_service.dart';
-import 'package:beats_music/services/cloud_sync_service.dart';
-import 'package:beats_music/services/db/sync_adapter.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:beats_music/screens/screen/home_views/setting_views/setting_shared_widgets.dart';
 import 'package:beats_music/screens/screen/home_views/setting_views/restore_downloads_screen.dart';
@@ -145,7 +143,7 @@ class _CloudSyncSettingsState extends State<CloudSyncSettings> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             children: [
               // Account Status Section
-              SettingSectionHeader(label: 'Account Status'),
+              const SettingSectionHeader(label: 'Account Status'),
               SettingCard(
                 children: [
                    Padding(
@@ -174,7 +172,7 @@ class _CloudSyncSettingsState extends State<CloudSyncSettings> {
                                     ? _auth.currentUser!.email ?? 'Logged in'
                                     : 'Sign in to sync your data',
                                 style: Default_Theme.secondoryTextStyle.copyWith(
-                                  color: Default_Theme.primaryColor1.withOpacity(0.6),
+                                  color: Default_Theme.primaryColor1.withValues(alpha: 0.6),
                                   fontSize: 14,
                                 ),
                               ),
@@ -190,7 +188,7 @@ class _CloudSyncSettingsState extends State<CloudSyncSettings> {
               const SizedBox(height: 28),
               
               // Synchronization Section
-              SettingSectionHeader(label: 'Synchronization'),
+              const SettingSectionHeader(label: 'Synchronization'),
               SettingCard(
                 children: [
                   SettingToggleTile(
@@ -215,7 +213,7 @@ class _CloudSyncSettingsState extends State<CloudSyncSettings> {
               const SizedBox(height: 28),
     
               // Data Management Section
-              SettingSectionHeader(label: 'Data Management'),
+              const SettingSectionHeader(label: 'Data Management'),
               SettingCard(
                 children: [
                   SettingNavTile(
@@ -235,7 +233,7 @@ class _CloudSyncSettingsState extends State<CloudSyncSettings> {
               const SizedBox(height: 28),
               
               // What Gets Synced Info
-              SettingSectionHeader(label: 'What Gets Synced'),
+              const SettingSectionHeader(label: 'What Gets Synced'),
               SettingCard(
                 children: [
                   _buildInfoItem(MingCute.music_2_fill, 'User Playlists', 'Custom playlists and folders'),
@@ -261,7 +259,7 @@ class _CloudSyncSettingsState extends State<CloudSyncSettings> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          Icon(icon, color: Default_Theme.accentColor2.withOpacity(0.7), size: 20),
+          Icon(icon, color: Default_Theme.accentColor2.withValues(alpha: 0.7), size: 20),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -277,7 +275,7 @@ class _CloudSyncSettingsState extends State<CloudSyncSettings> {
                 Text(
                   subtitle,
                   style: Default_Theme.secondoryTextStyle.copyWith(
-                    color: Default_Theme.primaryColor1.withOpacity(0.5),
+                    color: Default_Theme.primaryColor1.withValues(alpha: 0.5),
                     fontSize: 12,
                   ),
                 ),

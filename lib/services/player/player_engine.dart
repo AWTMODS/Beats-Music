@@ -36,7 +36,7 @@ class VolumeFader {
       await player.setVolume(endVol.clamp(0.0, 100.0));
       return;
     }
-    final steps = 20;
+    const steps = 20;
     final stepDuration =
         Duration(milliseconds: duration.inMilliseconds ~/ steps);
     for (int i = 1; i <= steps; i++) {

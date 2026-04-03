@@ -1,4 +1,3 @@
-import 'package:beats_music/screens/auth/login_screen.dart';
 import 'package:beats_music/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:beats_music/screens/screen/home_views/setting_view.dart';

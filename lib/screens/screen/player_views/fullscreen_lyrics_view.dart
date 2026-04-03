@@ -684,8 +684,9 @@ class _FullscreenSyncedLyricsState extends State<FullscreenSyncedLyrics> {
     for (int i = 0; i < lyrics.length; i++) {
       final nextStart =
           i + 1 < lyrics.length ? lyrics[i + 1].start : const Duration(days: 1);
-      if (currentPosition >= lyrics[i].start && currentPosition < nextStart)
+      if (currentPosition >= lyrics[i].start && currentPosition < nextStart) {
         return i;
+      }
     }
     return lyrics.length - 1;
   }
@@ -718,7 +719,9 @@ class _FullscreenSyncedLyricsState extends State<FullscreenSyncedLyrics> {
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification is ScrollStartNotification &&
-            notification.dragDetails != null) _onUserScroll();
+            notification.dragDetails != null) {
+          _onUserScroll();
+        }
         return false;
       },
       child: ShaderMask(

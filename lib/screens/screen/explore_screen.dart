@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'package:beats_music/blocs/explore/cubit/explore_cubits.dart';
 import 'package:beats_music/blocs/internet_connectivity/cubit/connectivity_cubit.dart';
 import 'package:beats_music/blocs/lastdotfm/lastdotfm_cubit.dart';
 import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
@@ -26,7 +25,6 @@ import 'package:beats_music/screens/screen/home_views/setting_view.dart';
 import 'package:beats_music/screens/screen/home_views/timer_view.dart';
 import 'package:beats_music/screens/widgets/plugin_bootstrap_overlay.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
-import 'package:beats_music/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:beats_music/core/constants/route_paths.dart';
 import 'package:icons_plus/icons_plus.dart';
@@ -726,7 +724,7 @@ class TimerIcon extends StatelessWidget {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => TimerView()),
+          MaterialPageRoute(builder: (context) => const TimerView()),
         );
       },
       icon: const Icon(

@@ -5,7 +5,6 @@ import 'package:beats_music/core/models/exported.dart';
 import 'package:beats_music/services/cloud_sync_service.dart';
 import 'package:beats_music/services/listening_statistics_service.dart';
 import 'package:beats_music/services/meta_resolver/chart_item_resolver.dart';
-import 'package:beats_music/services/meta_resolver/cross_plugin_resolver.dart';
 import 'package:beats_music/services/plugin/plugin_service.dart';
 import 'package:beats_music/src/rust/api/plugin/commands.dart';
 import 'package:bloc/bloc.dart';

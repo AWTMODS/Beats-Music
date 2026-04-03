@@ -12,7 +12,6 @@
 library;
 
 import 'dart:math' as math;
-import 'dart:ui';
 
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:beats_music/services/db/legacy/legacy_migration_service.dart'

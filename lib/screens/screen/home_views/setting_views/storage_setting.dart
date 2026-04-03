@@ -215,6 +215,7 @@ class BackupSettings extends StatelessWidget {
                       );
                       if (proceed == true) {
                         await StorageBackupService.resetAppData();
+                        if (!context.mounted) return;
                         SnackbarService.showMessage(l10n.storageResetSuccess);
                       }
                     },
@@ -448,8 +449,11 @@ Future<void> _onRestoreTap(BuildContext context) async {
       barrierDismissible: false,
       builder: (ctx) {
         progressDialogContext = ctx; // capture
-        return WillPopScope(
-          onWillPop: () async => false,
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+          },
           child: AlertDialog(
             backgroundColor: const Color.fromARGB(255, 24, 24, 24),
             content: Column(
@@ -521,6 +525,7 @@ Future<void> _onRestoreTap(BuildContext context) async {
       }
     }
 
+    if (!context.mounted) return;
     await _showResultDialog(context, success: success, errors: errors);
   } catch (e, st) {
     log("Unexpected error in restore flow: $e\n$st", name: "StorageSetting");

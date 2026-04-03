@@ -555,7 +555,7 @@ class PluginBootstrapService {
         // we wrap it as a single entry.
         if (json.containsKey('plugins') && !json.containsKey('repositories')) {
           return [
-            _HostedRepoEntry(url: hostedRepositoriesUrl, install: true),
+            const _HostedRepoEntry(url: hostedRepositoriesUrl, install: true),
           ];
         }
 

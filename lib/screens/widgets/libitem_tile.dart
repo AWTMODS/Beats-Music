@@ -1,6 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
-import 'package:beats_music/utils/load_image.dart';
 import 'package:beats_music/screens/widgets/thumbnail_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:beats_music/core/theme/app_theme.dart';

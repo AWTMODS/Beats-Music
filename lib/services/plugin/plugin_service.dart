@@ -197,8 +197,8 @@ class PluginService {
           } catch (e) {
             log('Simulated Search Error: $e');
           }
-          return PluginResponse.search(
-              const PagedMediaItems(items: [], nextPageToken: null));
+          return const PluginResponse.search(
+              PagedMediaItems(items: [], nextPageToken: null));
         },
         getAlbumDetails: (id) async =>
             throw const PluginExecutionException(pluginId: 'simulated', message: 'Not implemented'),
@@ -206,10 +206,10 @@ class PluginService {
             throw const PluginExecutionException(pluginId: 'simulated', message: 'Not implemented'),
         getPlaylistDetails: (id) async =>
             throw const PluginExecutionException(pluginId: 'simulated', message: 'Not implemented'),
-        getStreams: (id) async => PluginResponse.streams(const []),
+        getStreams: (id) async => const PluginResponse.streams([]),
         getHomeSections: () async {
           try {
-            final url =
+            const url =
                 'https://itunes.apple.com/us/rss/topsongs/limit=20/json';
             final response = await http.get(Uri.parse(url));
             if (response.statusCode == 200) {
@@ -249,8 +249,8 @@ class PluginService {
             log('Simulated Home Sections Error: $e');
           }
 
-          return PluginResponse.homeSections([
-            const Section(
+          return const PluginResponse.homeSections([
+            Section(
               id: 'mock_trending',
               title: 'Welcome to Beats (Safe Mode)',
               cardType: CardType.carousel,
@@ -259,23 +259,23 @@ class PluginService {
           ]);
         },
         moreAlbumTracks: (id, pageToken) async =>
-            PluginResponse.moreTracks(const PagedTracks(items: [])),
+            const PluginResponse.moreTracks(PagedTracks(items: [])),
         moreArtistAlbums: (id, pageToken) async =>
-            PluginResponse.moreAlbums(const PagedAlbums(items: [])),
+            const PluginResponse.moreAlbums(PagedAlbums(items: [])),
         morePlaylistTracks: (id, pageToken) async =>
-            PluginResponse.moreTracks(const PagedTracks(items: [])),
+            const PluginResponse.moreTracks(PagedTracks(items: [])),
         getRadioTracks: (id, pageToken) async =>
-            PluginResponse.moreTracks(const PagedTracks(items: [])),
+            const PluginResponse.moreTracks(PagedTracks(items: [])),
         loadMore: (id, moreLink) async =>
-            PluginResponse.loadMoreItems(const []),
+            const PluginResponse.loadMoreItems([]),
         getTrackDetails: (id) async =>
             throw const PluginExecutionException(pluginId: 'simulated', message: 'Not implemented'),
-        getSegmentsForTrack: (id) async => PluginResponse.segments(const []),
+        getSegmentsForTrack: (id) async => const PluginResponse.segments([]),
       ),
-      chartProvider: (cmd) async => PluginResponse.charts(const []),
+      chartProvider: (cmd) async => const PluginResponse.charts([]),
       lyricsProvider: (cmd) async => throw const PluginExecutionException(pluginId: 'simulated', message: 'Not implemented'),
       searchSuggestionProvider: (cmd) async =>
-          PluginResponse.suggestions(const []),
+          const PluginResponse.suggestions([]),
       contentImporter: (cmd) async =>
           throw const PluginExecutionException(pluginId: 'simulated', message: 'Not implemented'),
     );

@@ -85,7 +85,7 @@ class SearchSuggestionBloc
     try {
       final PluginRequest request;
       if (query.isEmpty || query.trim().isEmpty) {
-        request = PluginRequest.searchSuggestionProvider(
+        request = const PluginRequest.searchSuggestionProvider(
           SearchSuggestionCommand.getDefaultSuggestions(
             limit: 10,
             includeEntities: true,

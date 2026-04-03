@@ -1,34 +1,16 @@
 import 'package:beats_music/screens/widgets/player_components.dart';
-import 'package:beats_music/blocs/downloader/cubit/downloader_cubit.dart';
-import 'package:beats_music/blocs/library/cubit/library_items_cubit.dart';
 import 'package:beats_music/blocs/player_overlay/player_overlay_cubit.dart';
-import 'package:beats_music/core/adapters/track_adapter.dart';
-import 'package:beats_music/screens/screen/home_views/timer_view.dart';
-import 'package:beats_music/screens/screen/home_views/setting_views/player_setting.dart';
-import 'package:beats_music/screens/widgets/gradient_progress_bar.dart';
 import 'package:beats_music/screens/widgets/more_bottom_sheet.dart';
 import 'package:beats_music/screens/widgets/up_next_panel.dart';
-import 'package:beats_music/screens/widgets/volume_slider.dart';
-import 'package:beats_music/screens/widgets/media_metadata_links.dart';
 import 'package:beats_music/screens/screen/player_views/segments_sheet.dart';
 import 'package:beats_music/services/beats_player.dart';
-import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:beats_music/l10n/app_localizations.dart';
 import 'package:icons_plus/icons_plus.dart';
-import 'package:beats_music/services/player/player_engine.dart';
-import 'package:beats_music/screens/widgets/like_widget.dart';
-import 'package:beats_music/screens/widgets/play_pause_widget.dart';
-import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
-import 'package:beats_music/utils/load_image.dart';
-import 'package:beats_music/utils/pallete_generator.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../blocs/media_player/beats_player_cubit.dart';
-import '../../blocs/mini_player/mini_player_cubit.dart';
-import 'player_views/fullscreen_lyrics_view.dart';
 
 class AudioPlayerView extends StatefulWidget {
   const AudioPlayerView({super.key});

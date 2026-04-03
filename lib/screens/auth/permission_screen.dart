@@ -1,6 +1,5 @@
 import 'package:beats_music/core/constants/route_paths.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
-import 'package:beats_music/screens/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:icons_plus/icons_plus.dart';
@@ -178,7 +177,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isGranted ? Default_Theme.accentColor2 : Colors.transparent,
@@ -190,7 +189,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isGranted ? Default_Theme.accentColor2.withOpacity(0.2) : Colors.white.withOpacity(0.1),
+                color: isGranted ? Default_Theme.accentColor2.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -216,7 +215,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 12,
                     ),
                   ),
@@ -226,7 +225,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
             if (isGranted)
               const Icon(MingCute.check_circle_fill, color: Default_Theme.accentColor2)
             else
-              Text(
+              const Text(
                 "Allow",
                 style: TextStyle(
                   color: Default_Theme.accentColor2,

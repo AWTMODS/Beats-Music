@@ -8,8 +8,8 @@ import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 
 void createPlaylistBottomSheet(BuildContext context) {
-  final TextEditingController _controller = TextEditingController();
-  final _focusNode = FocusNode();
+  final TextEditingController controller = TextEditingController();
+  final focusNode = FocusNode();
 
   showMaterialModalBottomSheet(
     context: context,
@@ -33,7 +33,7 @@ void createPlaylistBottomSheet(BuildContext context) {
                 topRight: Radius.circular(32),
               ),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 0.5,
               ),
             ),
@@ -80,8 +80,8 @@ void createPlaylistBottomSheet(BuildContext context) {
 
                         // TextField
                         TextField(
-                          controller: _controller,
-                          focusNode: _focusNode,
+                          controller: controller,
+                          focusNode: focusNode,
                           autofocus: true,
                           textAlign: TextAlign.left,
                           style: AppTheme.secondoryTextStyleMedium.copyWith(
@@ -93,7 +93,7 @@ void createPlaylistBottomSheet(BuildContext context) {
                             hintText: "Playlist Name",
                             hintStyle: AppTheme.secondoryTextStyleMedium.copyWith(
                               fontSize: 24,
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                             ),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
@@ -133,7 +133,7 @@ void createPlaylistBottomSheet(BuildContext context) {
                             const SizedBox(width: 16),
                             Expanded(
                               child: ValueListenableBuilder<TextEditingValue>(
-                                valueListenable: _controller,
+                                valueListenable: controller,
                                 builder: (context, value, child) {
                                   final bool canCreate = value.text.trim().length > 2;
                                   return ElevatedButton(

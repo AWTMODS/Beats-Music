@@ -106,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.accentColor1.withOpacity(0.2),
+                    color: AppTheme.accentColor1.withValues(alpha: 0.2),
                     blurRadius: 100,
                     spreadRadius: 20,
                   ),
@@ -130,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(30),
                         image: const DecorationImage(
                           image: AssetImage('assets/icons/beats_music_logo.png'),

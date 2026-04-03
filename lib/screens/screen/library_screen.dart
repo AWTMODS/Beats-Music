@@ -26,7 +26,6 @@ import 'package:beats_music/blocs/library/search_cubit/library_search_cubit.dart
 import 'package:beats_music/core/models/library_search_result.dart';
 import 'package:beats_music/screens/widgets/animated_list_item.dart';
 import 'package:beats_music/blocs/downloader/cubit/downloader_cubit.dart';
-import 'package:beats_music/utils/load_image.dart';
 import 'package:beats_music/screens/widgets/thumbnail_grid.dart';
 
 class LibraryScreen extends StatelessWidget {
@@ -470,7 +469,7 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
       builder: (context, state) {
         final downloadedCount = state.downloaded.length;
         final thumbnails = state.downloaded.take(4)
-            .map((t) => t.thumbnail?.url ?? '')
+            .map((t) => t.thumbnail.url ?? '')
             .where((url) => url.isNotEmpty)
             .toList();
         final subtitle =

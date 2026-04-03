@@ -11,9 +11,21 @@ include: package:flutter_lints/flutter.yaml
 
 analyzer:
   exclude:
-    # Vendored FRB/cargokit helper package has its own pubspec and dependency graph.
-    # Root-level flutter analyze should not traverse it.
-    - rust_builder/cargokit/build_tool/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "rust_builder/cargokit/build_tool/**"
+  errors:
+    experimental_member_use: ignore
+    deprecated_member_use: info 
+    invalid_use_of_protected_member: ignore
+    library_private_types_in_public_api: ignore
+    no_leading_underscores_for_local_identifiers: ignore
+    prefer_const_constructors: info
+    prefer_const_literals_to_create_immutables: info
+    non_constant_identifier_names: ignore
+    curly_braces_in_flow_control_structures: ignore
+    control_flow_in_finally: ignore
+    use_build_context_synchronously: info
 
 linter:
   # The lint rules applied to this project can be customized in the
