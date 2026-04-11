@@ -20,6 +20,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -74,6 +75,15 @@ android {
                 signingConfig = signingConfigs.getByName("debug")
                 println("   📦 Release build: Using debug signing config (no keystore)")
             }
+            // Enable R8 minification and supply rules that preserve GSON generic
+            // signatures – required by flutter_local_notifications to deserialise
+            // scheduled notifications without crashing on TypeToken.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
@@ -87,5 +97,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 }
 
