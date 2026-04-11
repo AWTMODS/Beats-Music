@@ -1,3 +1,40 @@
+## [1.5.1] - 2026-04-11
+
+### New Features
+- **Turbo APK Updates**: Implemented Parallel Chunked Downloading for in-app updates, boosting speeds by up to 3x using concurrent range requests.
+- **Premium Update Experience**: Redesigned the update notification into a high-end, glassmorphic bottom sheet with neon accents and blur effects.
+- **"Tap to Play" Notifications**: Tapping a smart suggestion notification now launches the app and immediately starts playing the suggested track.
+- **Interactive Playlist Generation**:
+  - Added a **Track Count Slider** (10-50 songs) to let users choose the length of their AI-generated playlists.
+  - Added a **Real-time Percentage Progress** animation during song resolution.
+- **Gemini "Safe Mode"**: Stabilized the Generative AI service by migrating to an internal model-agnostic regex parser, resolving persistent API 400 errors.
+- **Smart Re-engagement Notifications**: Implemented a local "Smart Suggestions" engine that invites users back if they've been away for 48+ hours.
+  - **7-Day Trending Logic**: Dynamically identifies and suggests the user's #1 most-played song from the last 7 days.
+  - **BigPicture Artistic Notifications**: High-quality, full-width album artwork displayed directly in the notification drawer for a premium look.
+  - **Genre-Aware Dynamic Messaging**: Notification text changes based on the song's "vibe" (e.g., Rock: *"Ready to rock? 🤘"*, Lofi: *"Relax and unwind... 🌸"*) to feel personal and fresh.
+  - **Auto-Cancellation**: Intelligent background management ensures notifications are automatically cancelled as soon as you re-open the app.
+- **Expanded Authentication Suite**: Complete overhaul of the sign-in experience.
+  - **Email & Password Support**: Full support for traditional account creation and login.
+  - **Passwordless "Magic Links"**: Users can sign in securely with one tap via their email inbox.
+  - **Temp Mail Blocker**: Security layer that rejects registration from hundreds of known disposable email providers (e.g., @mailinator.com).
+  - **Integrated Recovery**: Self-service "Forgot Password" flow for effortless account recovery.
+
+### Improvements
+- **GitHub-First Strategy**: Migrated the default update source from SourceForge to GitHub for enhanced reliability and faster releases.
+- **Auth Reliability**: Resolved "Site Not Found" errors in the Magic Link flow by switching to the official Firebase Auth Action Handler.
+- **Smart Quota Handling**: Added user-friendly error messages and advice for Gemini API 429 (Quota Exceeded) errors.
+
+### Fixed
+- **Build & Theme Stability**: Fixed static vs instance member access errors in the theme kit and internal RandomAccessFile method mismatches.
+- **WASM Plugin Execution**: Fixed a critical execution crash ("WASM execution error / Cannot start a runtime from within a runtime") on Android when WASM plugins attempted to fetch external ciphers (e.g., YouTube `base.js`). This stabilizes network processing for the `contentResolver` and other plugins.
+- **Startup Crash**: Fixed a critical Crashlytics exception (`Unable to detect current Android Activity`) occurring randomly on app launch caused by the notification permission dialog attempting to display before the UI was fully drawn.
+- **False Fatal Crashes**: Fixed an issue where transient network errors (like failing to download album art or `HandshakeException`) were incorrectly reported to Firebase Crashlytics as fatal app crashes. These general socket exceptions are now properly logged as non-fatal events, while 404 image load errors are completely suppressed to reduce noise.
+- **Cloud Sync Crash**: Fixed a state assertion crash that occurred when users exited the Cloud Sync settings page before an active synchronization completed.
+- **High Refresh Rate Crash**: Fixed an `Activity not attached to plugin` exception occurring on start-up. The display mode adjustment now properly waits for the Android Activity to fully attach before executing.
+- **Player State Crash**: Fixed a `Bad state: Cannot add new events after calling close` streaming state error in both the Player Error Handler and Queue Manager. This occurred if users rapidly tapped to play a track or load a queue immediately while or after the player engine was being destroyed.
+- **Player Cleanup Crash**: Fixed a `Null check operator used on a null value` framework crash when the player screen was navigated away from. The UI component was attempting to resolve dependencies over a disconnected context tree.
+- **Onboarding Navigation Crash**: Fixed a `RangeError (start): Invalid value: Not in inclusive range` crash in `go_router` occurring when a user finished the Initial Preferences setup. Navigating directly to the absolute destination path reliably bypasses an internal router substring mismatch bug.
+
 ## [1.5.0] - 2026-04-03
 
 ### New Features
