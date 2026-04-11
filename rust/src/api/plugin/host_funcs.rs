@@ -41,10 +41,12 @@ pub mod http_client {
         }
 
         match request.send() {
-            Ok(response) => match response.text() {
-                Ok(body) => Ok(body),
-                Err(e) => Err(format!("Failed to read response body: {}", e)),
-            },
+            Ok(response) => {
+                let body: String = response
+                    .text()
+                    .map_err(|e| format!("Failed to read response body: {}", e))?;
+                Ok(body)
+            }
             Err(e) => Err(format!("HTTP request failed: {}", e)),
         }
     }
@@ -69,10 +71,12 @@ pub mod http_client {
         }
 
         match request.send() {
-            Ok(response) => match response.text() {
-                Ok(body) => Ok(body),
-                Err(e) => Err(format!("Failed to read response body: {}", e)),
-            },
+            Ok(response) => {
+                let body: String = response
+                    .text()
+                    .map_err(|e| format!("Failed to read response body: {}", e))?;
+                Ok(body)
+            }
             Err(e) => Err(format!("HTTP request failed: {}", e)),
         }
     }

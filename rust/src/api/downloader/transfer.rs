@@ -120,8 +120,8 @@ pub fn download_task_blocking(
     let range_supported = response
         .headers()
         .get(ACCEPT_RANGES)
-        .and_then(|v| v.to_str().ok())
-        .map(|v| v.eq_ignore_ascii_case("bytes"))
+        .and_then(|v: &reqwest::header::HeaderValue| v.to_str().ok())
+        .map(|v: &str| v.eq_ignore_ascii_case("bytes"))
         .unwrap_or(status.as_u16() == 206);
 
     // If we sent a Range header but got 200 back, start from the beginning.

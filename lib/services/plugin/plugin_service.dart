@@ -349,7 +349,7 @@ class PluginService {
     String? policyCountryCode,
   }) async {
     try {
-      final packedManifest = await _readPackedManifest(packedFilePath);
+      final packedManifest = await inspectPlugin(packedFilePath: packedFilePath);
       var countryCode =
           CountryInfoService.normalizeCountryCode(policyCountryCode);
       if (countryCode.isEmpty) {
@@ -362,30 +362,30 @@ class PluginService {
           (countryCode.isEmpty ||
               !packedManifest.countryAllowlist.contains(countryCode))) {
         throw PluginCountryRestrictedException(
-          pluginId: packedManifest.pluginId,
+          pluginId: packedManifest.id,
           countryCode: countryCode,
           allowlist: packedManifest.countryAllowlist,
         );
       }
 
       if (_isDeactivated) {
-        log('PluginService (Degraded): Simulating installation for ${packedManifest.pluginId}',
+        log('PluginService (Degraded): Simulating installation for ${packedManifest.id}',
             name: 'PluginService');
-        _simulatedInstalledIds.add(packedManifest.pluginId);
+        _simulatedInstalledIds.add(packedManifest.id);
         if (shouldLoad) {
-          _simulatedLoadedIds.add(packedManifest.pluginId);
+          _simulatedLoadedIds.add(packedManifest.id);
         }
         // Broadcast events so PluginBloc state updates correctly
         PluginEventBus.instance
-            .broadcast(PluginManagerEvent.pluginInstalled(id: packedManifest.pluginId));
+            .broadcast(PluginManagerEvent.pluginInstalled(id: packedManifest.id));
         if (shouldLoad) {
           PluginEventBus.instance.broadcast(PluginManagerEvent.pluginLoaded(
-              id: packedManifest.pluginId,
+              id: packedManifest.id,
               pluginType: PluginType.contentResolver));
         }
         return PluginInstallResult(
           status: PluginInstallStatus.installed,
-          pluginId: packedManifest.pluginId,
+          pluginId: packedManifest.id,
         );
       }
 
@@ -573,57 +573,3 @@ class PluginService {
   }
 }
 
-class _PackedPluginManifest {
-  final String pluginId;
-  final List<String> countryAllowlist;
-
-  const _PackedPluginManifest({
-    required this.pluginId,
-    required this.countryAllowlist,
-  });
-}
-
-Future<_PackedPluginManifest> _readPackedManifest(String packedFilePath) async {
-  final bytes = await File(packedFilePath).readAsBytes();
-  final archive = ZipDecoder().decodeBytes(bytes, verify: false);
-  final manifestFile = archive.files.cast<ArchiveFile?>().firstWhere(
-        (file) =>
-            file != null &&
-            file.isFile &&
-            p.basename(file.name).toLowerCase() == 'manifest.json',
-        orElse: () => null,
-      );
-
-  if (manifestFile == null) {
-    return const _PackedPluginManifest(
-        pluginId: 'unknown', countryAllowlist: []);
-  }
-
-  final manifestBytes = manifestFile.content as List<int>;
-  if (manifestBytes.isEmpty) {
-    return const _PackedPluginManifest(
-        pluginId: 'unknown', countryAllowlist: []);
-  }
-
-  final decoded = jsonDecode(utf8.decode(manifestBytes));
-  if (decoded is! Map) {
-    return const _PackedPluginManifest(
-        pluginId: 'unknown', countryAllowlist: []);
-  }
-
-  final json = Map<String, dynamic>.from(decoded);
-  final pluginId = json['id']?.toString() ?? 'unknown';
-  final countryAllowlist = (json['country_allowlist'] as List<dynamic>? ??
-          const [])
-      .map(
-          (value) => CountryInfoService.normalizeCountryCode(value?.toString()))
-      .where((value) => value.isNotEmpty)
-      .toSet()
-      .toList()
-    ..sort();
-
-  return _PackedPluginManifest(
-    pluginId: pluginId,
-    countryAllowlist: countryAllowlist,
-  );
-}

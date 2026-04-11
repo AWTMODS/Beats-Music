@@ -93,7 +93,7 @@ impl DownloadManager {
         // Building it inside an async context causes "Cannot drop a runtime
         // in a context where blocking is not allowed" panics when it is
         // eventually dropped.  Build it on a blocking thread instead.
-        let http_client = tokio::task::spawn_blocking(|| {
+        let http_client = tokio::task::spawn_blocking(|| -> Result<Client, String> {
             Client::builder()
                 .build()
                 .map_err(|e| format!("Failed to build HTTP client: {e}"))

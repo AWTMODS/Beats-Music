@@ -77,15 +77,23 @@ impl bindgen::UtilsHost for ContentImporterHostImpl {
             req = req.body(body);
         }
 
-        let resp = req.send().map_err(|e| e.to_string())?;
+        let resp = req.send().map_err(|e: reqwest::Error| e.to_string())?;
 
         let status = resp.status().as_u16();
         let headers: Vec<(String, String)> = resp
             .headers()
             .iter()
-            .map(|(k, v)| (k.as_str().to_string(), v.to_str().unwrap_or("").to_string()))
+            .map(|(k, v): (&reqwest::header::HeaderName, &reqwest::header::HeaderValue)| {
+                (
+                    k.as_str().to_string(),
+                    v.to_str().unwrap_or("").to_string(),
+                )
+            })
             .collect();
-        let body_bytes = resp.bytes().map_err(|e| e.to_string())?.to_vec();
+        let body_bytes = resp
+            .bytes()
+            .map_err(|e: reqwest::Error| e.to_string())?
+            .to_vec();
 
         Ok(bindgen::HttpResponse {
             status,
