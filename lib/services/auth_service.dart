@@ -20,6 +20,86 @@ class AuthService {
   // Get current user
   User? get currentUser => _auth.currentUser;
 
+  // Sign in with Email & Password
+  Future<UserCredential?> signInWithEmail(String email, String password) async {
+    try {
+      final userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (userCredential.user != null) {
+        _restoreDataInBackground();
+      }
+      return userCredential;
+    } catch (e) {
+      debugPrint("AuthService Error (Email Sign-In): $e");
+      rethrow;
+    }
+  }
+
+  // Register with Email & Password
+  Future<UserCredential?> registerWithEmail(String email, String password) async {
+    try {
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (userCredential.user != null) {
+        _restoreDataInBackground();
+      }
+      return userCredential;
+    } catch (e) {
+      debugPrint("AuthService Error (Email Register): $e");
+      rethrow;
+    }
+  }
+
+  // Passwordless magic link
+  Future<void> sendSignInLinkToEmail(String email) async {
+    try {
+      final actionCodeSettings = ActionCodeSettings(
+        url: 'https://beats-music-7d78b.firebaseapp.com/__/auth/action', // Official Firebase Auth Handler
+        handleCodeInApp: true,
+        androidPackageName: 'com.beats.app',
+        androidInstallApp: true,
+        androidMinimumVersion: '21',
+      );
+      await _auth.sendSignInLinkToEmail(email: email, actionCodeSettings: actionCodeSettings);
+      debugPrint("AuthService: Sign-in link sent to $email");
+    } catch (e) {
+       debugPrint("AuthService Error (Magic Link): $e");
+       rethrow;
+    }
+  }
+
+  // Complete magic link sign-in
+  Future<UserCredential?> completeSignInWithEmailLink(String email, String link) async {
+    try {
+      if (_auth.isSignInWithEmailLink(link)) {
+        final userCredential = await _auth.signInWithEmailLink(email: email, emailLink: link);
+        if (userCredential.user != null) {
+          _restoreDataInBackground();
+        }
+        return userCredential;
+      }
+      return null;
+    } catch (e) {
+      debugPrint("AuthService Error (Complete Magic Link): $e");
+      rethrow;
+    }
+  }
+
+  // Reset Password
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      debugPrint("AuthService: Password reset link sent to $email");
+    } catch (e) {
+       debugPrint("AuthService Error (Reset Password): $e");
+       rethrow;
+    }
+  }
+
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {

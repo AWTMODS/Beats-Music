@@ -255,6 +255,58 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     
                     const SizedBox(height: 16),
+
+                    // Divider
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Text(
+                              "OR",
+                              style: TextStyle(
+                                color: Colors.white24,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Email Sign In Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: OutlinedButton.icon(
+                        onPressed: _agreedToTerms ? () => context.push('/EmailAuth') : null,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _agreedToTerms ? Colors.white : Colors.white24,
+                          side: BorderSide(
+                            color: _agreedToTerms ? Colors.white24 : Colors.white10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        icon: const Icon(MingCute.mail_line),
+                        label: const Text(
+                          "Continue with Email",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
                     
                     // Guest Mode Button
                     TextButton(
