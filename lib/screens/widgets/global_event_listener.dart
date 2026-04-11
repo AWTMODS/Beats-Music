@@ -5,6 +5,7 @@ import 'package:beats_music/core/events/global_event_bus.dart';
 import 'package:beats_music/l10n/app_localizations.dart';
 import 'package:beats_music/screens/screen/common_views/changelog_reader.dart';
 import 'package:beats_music/screens/widgets/beats_ui_kit/beats_dialog.dart';
+import 'package:beats_music/screens/widgets/update_sheet.dart';
 import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:beats_music/services/plugin/plugin_event_bus.dart';
 import 'package:beats_music/src/rust/api/plugin/events.dart';
@@ -119,17 +120,11 @@ class _GlobalEventListenerState extends State<GlobalEventListener> {
             final s = state as UpdateAvailable;
             final l10n = AppLocalizations.of(dialogContext)!;
             log("Update Available: ${s.newVersion}+${s.newBuild}");
-            showBeatsDialog(
+            showUpdateSheet(
               context: dialogContext,
-              title: l10n.dialogUpdateAvailable,
-              subtitle: l10n.updateAvailableBody(s.newVersion, s.newBuild),
-              icon: Icons.system_update_rounded,
-              actions: [
-                BeatsDialogAction.text(l10n.buttonLater),
-                BeatsDialogAction.filled(l10n.dialogUpdateNow, onPressed: () {
-                  openURL(s.downloadUrl);
-                }),
-              ],
+              newVersion: s.newVersion,
+              newBuild: s.newBuild,
+              onUpdate: () => openURL(s.downloadUrl),
             );
             break;
           case AlertDialogState:

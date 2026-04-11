@@ -456,6 +456,11 @@ class BeatsMusicPlayer extends BaseAudioHandler
     return _queueManager.currentTrack ?? trackNull;
   }
 
+  /// Public entry point to play a specific track.
+  Future<void> playTrack(Track track) async {
+    return _enqueuePlayTrack(track);
+  }
+
   // ─── Playback Control ──────────────────────────────────────────────────────
 
   @override

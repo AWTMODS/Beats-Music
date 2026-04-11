@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io' as io;
+import 'package:beats_music/services/auth_service.dart';
 import 'package:beats_music/blocs/downloader/cubit/downloader_cubit.dart';
 import 'package:beats_music/blocs/global_events/global_events_cubit.dart';
 import 'package:beats_music/blocs/internet_connectivity/cubit/connectivity_cubit.dart';
@@ -71,6 +72,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:beats_music/services/notification_manager.dart';
+import 'package:app_links/app_links.dart';
 import 'dart:ui';
 
 void processIncomingIntent(SharedMedia sharedMedia) {
@@ -116,9 +119,33 @@ Future<void> main() async {
   try {
     await Firebase.initializeApp();
     
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    FlutterError.onError = (FlutterErrorDetails details) {
+      // Completely swallow expected network image exceptions (like HTTP 404s)
+      if (details.library == 'image resource service' || 
+          details.exception is NetworkImageLoadException) {
+        return;
+      }
+      
+      if (details.exception is io.SocketException ||
+          details.exception is io.HandshakeException ||
+          details.exception is io.HttpException) {
+        // Report other transient network errors as non-fatal
+        FirebaseCrashlytics.instance.recordFlutterError(details);
+        return;
+      }
+      FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    };
+
     PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      if (error is NetworkImageLoadException) {
+        return true; 
+      }
+      
+      bool isNetworkError = error is io.SocketException || 
+                            error is io.HandshakeException || 
+                            error is io.HttpException;
+      
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: !isNetworkError);
       return true;
     };
     
@@ -156,7 +183,6 @@ Future<void> main() async {
   
   debugPrint("Main: Initial Route set to: ${AppRouter.initialRoute}");
 
-  setHighRefreshRate();
   DiscordService.initialize();
 
   final player = await AudioService.init(
@@ -172,6 +198,8 @@ Future<void> main() async {
     ),
   );
 
+  await NotificationManager().init();
+
   runApp(MyApp(player: player));
 }
 
@@ -183,9 +211,11 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   StreamSubscription<SharedMedia>? _intentSub;
+  StreamSubscription<Uri>? _linkSub;
   SharedMedia? sharedMedia;
+  late final AppLinks _appLinks;
 
   bool _onboardingPending = false;
   bool _bootstrapPending = false;
@@ -194,6 +224,10 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    
+    _appLinks = AppLinks();
+    _initDeepLinks();
 
     _onboardingPending = !OnboardingService.onboardingDone;
     _bootstrapPending = !PluginBootstrapService.bootstrapDone;
@@ -209,7 +243,32 @@ class _MyAppState extends State<MyApp> {
 
     if (io.Platform.isAndroid) {
       initPlatformState();
-      _requestNotificationPermission();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setHighRefreshRate();
+        _requestNotificationPermission();
+      });
+    }
+
+    // Listen for notification "Tap to Play"
+    NotificationManager().onNotificationTap.addListener(_handleNotificationTap);
+  }
+
+  void _handleNotificationTap() async {
+    final songId = NotificationManager().onNotificationTap.value;
+    if (songId == null || songId.isEmpty) return;
+
+    debugPrint('Main: Notification tap received for songId: $songId');
+    
+    try {
+      final track = await TrackDAO(DBProvider.db).getTrackByMediaId(songId);
+      if (track != null) {
+        debugPrint('Main: Playing song from notification: ${track.title}');
+        await widget.player.playTrack(track);
+      } else {
+        debugPrint('Main: Song from notification not found in database.');
+      }
+    } catch (e) {
+      debugPrint('Main: Error playing song from notification: $e');
     }
   }
 
@@ -221,6 +280,78 @@ class _MyAppState extends State<MyApp> {
         settingsDao: SettingsDAO(DBProvider.db),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    NotificationManager().onNotificationTap.removeListener(_handleNotificationTap);
+    _linkSub?.cancel();
+    _intentSub?.cancel();
+    if (io.Platform.isWindows || io.Platform.isLinux || io.Platform.isMacOS) {
+      DiscordService.clearPresence();
+    }
+    super.dispose();
+  }
+
+  Future<void> _initDeepLinks() async {
+    // Check initial link
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        _handleDeepLink(initialUri);
+      }
+    } catch (e) {
+      debugPrint("Deep Link Error (Initial): $e");
+    }
+
+    // Listen for incoming links
+    _linkSub = _appLinks.uriLinkStream.listen((uri) {
+      _handleDeepLink(uri);
+    });
+  }
+
+  Future<void> _handleDeepLink(Uri uri) async {
+    final link = uri.toString();
+    debugPrint("Deep Link Received: $link");
+
+    if (link.contains('apiKey') && link.contains('oobCode')) {
+      // Looks like a Firebase Auth link
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final email = prefs.getString('magic_link_email');
+
+        if (email != null) {
+          debugPrint("Main: Magic Link detected for $email. Completing sign-in...");
+          final userCredential = await AuthService().completeSignInWithEmailLink(email, link);
+
+          if (userCredential != null && mounted) {
+            // Clear used email
+            await prefs.remove('magic_link_email');
+            
+            // Navigate to explore
+            AppRouter.globalRouter.go('/Explore');
+            
+            SnackbarService.showMessage("Welcome back! Signed in with Magic Link.");
+          }
+        } else {
+           debugPrint("Main: Magic Link detected but no cached email found.");
+        }
+      } catch (e) {
+        debugPrint("Deep Link Auth Error: $e");
+      }
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      // User left the app - schedule a suggestion for later
+      NotificationManager().scheduleReengagementNotification();
+    } else if (state == AppLifecycleState.resumed) {
+      // User came back - cancel existing suggestion
+      NotificationManager().cancelReengagementNotification();
+    }
   }
 
   Future<void> initPlatformState() async {
@@ -253,14 +384,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  @override
-  void dispose() {
-    _intentSub?.cancel();
-    if (io.Platform.isWindows || io.Platform.isLinux || io.Platform.isMacOS) {
-      DiscordService.clearPresence();
-    }
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {
