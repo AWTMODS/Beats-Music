@@ -2,7 +2,7 @@
   "android": {
     "version": "1.5.2",
     "build": "204",
-    "url": "https://github.com/AWTMODS/Beats-Music/releases/latest"
+    "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.5.0/BeatsMusic_v1.5.0_universal.apk"
   },
   "windows": {
     "version": "1.5.0",
