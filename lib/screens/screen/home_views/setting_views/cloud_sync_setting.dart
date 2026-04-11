@@ -92,9 +92,11 @@ class _CloudSyncSettingsState extends State<CloudSyncSettings> {
         );
       }
     } finally {
-      setState(() {
-        _isSyncing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSyncing = false;
+        });
+      }
     }
   }
   

@@ -33,14 +33,26 @@ class HistoryDAO {
       return;
     }
 
-    final entry = PlaybackHistoryDB(playedAt: DateTime.now())
-      ..track.value = trackObj;
-
     await isar.writeTxn(() async {
-      await isar.playbackHistoryDBs.put(entry);
-      await entry.track.save();
+      // Deduplication: Look for an existing history entry for this track id.
+      // If found, update its 'playedAt' to now, effectively moving it to top.
+      final existing = await isar.playbackHistoryDBs
+          .filter()
+          .track((q) => q.idEqualTo(trackId))
+          .findFirst();
+
+      if (existing != null) {
+        existing.playedAt = DateTime.now();
+        await isar.playbackHistoryDBs.put(existing);
+        log('Updated existing history entry for ${track.id}', name: 'HistoryDAO');
+      } else {
+        final entry = PlaybackHistoryDB(playedAt: DateTime.now())
+          ..track.value = trackObj;
+        await isar.playbackHistoryDBs.put(entry);
+        await entry.track.save();
+        log('Created new history entry for ${track.id}', name: 'HistoryDAO');
+      }
     });
-    log('Recorded play for ${track.id}', name: 'HistoryDAO');
   }
 
   // -- Read -------------------------------------------------------------------

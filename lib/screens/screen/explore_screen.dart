@@ -283,35 +283,55 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               .read<PluginBloc>()
                               .state
                               .loadedContentResolvers;
+                          final allLoadedIds =
+                              context.read<PluginBloc>().state.loadedPluginIds;
+
                           if (loadedResolvers.isEmpty) {
+                            final hasOtherPlugins = allLoadedIds.isNotEmpty;
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 40),
                               child: Column(
                                 children: [
-                                  const SignBoardWidget(
-                                    message:
-                                        'No content plugin loaded.\nSync repositories to get started.',
-                                    icon: MingCute.plugin_2_line,
+                                  SignBoardWidget(
+                                    message: hasOtherPlugins
+                                        ? 'No content source loaded.\nInstall a "Content Resolver" to see the Home feed.'
+                                        : 'No content plugin loaded.\nSync repositories to get started.',
+                                    icon: hasOtherPlugins
+                                        ? MingCute.warning_line
+                                        : MingCute.plugin_2_line,
                                   ),
                                   const SizedBox(height: 16),
-                                  ElevatedButton.icon(
-                                    onPressed: () {
-                                      // Trigger Bootstrap Overlay
-                                      showDialog(
-                                        context: context,
-                                        barrierDismissible: false,
-                                        builder: (context) => PluginBootstrapOverlay(
-                                          onComplete: () => Navigator.pop(context),
-                                        ),
-                                      );
-                                    },
-                                    icon: const Icon(MingCute.refresh_3_line),
-                                    label: const Text('Sync Plugins Now'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Default_Theme.successAccent,
-                                      foregroundColor: Colors.white,
+                                  if (!hasOtherPlugins)
+                                    ElevatedButton.icon(
+                                      onPressed: () {
+                                        // Trigger Bootstrap Overlay
+                                        showDialog(
+                                          context: context,
+                                          barrierDismissible: false,
+                                          builder: (context) =>
+                                              PluginBootstrapOverlay(
+                                            onComplete: () =>
+                                                Navigator.pop(context),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(MingCute.refresh_3_line),
+                                      label: const Text('Sync Plugins Now'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Default_Theme.successAccent,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                    )
+                                  else
+                                    TextButton.icon(
+                                      onPressed: () => context.go('/Settings'),
+                                      icon: const Icon(MingCute.settings_2_line, size: 18),
+                                      label: const Text('Manage Plugins'),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Default_Theme.accentColor2,
+                                      ),
                                     ),
-                                  ),
                                 ],
                               ),
                             );

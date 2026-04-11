@@ -8,6 +8,7 @@ import 'package:beats_music/screens/screen/library_views/more_opts_sheet.dart';
 import 'package:beats_music/screens/screen/common_views/album_view.dart';
 import 'package:beats_music/screens/screen/common_views/artist_view.dart';
 import 'package:beats_music/screens/screen/common_views/playlist_view.dart';
+import 'package:beats_music/screens/screen/library_views/generative_playlist_sheet.dart';
 import 'package:beats_music/screens/widgets/more_bottom_sheet.dart';
 import 'package:beats_music/screens/widgets/sign_board_widget.dart';
 import 'package:beats_music/screens/widgets/song_tile.dart';
@@ -438,6 +439,12 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
             onPressed: () => createPlaylistBottomSheet(context),
             icon: const Icon(MingCute.add_fill,
                 size: 25, color: Default_Theme.primaryColor1),
+          ),
+          IconButton(
+            padding: const EdgeInsets.all(8),
+            onPressed: () => GenerativePlaylistSheet.show(context),
+            icon: const Icon(MingCute.magic_3_fill,
+                size: 22, color: Default_Theme.primaryColor1),
           ),
           IconButton(
             padding: const EdgeInsets.all(8),

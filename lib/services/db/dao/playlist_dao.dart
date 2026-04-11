@@ -490,33 +490,48 @@ class PlaylistDAO {
     final isar = await _db;
 
     await isar.writeTxn(() async {
-      final entries = await isar.playlistEntryDBs
-          .where()
-          .playlistIdEqualToAnyPosition(playlistId)
-          .findAll();
+      final movedEntry = await isar.playlistEntryDBs
+          .filter()
+          .playlistIdEqualTo(playlistId)
+          .and()
+          .positionEqualTo(oldPosition)
+          .findFirst();
 
-      final movedEntry = entries.firstWhere(
-        (e) => e.position == oldPosition,
-        orElse: () => throw StateError(
-            'No entry at position $oldPosition in playlist $playlistId'),
-      );
+      if (movedEntry == null) {
+        throw StateError(
+            'No entry at position $oldPosition in playlist $playlistId');
+      }
 
       final List<PlaylistEntryDB> toUpdate = [];
 
       if (oldPosition < newPosition) {
-        for (final e in entries) {
-          if (e.position > oldPosition && e.position <= newPosition) {
-            e.position -= 1;
-            toUpdate.add(e);
-          }
+        // Moving down: entries in ]old..new] shift up by -1
+        final affected = await isar.playlistEntryDBs
+            .filter()
+            .playlistIdEqualTo(playlistId)
+            .and()
+            .positionGreaterThan(oldPosition)
+            .and()
+            .positionLessThan(newPosition, include: true)
+            .findAll();
+        for (final e in affected) {
+          e.position -= 1;
         }
+        toUpdate.addAll(affected);
       } else {
-        for (final e in entries) {
-          if (e.position >= newPosition && e.position < oldPosition) {
-            e.position += 1;
-            toUpdate.add(e);
-          }
+        // Moving up: entries in [new..old[ shift down by +1
+        final affected = await isar.playlistEntryDBs
+            .filter()
+            .playlistIdEqualTo(playlistId)
+            .and()
+            .positionGreaterThan(newPosition, include: true)
+            .and()
+            .positionLessThan(oldPosition)
+            .findAll();
+        for (final e in affected) {
+          e.position += 1;
         }
+        toUpdate.addAll(affected);
       }
 
       movedEntry.position = newPosition;

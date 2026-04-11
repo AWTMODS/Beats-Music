@@ -157,7 +157,9 @@ class PlayerErrorHandler {
       originalError: originalError,
     );
 
-    lastError.add(error);
+    if (!lastError.isClosed) {
+      lastError.add(error);
+    }
     dev.log('Player error processed: $error', name: 'PlayerErrorHandler');
 
     try {
@@ -269,10 +271,16 @@ class PlayerErrorHandler {
     _currentTrackRetries = 0;
     _consecutiveTrackFailures = 0;
     _currentTrackHadPlay = false;
-    lastError.add(null);
+    if (!lastError.isClosed) {
+      lastError.add(null);
+    }
   }
 
-  void clearError() => lastError.add(null);
+  void clearError() {
+    if (!lastError.isClosed) {
+      lastError.add(null);
+    }
+  }
 
   void dispose() {
     _reconnectionTimer?.cancel();

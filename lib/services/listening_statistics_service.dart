@@ -33,6 +33,8 @@ class ListeningStatisticsService {
       final artist = mediaItem.artist ?? 'Unknown Artist';
       final genre = mediaItem.genre;
       
+      final thumbnail = mediaItem.artUri?.toString();
+      
       await isar.writeTxn(() async {
         // 1. Record play history
         await isar.collection<PlayHistoryDB>().put(PlayHistoryDB(
@@ -43,6 +45,7 @@ class ListeningStatisticsService {
           playedAt: now,
           durationListened: durationListened,
           wasCompleted: wasCompleted,
+          thumbnailUrl: thumbnail,
         ));
         
         // 2. Update song statistics
@@ -55,6 +58,7 @@ class ListeningStatisticsService {
           durationListened: durationListened,
           wasCompleted: wasCompleted,
           playedAt: now,
+          thumbnailUrl: thumbnail,
         );
         
         // 3. Update artist statistics
@@ -84,6 +88,7 @@ class ListeningStatisticsService {
     required int durationListened,
     required bool wasCompleted,
     required DateTime playedAt,
+    String? thumbnailUrl,
   }) async {
     // Find existing statistics
     SongStatisticsDB? stats = await isar.collection<SongStatisticsDB>()
@@ -103,12 +108,14 @@ class ListeningStatisticsService {
         lastPlayed: playedAt,
         firstPlayed: playedAt,
         avgListeningPercentage: wasCompleted ? 100.0 : 0.0,
+        thumbnailUrl: thumbnailUrl,
       );
     } else {
       // Update existing statistics
       stats.playCount++;
       stats.totalListeningTime += durationListened;
       stats.lastPlayed = playedAt;
+      if (thumbnailUrl != null) stats.thumbnailUrl = thumbnailUrl;
       
       // Update average listening percentage
       final totalPlays = stats.playCount;
@@ -179,6 +186,42 @@ class ListeningStatisticsService {
         .sortByPlayCountDesc()
         .limit(limit)
         .findAll();
+  }
+
+  /// Get the "Trending" song (most played in the last 7 days).
+  /// Falls back to all-time top song if no recent history exists.
+  Future<SongStatisticsDB?> getTrendingSong() async {
+    final isar = await DBProvider.db;
+    final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+    
+    // 1. Get recent play history
+    final recentHistory = await isar.collection<PlayHistoryDB>()
+        .where()
+        .playedAtGreaterThan(sevenDaysAgo)
+        .findAll();
+        
+    if (recentHistory.isEmpty) {
+      // Fallback: Get all-time top song
+      final topSongs = await getTopSongs(limit: 1);
+      return topSongs.isNotEmpty ? topSongs.first : null;
+    }
+    
+    // 2. Count occurrences of each songId
+    final counts = <String, int>{};
+    for (var entry in recentHistory) {
+      counts[entry.songId] = (counts[entry.songId] ?? 0) + 1;
+    }
+    
+    // 3. Find songId with max play count
+    final entries = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final trendingId = entries.first.key;
+    
+    // 4. Return matching SongStatistics
+    return await isar.collection<SongStatisticsDB>()
+        .where()
+        .songIdEqualTo(trendingId)
+        .findFirst();
   }
   
   /// Get top artists (most played)

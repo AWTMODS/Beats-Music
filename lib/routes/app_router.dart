@@ -16,6 +16,7 @@ import 'package:beats_music/screens/auth/login_screen.dart';
 import 'package:beats_music/screens/auth/permission_screen.dart';
 import 'package:beats_music/screens/screen/home_views/preference_selection_screen.dart';
 import 'package:beats_music/screens/screen/home_views/wrapped_view.dart';
+import 'package:beats_music/screens/auth/email_auth_screen.dart';
 
 /// Canonical app router configuration.
 ///
@@ -43,6 +44,11 @@ class AppRouter {
         path: '/Login',
         name: RoutePaths.loginScreen,
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/EmailAuth',
+        name: RoutePaths.emailAuthScreen,
+        builder: (context, state) => const EmailAuthScreen(),
       ),
       GoRoute(
         path: '/Permission',

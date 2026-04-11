@@ -23,14 +23,16 @@ class _AudioPlayerViewState extends State<AudioPlayerView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final UpNextPanelController _upNextPanelController = UpNextPanelController();
+  late PlayerOverlayCubit _playerOverlayCubit;
 
   @override
   void initState() {
     super.initState();
+    _playerOverlayCubit = context.read<PlayerOverlayCubit>();
     _tabController = TabController(length: 2, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<PlayerOverlayCubit>().registerUpNextPanelCollapse(
+        _playerOverlayCubit.registerUpNextPanelCollapse(
               () => _upNextPanelController.collapse(),
             );
       }
@@ -39,7 +41,7 @@ class _AudioPlayerViewState extends State<AudioPlayerView>
 
   @override
   void dispose() {
-    context.read<PlayerOverlayCubit>().unregisterUpNextPanelCollapse();
+    _playerOverlayCubit.unregisterUpNextPanelCollapse();
     _tabController.dispose();
     super.dispose();
   }

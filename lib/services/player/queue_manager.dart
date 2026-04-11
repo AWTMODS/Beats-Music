@@ -24,6 +24,18 @@ class QueueManager {
   int _shuffleIndex = 0;
   List<int> _shuffleList = [];
 
+  void _setQueue(List<Track> value) {
+    if (!_queue.isClosed) _queue.add(value);
+  }
+
+  void _setShuffleMode(bool value) {
+    if (!shuffleMode.isClosed) shuffleMode.add(value);
+  }
+
+  void _setQueueTitle(String value) {
+    if (!queueTitle.isClosed) queueTitle.add(value);
+  }
+
   // ─── Getters ───────────────────────────────────────────────────────────────
 
   List<Track> get tracks => _queue.value;
@@ -181,11 +193,11 @@ class QueueManager {
       remappedIdx = pos != -1 ? pos : 0;
     }
 
-    _queue.add(deduped);
-    queueTitle.add(playlistName);
+    _setQueue(deduped);
+    _setQueueTitle(playlistName);
 
     final shouldShuffle = shuffling || shuffleMode.value;
-    shuffleMode.add(shouldShuffle);
+    _setShuffleMode(shouldShuffle);
 
     if (shouldShuffle && deduped.isNotEmpty) {
       _shuffleList = generateRandomIndices(deduped.length);
@@ -207,7 +219,7 @@ class QueueManager {
 
   /// Toggle shuffle mode.
   void shuffle(bool enabled) {
-    shuffleMode.add(enabled);
+    _setShuffleMode(enabled);
     if (enabled && _queue.value.isNotEmpty) {
       _shuffleList = generateRandomIndices(_queue.value.length);
       // Put current track at shuffle index 0.
@@ -223,10 +235,10 @@ class QueueManager {
   /// Add a track to the end of the queue. Skips duplicates (by id).
   void addTrack(Track track) {
     if (_queue.value.any((t) => t.id == track.id)) return;
-    queueTitle.add('Queue');
+    _setQueueTitle('Queue');
     final newQueue = List<Track>.from(_queue.value)..add(track);
     final newIdx = newQueue.length - 1;
-    _queue.add(newQueue);
+    _setQueue(newQueue);
     if (shuffleMode.value && _shuffleList.isNotEmpty) {
       _shuffleList.add(newIdx);
     }
@@ -241,7 +253,7 @@ class QueueManager {
       if (deduplicated.isEmpty) return;
       final startIdx = _queue.value.length;
       final newQueue = List<Track>.from(_queue.value)..addAll(deduplicated);
-      _queue.add(newQueue);
+      _setQueue(newQueue);
       // Append new indices to the shuffle list so the existing shuffle order
       // is preserved. Without this, _ensureShuffleListValid would regenerate
       // the entire order, causing unpredictable jumps.
@@ -260,7 +272,7 @@ class QueueManager {
   /// Insert a track to play next (after current).
   void addPlayNext(Track track) {
     if (_queue.value.isEmpty) {
-      _queue.add([track]);
+      _setQueue([track]);
       _currentIndex = 0;
       return;
     }
@@ -268,7 +280,7 @@ class QueueManager {
 
     final insertIdx = _currentIndex + 1;
     final newQueue = List<Track>.from(_queue.value)..insert(insertIdx, track);
-    _queue.add(newQueue);
+    _setQueue(newQueue);
 
     if (shuffleMode.value && _shuffleList.isNotEmpty) {
       for (int i = 0; i < _shuffleList.length; i++) {
@@ -290,7 +302,7 @@ class QueueManager {
     } else {
       queue.add(track);
     }
-    _queue.add(queue);
+    _setQueue(queue);
 
     if (_currentIndex >= actualIdx) _currentIndex++;
 
@@ -310,7 +322,7 @@ class QueueManager {
     if (index >= _queue.value.length) return;
 
     final newQueue = List<Track>.from(_queue.value)..removeAt(index);
-    _queue.add(newQueue);
+    _setQueue(newQueue);
 
     // Adjust shuffle list.
     if (shuffleMode.value && _shuffleList.isNotEmpty) {
@@ -348,7 +360,7 @@ class QueueManager {
     if (oldIndex < newIndex) newIndex--;
     final item = queue.removeAt(oldIndex);
     queue.insert(newIndex, item);
-    _queue.add(queue);
+    _setQueue(queue);
 
     // Update shuffle list.
     if (shuffleMode.value && _shuffleList.isNotEmpty) {
@@ -382,10 +394,10 @@ class QueueManager {
   void clearQueue() {
     final current = currentTrack;
     if (current == null) {
-      _queue.add([]);
+      _setQueue([]);
       _currentIndex = 0;
     } else {
-      _queue.add([current]);
+      _setQueue([current]);
       _currentIndex = 0;
     }
     _shuffleList = [];
@@ -397,7 +409,7 @@ class QueueManager {
     final seenIds = <String>{};
     final deduped =
         tracks.where((t) => seenIds.add(t.id)).toList(growable: false);
-    _queue.add(deduped);
+    _setQueue(deduped);
     _currentIndex =
         startIndex.clamp(0, deduped.isEmpty ? 0 : deduped.length - 1);
     if (shuffleMode.value && deduped.isNotEmpty) {
@@ -419,7 +431,7 @@ class QueueManager {
       }
     }
     if (changed) {
-      _queue.add(queue);
+      _setQueue(queue);
     }
     return changed;
   }

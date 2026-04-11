@@ -29,7 +29,10 @@ class PlayHistoryDB {
   
   /// Whether the song was completed (>80% listened)
   bool wasCompleted;
-  
+
+  /// Album art URL
+  String? thumbnailUrl;
+
   PlayHistoryDB({
     required this.songId,
     required this.songTitle,
@@ -38,5 +41,6 @@ class PlayHistoryDB {
     required this.playedAt,
     required this.durationListened,
     this.wasCompleted = false,
+    this.thumbnailUrl,
   });
 }

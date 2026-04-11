@@ -63,7 +63,7 @@ class _PreferenceSelectionScreenState extends State<PreferenceSelectionScreen> {
   Future<void> _finishOnboarding() async {
     // Navigate immediately to ensure responsiveness
     if (mounted) {
-      context.goNamed(RoutePaths.exploreScreen);
+      context.go('/Explore');
     }
     
     // Save to Firebase in the background
@@ -115,7 +115,7 @@ class _PreferenceSelectionScreenState extends State<PreferenceSelectionScreen> {
             errorBuilder: (context, error, stackTrace) => const Icon(MingCute.music_2_fill, color: Default_Theme.successAccent),
           ),
           TextButton(
-            onPressed: () => context.goNamed(RoutePaths.exploreScreen),
+            onPressed: () => context.go('/Explore'),
             child: Text(
               'Skip',
               style: Default_Theme.secondoryTextStyle.copyWith(

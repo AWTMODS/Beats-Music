@@ -12,6 +12,7 @@ class RoutePaths {
   static const String searchScreen = "Search";
   static const String offlineScreen = "Offline";
   static const String loginScreen = "Login";
+  static const String emailAuthScreen = "EmailAuth";
   static const String permissionScreen = "Permission";
   static const String preferenceSelectionScreen = "PreferenceSelection";
   static const String wrappedScreen = "BeatsWrapped";

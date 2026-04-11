@@ -36,7 +36,10 @@ class SongStatisticsDB {
   
   /// Average listening percentage (0-100)
   double avgListeningPercentage;
-  
+
+  /// Album art URL
+  String? thumbnailUrl;
+
   SongStatisticsDB({
     required this.songId,
     required this.songTitle,
@@ -47,5 +50,6 @@ class SongStatisticsDB {
     required this.lastPlayed,
     required this.firstPlayed,
     this.avgListeningPercentage = 0.0,
+    this.thumbnailUrl,
   });
 }

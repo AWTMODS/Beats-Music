@@ -706,15 +706,16 @@ class PlayerEngine {
       final band = _eqBands[i];
       if (band.gain.abs() < 0.05) continue;
 
-      // Use broader octave widths at the edges so low/high bands are audibly effective.
-      final width = switch (i) {
-        0 || 1 => 1.8,
-        8 || 9 => 1.6,
-        _ => 1.25,
+      // Use Q-factors for width (t=q). Higher Q means narrower peak.
+      // Values inspired by BloomeeTunes for better audio separation.
+      final qFactor = switch (i) {
+        0 || 1 => 0.5, // Broad low-end
+        8 || 9 => 0.6, // Slightly broad highs
+        _ => 1.0,      // Sharp mid-range
       };
 
       parts.add(
-        'equalizer=f=${band.centerFrequency}:t=o:w=$width:g=${band.gain.toStringAsFixed(2)}',
+        'equalizer=f=${band.centerFrequency}:t=q:w=$qFactor:g=${band.gain.toStringAsFixed(2)}',
       );
     }
     if (parts.isEmpty) return '';
