@@ -1,3 +1,16 @@
+## [1.6.0] - 2026-06-01
+
+### Improvements & Fixes
+- **Plugin Loading & Playback Resolution**: Fixed the critical song playback issue ("Unable to start playback for this playlist") affecting remote tracks (JioSaavn / YTMusic) by expanding Dart success checks to include `PluginInstallStatus.pluginLoaded` so loaded plugins register correctly in global runtime state.
+- **Persistent Plugin States**: Fixed an issue where the plugin installation state reverted from "Installed" to "Install" on exiting the repository detail screen. Plugin auto-load states are now safely written to persistence regardless of transient failures.
+- **Default Plugin Auto-Healing**: Implemented self-healing startup logic that automatically registers currently selected default plugins (Home, Search, and Suggestion providers) into the startup auto-load list, ensuring seamless out-of-the-box performance.
+- **YTMusic Sync Loop Resolution**: Corrected version checker logic to look for version `>= 1` instead of `2` to match the official remote repository metadata, ending infinite background repository sync cycles.
+- **Premium Lottie Equalizer Animation**: Integrated an eye-catching, high-quality Lottie equalizer animation during startup and plugin setup views, transitioning into a seamless checkmark on success.
+- **Instant Cold Startup**: Tuned session restore delays, shortening launch times from 500ms to a snappy 100ms.
+- **Restored Playback Activation**: Resolved an issue where a restored song from a previous session would fail to start playing on app launch. The playback engine now automatically resolves and loads the track metadata and stream on initial play command.
+- **Bypass Plugin Country Restrictions**: Enhanced the Rust-side plugin unpacker to bypass country allowlist checks when the policy country code is empty, enabling successful installation of plugins with country restrictions (e.g., JioSaavn restricted to IN).
+- **Accurate Plugin Installation Reporting**: Fixed state propagation in `PluginBloc` so that installation failures are correctly reported as errors. This prevents the repository detail screen from falsely showing a failed installation as "Installed".
+
 ## [1.5.1] - 2026-04-11
 
 ### New Features

@@ -1,24 +1,22 @@
 import 'dart:developer';
 import 'package:beats_music/blocs/internet_connectivity/cubit/connectivity_cubit.dart';
 import 'package:beats_music/blocs/lastdotfm/lastdotfm_cubit.dart';
-import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
 import 'package:beats_music/blocs/notification/notification_cubit.dart';
 import 'package:beats_music/blocs/recommendation/cubit/recommendation_cubit.dart';
 import 'package:beats_music/blocs/recommendation/cubit/recommendation_state.dart';
 import 'package:beats_music/blocs/settings_cubit/cubit/settings_cubit.dart';
 import 'package:beats_music/core/di/service_locator.dart';
 import 'package:beats_music/core/models/exported.dart';
-import 'package:beats_music/core/models/media_playlist_model.dart';
 import 'package:beats_music/plugins/blocs/content/content_bloc.dart';
 import 'package:beats_music/plugins/blocs/content/content_event.dart';
 import 'package:beats_music/plugins/blocs/content/content_state.dart';
 import 'package:beats_music/plugins/blocs/plugin/plugin_bloc.dart';
 import 'package:beats_music/plugins/blocs/plugin/plugin_state.dart';
+import 'package:beats_music/blocs/explore/cubit/recently_cubit.dart';
+import 'package:beats_music/blocs/library/cubit/library_items_cubit.dart';
 import 'package:beats_music/screens/screen/home_views/recents_view.dart';
 import 'package:beats_music/screens/screen/home_views/setting_views/about.dart';
-import 'package:beats_music/screens/widgets/more_bottom_sheet.dart';
 import 'package:beats_music/screens/widgets/sign_board_widget.dart';
-import 'package:beats_music/screens/widgets/song_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:beats_music/screens/screen/home_views/notification_view.dart';
 import 'package:beats_music/screens/screen/home_views/setting_view.dart';
@@ -32,7 +30,6 @@ import 'package:go_router/go_router.dart';
 import 'chart/carousal_widget.dart';
 import '../widgets/horizontal_card_view.dart';
 import '../widgets/side_drawer.dart';
-import '../widgets/tab_list_widget.dart';
 import 'package:badges/badges.dart' as badges;
 
 class ExploreScreen extends StatefulWidget {
@@ -200,34 +197,80 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     [
                       const ShortcutGrid(),
                       const CaraouselWidget(),
-                      // AI Recommendations Section
-                      BlocBuilder<RecommendationCubit, RecommendationState>(
+                      // Jump back in (Recently Played) Section
+                      BlocBuilder<RecentlyCubit, RecentlyCubitState>(
                         builder: (context, state) {
-                          if (state is RecommendationLoaded && state.tracks.isNotEmpty) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 20.0),
-                              child: TabSongListWidget(
-                                list: state.tracks.map((track) {
-                                  return SongCardWidget(
-                                    song: track,
-                                    onTap: () {
-                                      context.read<BeatsPlayerCubit>().BeatsPlayer.loadPlaylist(
-                                        Playlist(tracks: state.tracks, title: state.title),
-                                        idx: state.tracks.indexOf(track),
-                                        doPlay: true,
-                                      );
-                                    },
-                                    onOptionsTap: () => showMoreBottomSheet(context, showSinglePlay: true, track),
-                                  );
-                                }).toList(),
-                                category: state.title,
-                                columnSize: 3,
-                              ),
+                          if (state.tracks.isNotEmpty) {
+                            final section = Section(
+                              id: 'recently_played',
+                              title: 'Jump back in',
+                              cardType: CardType.carousel,
+                              items: state.tracks.map((t) => MediaItem.track(t)).toList(),
+                            );
+                            return HorizontalCardView(
+                              section: section,
+                              pluginId: '',
                             );
                           }
                           return const SizedBox.shrink();
                         },
                       ),
+                      // Recents (User Library Playlists) Section
+                      BlocBuilder<LibraryItemsCubit, LibraryItemsState>(
+                        builder: (context, state) {
+                          if (state.playlists.isNotEmpty) {
+                            final recentsSection = Section(
+                              id: 'library_recents',
+                              title: 'Recents',
+                              cardType: CardType.carousel,
+                              items: state.playlists.map((p) {
+                                return MediaItem.playlist(
+                                  PlaylistSummary(
+                                    id: p.storageKey,
+                                    title: p.playlistName,
+                                    owner: p.subTitle ?? 'Playlist',
+                                    thumbnail: Artwork(
+                                      url: p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
+                                      urlLow: null,
+                                      urlHigh: null,
+                                      layout: ImageLayout.square,
+                                    ),
+                                    url: null,
+                                  ),
+                                );
+                              }).toList(),
+                            );
+                            return HorizontalCardView(
+                              section: recentsSection,
+                              pluginId: '',
+                              trailingText: 'Show all',
+                              onTrailingTap: () {
+                                context.go('/Library');
+                              },
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      // More of what you like (AI Recommendations) Section
+                      BlocBuilder<RecommendationCubit, RecommendationState>(
+                        builder: (context, state) {
+                          if (state is RecommendationLoaded && state.tracks.isNotEmpty) {
+                            final section = Section(
+                              id: 'recommendations',
+                              title: state.title.isNotEmpty ? state.title : 'More of what you like',
+                              cardType: CardType.carousel,
+                              items: state.tracks.map((t) => MediaItem.track(t)).toList(),
+                            );
+                            return HorizontalCardView(
+                              section: section,
+                              pluginId: '',
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      // Last.Fm Picks Section
                       BlocBuilder<SettingsCubit, SettingsState>(
                         builder: (context, state) {
                           if (state.lFMPicks) {
@@ -236,36 +279,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               builder: (context, snapshot) {
                                 if (snapshot.hasData &&
                                     (snapshot.data?.isNotEmpty ?? false)) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 15.0),
-                                    child: TabSongListWidget(
-                                      list: snapshot.data!.map((e) {
-                                        return SongCardWidget(
-                                          song: e,
-                                          onTap: () {
-                                            context
-                                                .read<BeatsPlayerCubit>()
-                                                .BeatsPlayer
-                                                .loadPlaylist(
-                                                  Playlist(
-                                                    tracks: snapshot.data!,
-                                                    title: 'Last.Fm Picks',
-                                                  ),
-                                                  idx:
-                                                      snapshot.data!.indexOf(e),
-                                                  doPlay: true,
-                                                );
-                                          },
-                                          onOptionsTap: () =>
-                                              showMoreBottomSheet(
-                                                  context,
-                                                  showSinglePlay: true,
-                                                  e),
-                                        );
-                                      }).toList(),
-                                      category: 'Made For You',
-                                      columnSize: 3,
-                                    ),
+                                  final section = Section(
+                                    id: 'lfm_picks',
+                                    title: 'Last.Fm Picks',
+                                    cardType: CardType.carousel,
+                                    items: snapshot.data!.map((t) => MediaItem.track(t)).toList(),
+                                  );
+                                  return HorizontalCardView(
+                                    section: section,
+                                    pluginId: '',
                                   );
                                 }
                                 return const SizedBox.shrink();

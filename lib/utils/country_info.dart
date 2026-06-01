@@ -108,7 +108,17 @@ class CountryInfoService {
     bool forceRefresh = false,
   }) async {
     final cached = await readCachedCountryCode(settingsDao);
-    return cached ?? '';
+    if (cached != null && cached.isNotEmpty) {
+      return cached;
+    }
+
+    final deviceCode = await resolveCountryCodeFromDeviceLocale();
+    if (deviceCode != null && deviceCode.isNotEmpty) {
+      await settingsDao.putSettingStr(SettingKeys.countryCode, deviceCode);
+      return deviceCode;
+    }
+
+    return defaultCountryCode;
   }
 
   static Future<String?> _fetchCountryCode() async {

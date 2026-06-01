@@ -66,16 +66,28 @@ class HistoryDAO {
     final isar = await _db;
     final query = isar.playbackHistoryDBs.where().sortByPlayedAtDesc();
 
-    final entries =
-        limit > 0 ? await query.limit(limit).findAll() : await query.findAll();
+    // Fetch more entries initially to ensure we have enough after deduplication
+    final fetchLimit = limit > 0 ? limit * 3 : 0;
+    final entries = fetchLimit > 0 
+        ? await query.limit(fetchLimit).findAll() 
+        : await query.findAll();
 
     await Future.wait(entries.map((e) => e.track.load()));
 
-    return entries
-        .map((e) => e.track.value)
-        .whereType<TrackDB>()
-        .map(trackDBToTrack)
-        .toList();
+    final seen = <String>{};
+    final uniqueTracks = <Track>[];
+
+    for (final entry in entries) {
+      final trackDb = entry.track.value;
+      if (trackDb != null && seen.add(trackDb.mediaId)) {
+        uniqueTracks.add(trackDBToTrack(trackDb));
+        if (limit > 0 && uniqueTracks.length >= limit) {
+          break;
+        }
+      }
+    }
+
+    return uniqueTracks;
   }
 
   /// Return raw [PlaybackHistoryDB] rows sorted newest-first.

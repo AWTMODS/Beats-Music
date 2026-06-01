@@ -311,7 +311,7 @@ class PlayerEngine {
       if (_disposed || _generation != gen) return EngineCanceled();
 
       _hasMedia = true;
-      if (_eqEnabled) await _applyEqualizer();
+      if (_eqEnabled) await _applyEqualizerToPlayer(_active);
       _deriveState();
       return EngineSuccess();
     } catch (e) {
@@ -373,7 +373,7 @@ class PlayerEngine {
       _hasMedia = true;
 
       _swapActivePlayer();
-      if (_eqEnabled) await _applyEqualizer();
+      if (_eqEnabled) await _applyEqualizerToPlayer(_active);
 
       return EngineSuccess();
     } catch (e) {
@@ -438,7 +438,7 @@ class PlayerEngine {
       _hasMedia = true;
 
       _swapActivePlayer();
-      if (_eqEnabled) await _applyEqualizer();
+      if (_eqEnabled) await _applyEqualizerToPlayer(_active);
 
       _oldPlayerFader.fade(oldPlayer, oldStartVol, 0.0, duration);
       _newPlayerFader.fade(newPlayer, 0.0, _userVolume * 100.0, duration);
@@ -688,15 +688,29 @@ class PlayerEngine {
   Future<void> _applyEqualizer() async {
     if (_disposed) return;
     try {
-      final filter = _eqEnabled ? _buildEqualizerFilter() : '';
-      log('Applying EQ filter: ${filter.isEmpty ? '<off>' : filter}',
-          name: 'PlayerEngine');
-      final platformA = _playerA.platform;
-      final platformB = _playerB.platform;
-      if (platformA is NativePlayer) await platformA.setProperty('af', filter);
-      if (platformB is NativePlayer) await platformB.setProperty('af', filter);
+      if (_isTransitioning) {
+        await _applyEqualizerToPlayer(_active);
+      } else {
+        await Future.wait([
+          _applyEqualizerToPlayer(_playerA),
+          _applyEqualizerToPlayer(_playerB),
+        ]);
+      }
     } catch (e) {
       log('Equalizer apply error: $e', name: 'PlayerEngine');
+    }
+  }
+
+  Future<void> _applyEqualizerToPlayer(Player player) async {
+    if (_disposed) return;
+    try {
+      final filter = _eqEnabled ? _buildEqualizerFilter() : '';
+      final platform = player.platform;
+      if (platform is NativePlayer) {
+        await platform.setProperty('af', filter);
+      }
+    } catch (e) {
+      log('Equalizer apply to player error: $e', name: 'PlayerEngine');
     }
   }
 

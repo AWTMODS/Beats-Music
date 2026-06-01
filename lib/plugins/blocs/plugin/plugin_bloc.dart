@@ -269,7 +269,33 @@ class PluginBloc extends Bloc<PluginEvent, PluginState> {
       clearSuccessMessage: true,
     ));
 
+    String? pluginId;
     try {
+      final packedManifest =
+          await _pluginService.inspectPlugin(packedFilePath: event.packedFilePath);
+      pluginId = packedManifest.id;
+      final isLoaded = state.loadedPluginIds.contains(pluginId);
+
+      if (isLoaded) {
+        final availableById = <String, PluginInfo>{
+          for (final p in state.availablePlugins) p.manifest.id: p,
+        };
+        final info = availableById[pluginId];
+        if (info != null) {
+          try {
+            await _pluginService.unloadPlugin(
+              pluginId: pluginId,
+              pluginType: info.pluginType,
+            );
+            log('Unloaded loaded plugin $pluginId prior to install/upgrade',
+                name: 'PluginBloc');
+          } catch (e) {
+            log('Failed to unload plugin $pluginId prior to upgrade: $e',
+                name: 'PluginBloc');
+          }
+        }
+      }
+
       final result = await _pluginService.installPlugin(
         packedFilePath: event.packedFilePath,
         shouldLoad: event.shouldLoad,
@@ -293,21 +319,32 @@ class PluginBloc extends Bloc<PluginEvent, PluginState> {
           'Plugin "${result.pluginId}" installed successfully.',
       };
 
-      if (event.shouldLoad &&
-          (result.status == PluginInstallStatus.installed ||
-              result.status == PluginInstallStatus.updated ||
-              result.status == PluginInstallStatus.alreadyInstalled)) {
-        await _persistAutoLoadSafe({..._preferredAutoLoadIds, result.pluginId});
+      if (result.status == PluginInstallStatus.failed) {
+        final errorDetail = result.error != null ? ': ${result.error}' : '';
+        emit(state.copyWith(
+          isLoading: false,
+          error: 'Failed to install plugin "${result.pluginId}"$errorDetail',
+        ));
+      } else {
+        if (event.shouldLoad &&
+            (result.status == PluginInstallStatus.installed ||
+                result.status == PluginInstallStatus.updated ||
+                result.status == PluginInstallStatus.alreadyInstalled)) {
+          await _persistAutoLoadSafe({..._preferredAutoLoadIds, result.pluginId});
+        }
+        emit(state.copyWith(
+          isLoading: false,
+          successMessage: message,
+        ));
       }
-
-      emit(state.copyWith(successMessage: message));
 
       // Refresh available plugins after install.
       add(const RefreshPlugins());
-    } on PluginException catch (e) {
+    } catch (e) {
+      log('Install failed for ${pluginId ?? event.packedFilePath}: $e', name: 'PluginBloc');
       emit(state.copyWith(
         isLoading: false,
-        error: e.message,
+        error: 'Failed to install plugin ${pluginId != null ? '"$pluginId"' : 'from file'}: $e',
       ));
     }
   }

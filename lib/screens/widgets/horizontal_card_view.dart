@@ -12,14 +12,17 @@ import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:go_router/go_router.dart';
+import 'package:beats_music/core/constants/route_paths.dart';
 
-/// Displays a horizontal scrollable card view for a home [Section].
 class HorizontalCardView extends StatefulWidget {
   final Section section;
   final String pluginId;
   final VoidCallback? onLoadMore;
   final bool canLoadMore;
   final bool isLoadingMore;
+  final String? trailingText;
+  final VoidCallback? onTrailingTap;
 
   const HorizontalCardView({
     super.key,
@@ -28,6 +31,8 @@ class HorizontalCardView extends StatefulWidget {
     this.onLoadMore,
     this.canLoadMore = false,
     this.isLoadingMore = false,
+    this.trailingText,
+    this.onTrailingTap,
   });
 
   @override
@@ -104,15 +109,32 @@ class _HorizontalCardViewState extends State<HorizontalCardView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 20, top: 5),
-            child: Text(
-              widget.section.title,
-              textAlign: TextAlign.start,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Default_Theme.primaryColor1,
-              ).merge(Default_Theme.secondoryTextStyle),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.section.title,
+                  textAlign: TextAlign.start,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Default_Theme.primaryColor1,
+                  ).merge(Default_Theme.secondoryTextStyle),
+                ),
+                if (widget.trailingText != null && widget.onTrailingTap != null)
+                  GestureDetector(
+                    onTap: widget.onTrailingTap,
+                    child: Text(
+                      widget.trailingText!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Default_Theme.primaryColor1.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           SizedBox(
@@ -165,7 +187,7 @@ class _HorizontalCardViewState extends State<HorizontalCardView> {
 
   void _handleItemTap(BuildContext context, MediaItem item) {
     final loadedPluginIds = context.read<PluginBloc>().state.loadedPluginIds;
-    if (!requirePlugin(widget.pluginId, loadedPluginIds)) {
+    if (widget.pluginId.isNotEmpty && !requirePlugin(widget.pluginId, loadedPluginIds)) {
       return;
     }
 
@@ -207,13 +229,23 @@ class _HorizontalCardViewState extends State<HorizontalCardView> {
         );
       },
       playlist: (playlist) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                OnlPlaylistView(playlist: playlist, pluginId: widget.pluginId),
-          ),
-        );
+        if (widget.pluginId.isEmpty ||
+            playlist.id == 'Liked' ||
+            playlist.id.startsWith('user_playlist_') ||
+            !playlist.id.contains('_')) {
+          context.pushNamed(
+            RoutePaths.playlistView,
+            extra: playlist.id,
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  OnlPlaylistView(playlist: playlist, pluginId: widget.pluginId),
+            ),
+          );
+        }
       },
     );
   }

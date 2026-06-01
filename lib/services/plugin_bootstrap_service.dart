@@ -58,7 +58,7 @@ class PluginBootstrapProgress {
 
 class PluginBootstrapService {
   static const String hostedRepositoriesUrl =
-      'https://github.com/kojima-ui/bloom-factory/releases/latest/download/bex-factory.json';
+      'https://hemantkarya.github.io/BloomeeTunes/repositories.json';
 
   static const int maxRetries = 3;
 
@@ -158,7 +158,9 @@ class PluginBootstrapService {
       }
     }
 
-    final installedIds = await _safeGetInstalledIds(pluginService);
+    final available = await _safeGetAvailable(pluginService);
+    final installedIds = available.map((p) => p.manifest.id).toSet();
+    final bootstrapTargetIds = <String>{};
     final totalPlugins =
         installRepos.fold<int>(0, (sum, repo) => sum + repo.plugins.length);
     var processedPlugins = 0;
@@ -169,26 +171,19 @@ class PluginBootstrapService {
             ((processedPlugins * 55) ~/
                 (totalPlugins == 0 ? 1 : totalPlugins))));
 
-        if (installedIds.contains(plugin.id)) {
-          // If already installed, ensure it is actually LOADED.
-          final available = await _safeGetAvailable(pluginService);
-          final matches = available.where((p) => p.manifest.id == plugin.id);
-          final info = matches.isEmpty ? null : matches.first;
-          if (info != null) {
-            final isLoaded = pluginService.getLoadedPlugins().contains(plugin.id);
-            if (!isLoaded) {
-              try {
-                await pluginService.loadPlugin(
-                  pluginId: info.manifest.id,
-                  pluginType: info.pluginType,
-                );
-              } catch (e) {
-                log('Failed to auto-load existing plugin ${plugin.id}: $e', name: 'PluginBootstrap');
-              }
-            }
+        PluginInfo? local;
+        for (final p in available) {
+          if (p.manifest.id == plugin.id) {
+            local = p;
+            break;
           }
-          processedPlugins++;
-          continue;
+        }
+
+        if (local != null) {
+          if (_compareVersions(plugin.version, local.manifest.version) <= 0) {
+            processedPlugins++;
+            continue;
+          }
         }
 
         if (!plugin.isAllowedInCountry(countryCode)) {
@@ -201,6 +196,8 @@ class PluginBootstrapService {
           processedPlugins++;
           continue;
         }
+
+        bootstrapTargetIds.add(plugin.id);
 
         bool installed = false;
         bool skippedByCountry = false;
@@ -221,7 +218,8 @@ class PluginBootstrapService {
 
             final ok = result.status == PluginInstallStatus.installed ||
                 result.status == PluginInstallStatus.updated ||
-                result.status == PluginInstallStatus.alreadyInstalled;
+                result.status == PluginInstallStatus.alreadyInstalled ||
+                result.status == PluginInstallStatus.pluginLoaded;
 
             if (ok) {
               installed = true;
@@ -254,14 +252,51 @@ class PluginBootstrapService {
       }
     }
 
-    if (errors.isEmpty) {
-      log('Plugin bootstrap completed successfully.', name: 'PluginBootstrap');
-    } else {
-      log('Plugin bootstrap completed with ${errors.length} error(s). (Marking as done anyway for permanence)',
+    // Persist bootstrap-managed plugin IDs for auto-load regardless of
+    // non-fatal install errors, so successful installs remain loaded on
+    // subsequent app opens.
+    try {
+      if (bootstrapTargetIds.isNotEmpty) {
+        final loadStateService = PluginLoadStateService(settingsDao);
+        await loadStateService.addAutoLoadPluginIds(bootstrapTargetIds);
+        log('Persisted ${bootstrapTargetIds.length} bootstrap plugin IDs for auto-load',
+            name: 'PluginBootstrap');
+      }
+    } catch (e) {
+      log('Failed to persist bootstrap auto-load IDs: $e',
           name: 'PluginBootstrap');
     }
 
-    await _markDone(settingsDao);
+    // Ensure all installed plugins (the ones we just installed/updated)
+    // are added to the auto-load list so they are actually used.
+    try {
+      final loadStateService = PluginLoadStateService(settingsDao);
+
+      // Ensure everything that is "available" and part of our bootstrap
+      // is in the auto-load list.
+      final available = await _safeGetAvailable(pluginService);
+      final bootstrapIds = available
+          .where((p) => installedIds.contains(p.manifest.id))
+          .map((p) => p.manifest.id)
+          .toSet();
+
+      if (bootstrapIds.isNotEmpty) {
+        await loadStateService.addAutoLoadPluginIds(bootstrapIds);
+        log('Added ${bootstrapIds.length} plugins to auto-load list',
+            name: 'PluginBootstrap');
+      }
+    } catch (e) {
+      log('Failed to update auto-load list: $e', name: 'PluginBootstrap');
+    }
+
+    if (errors.isEmpty) {
+      await _markDone(settingsDao);
+      log('Plugin bootstrap completed successfully.', name: 'PluginBootstrap');
+    } else {
+      log('Plugin bootstrap completed with ${errors.length} error(s).',
+          name: 'PluginBootstrap');
+    }
+
     await pluginService.refreshPlugins();
     await autoSelectPluginDefaults(pluginService, settingsDao);
 
@@ -321,6 +356,28 @@ class PluginBootstrapService {
         log('Auto-selected search plugin: ${searchPlugin.manifest.id}',
             name: 'PluginBootstrap');
       }
+
+      // Auto-healing: Ensure currently active default plugins are registered in the auto-load list.
+      final activeDefaultIds = <String>{};
+      final freshSuggestion = await settingsDao.getSettingStr(SettingKeys.suggestionPluginId);
+      if (freshSuggestion != null && freshSuggestion.isNotEmpty) {
+        activeDefaultIds.add(freshSuggestion);
+      }
+      final freshHome = await settingsDao.getSettingStr(SettingKeys.homePluginId);
+      if (freshHome != null && freshHome.isNotEmpty) {
+        activeDefaultIds.add(freshHome);
+      }
+      final freshSearch = await settingsDao.getSettingStr(SettingKeys.searchPluginId);
+      if (freshSearch != null && freshSearch.isNotEmpty) {
+        activeDefaultIds.add(freshSearch);
+      }
+
+      if (activeDefaultIds.isNotEmpty) {
+        final loadStateService = PluginLoadStateService(settingsDao);
+        await loadStateService.addAutoLoadPluginIds(activeDefaultIds);
+        log('Auto-healed/ensured default plugin IDs in auto-load list: $activeDefaultIds',
+            name: 'PluginBootstrap');
+      }
     } catch (_) {}
   }
 
@@ -335,7 +392,24 @@ class PluginBootstrapService {
     final lastSync =
         lastSyncRaw == null ? null : DateTime.tryParse(lastSyncRaw)?.toUtc();
 
-    if (lastSync != null && now.difference(lastSync) < syncGap) {
+    final available = await _safeGetAvailable(pluginService);
+    PluginInfo? ytmusic;
+    PluginInfo? jisaavn;
+    for (final p in available) {
+      if (p.manifest.id == 'content-resolver.bloomfactory.ytmusic') {
+        ytmusic = p;
+      } else if (p.manifest.id == 'content-resolver.bloomfactory.jisaavn') {
+        jisaavn = p;
+      }
+    }
+    final hasDefaultPlugins = ytmusic != null &&
+                              _compareVersions(ytmusic.manifest.version, '1') >= 0 &&
+                              jisaavn != null &&
+                              _compareVersions(jisaavn.manifest.version, '1') >= 0;
+
+    if (!hasDefaultPlugins) {
+      log('Default plugins missing or outdated. Forcing repository sync.', name: 'PluginBootstrap');
+    } else if (lastSync != null && now.difference(lastSync) < syncGap) {
       return;
     }
 
@@ -362,6 +436,12 @@ class PluginBootstrapService {
       await repositoryService.ensureRepositoryUrls(
         hostedEntries.map((entry) => entry.url),
       );
+
+      final installUrls = hostedEntries
+          .where((e) => e.install && e.url.isNotEmpty)
+          .map((e) => e.url)
+          .toSet();
+
       final knownUrls =
           (await repositoryService.getSavedRepositoryUrls()).toSet();
 
@@ -379,14 +459,17 @@ class PluginBootstrapService {
       }
 
       await pluginService.refreshPlugins();
-      await pluginService.refreshPlugins();
-      final installedIds = await _safeGetInstalledIds(pluginService);
-      final installedById = <String, String>{
-        for (final id in installedIds) id: id,
+      final available = await _safeGetAvailable(pluginService);
+      final installedIds = available.map((p) => p.manifest.id).toSet();
+      final installedById = <String, PluginInfo>{
+        for (final plugin in available) plugin.manifest.id: plugin,
       };
 
       final remoteLatestById = <String, RemotePluginModel>{};
+      final remoteToInstall = <String, RemotePluginModel>{};
+
       for (final repo in repos) {
+        final isInstallRepo = installUrls.contains(repo.url);
         for (final remote in repo.plugins) {
           if (!_isRemoteManifestCompatible(remote)) {
             continue;
@@ -394,43 +477,77 @@ class PluginBootstrapService {
           if (!remote.isAllowedInCountry(countryCode)) {
             continue;
           }
-          final existing = remoteLatestById[remote.id];
-          if (existing == null ||
-              _compareVersions(remote.version, existing.version) > 0) {
-            remoteLatestById[remote.id] = remote;
+
+          if (!installedIds.contains(remote.id)) {
+            if (isInstallRepo) {
+              final existing = remoteToInstall[remote.id];
+              if (existing == null ||
+                  _compareVersions(remote.version, existing.version) > 0) {
+                remoteToInstall[remote.id] = remote;
+              }
+            }
+          } else {
+            final existing = remoteLatestById[remote.id];
+            if (existing == null ||
+                _compareVersions(remote.version, existing.version) > 0) {
+              remoteLatestById[remote.id] = remote;
+            }
           }
         }
       }
 
-      for (final entry in installedById.entries) {
-        final pluginId = entry.key;
-        final remote = remoteLatestById[pluginId];
-        if (remote == null) {
-          continue;
-        }
-        
-        // In safe mode we don't have local version info to compare with `remote.version`.
-        // We could look at the `PluginService` but it doesn't store versions for simulated plugins.
-        // We'll lean on the Rust side `installPlugin` which returns `PluginInstallStatus.alreadyInstalled` 
-        // if the remote version isn't newer.
-        // For real plugins, we would ideally compare versions but `PluginInfo` is opaque in Safe Mode
-        // so we'll just attempt install and let `installPlugin` handle version checking.
+      final pluginsToLoad = <String>{};
+
+      // 1. Install missing official repository plugins
+      for (final remote in remoteToInstall.values) {
         try {
+          log('Installing missing plugin from repository: ${remote.id}',
+              name: 'PluginBootstrap');
           await _installRemotePluginWithRetry(
             pluginService: pluginService,
             plugin: remote,
             retries: maxRetries,
             countryCode: countryCode,
           );
+          pluginsToLoad.add(remote.id);
+        } catch (e) {
+          log('Failed to install missing plugin ${remote.id}: $e',
+              name: 'PluginBootstrap');
+        }
+      }
 
-          // Add to auto-load list if updated.
-          final loadStateService = PluginLoadStateService(settingsDao);
-          await loadStateService.addAutoLoadPluginIds(<String>[pluginId]);
+      // 2. Update existing plugins if a newer version is available
+      for (final entry in installedById.entries) {
+        final pluginId = entry.key;
+        final local = entry.value;
+        final remote = remoteLatestById[pluginId];
+        if (remote == null) {
+          continue;
+        }
+        if (_compareVersions(remote.version, local.manifest.version) <= 0) {
+          continue;
+        }
+        
+        try {
+          log('Updating plugin ${local.manifest.id} from version ${local.manifest.version} to ${remote.version}',
+              name: 'PluginBootstrap');
+          await _installRemotePluginWithRetry(
+            pluginService: pluginService,
+            plugin: remote,
+            retries: maxRetries,
+            countryCode: countryCode,
+          );
+          pluginsToLoad.add(pluginId);
         } on PluginCountryRestrictedException {
           continue;
         } catch (e) {
           log('Auto-update failed for $pluginId: $e', name: 'PluginBootstrap');
         }
+      }
+
+      if (pluginsToLoad.isNotEmpty) {
+        final loadStateService = PluginLoadStateService(settingsDao);
+        await loadStateService.addAutoLoadPluginIds(pluginsToLoad);
       }
 
       await pluginService.refreshPlugins();
@@ -468,7 +585,8 @@ class PluginBootstrapService {
 
         final ok = result.status == PluginInstallStatus.installed ||
             result.status == PluginInstallStatus.updated ||
-            result.status == PluginInstallStatus.alreadyInstalled;
+            result.status == PluginInstallStatus.alreadyInstalled ||
+            result.status == PluginInstallStatus.pluginLoaded;
         if (ok) {
           return;
         }
@@ -601,18 +719,6 @@ class PluginBootstrapService {
     }
   }
 
-  static Future<Set<String>> _safeGetInstalledIds(
-      PluginService pluginService) async {
-    try {
-      if (pluginService.isDeactivated) {
-        return pluginService.simulatedInstalledIds;
-      }
-      final available = await pluginService.getAvailablePlugins();
-      return available.map((p) => p.manifest.id).toSet();
-    } catch (_) {
-      return {};
-    }
-  }
 
   static Future<String> _resolveBootstrapCountryCode(
     SettingsDAO settingsDao,

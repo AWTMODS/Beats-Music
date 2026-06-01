@@ -107,4 +107,18 @@ class SettingKeys {
 
   /// Whether to confirm before deleting a local track.
   static const String localMusicConfirmDelete = 'localMusicConfirmDelete';
+
+  /// JSON-encoded state of the last active playback queue. Stored as String.
+  static const String lastQueueState = "lastQueueState";
+
+  /// The equalizer source (e.g. builtin, device). Stored as String.
+  static const String eqSource = "eqSource";
+}
+
+/// Valid values for [SettingKeys.eqSource].
+class EqSourceValues {
+  EqSourceValues._();
+
+  static const String builtin = "builtin";
+  static const String device = "device";
 }

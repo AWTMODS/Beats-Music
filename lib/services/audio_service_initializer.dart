@@ -1,58 +1,95 @@
 import 'package:beats_music/services/beats_player.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:audio_session/audio_session.dart';
 
+/// Initializes the audio session and player.
+///
+/// ## Why configure() is called HERE (not in BeatsMusicPlayer's constructor)
+///
+/// Dart constructors cannot `await`. If AudioSession.configure() is called
+/// inside the player constructor (fire-and-forget), there is a race window
+/// on slow/cold-start devices where the user taps a song before configure()
+/// completes. setActive(true) then calls requestAudioFocus() with unconfigured
+/// attributes → AUDIOFOCUS_REQUEST_FAILED on Xiaomi MIUI / Samsung OneUI.
+///
+/// Calling configure() here, before AudioService.init(), eliminates the race:
+/// the session is fully configured before any BeatsMusicPlayer method can run.
+Future<void> setupAudioSession() async {
+  final session = await AudioSession.instance;
+  await session.configure(AudioSessionConfiguration(
+    // iOS
+    avAudioSessionCategory: AVAudioSessionCategory.playback,
+    avAudioSessionCategoryOptions:
+        AVAudioSessionCategoryOptions.allowBluetooth |
+            AVAudioSessionCategoryOptions.allowAirPlay,
+    avAudioSessionMode: AVAudioSessionMode.defaultMode,
+    avAudioSessionRouteSharingPolicy:
+        AVAudioSessionRouteSharingPolicy.defaultPolicy,
+    avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+    // Android
+    androidAudioAttributes: AndroidAudioAttributes(
+      contentType: AndroidAudioContentType.music,
+      usage: AndroidAudioUsage.media,
+    ),
+    androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+    // We handle ducking ourselves via interruptionEventStream.
+    androidWillPauseWhenDucked: false,
+  ));
+}
+
+/// Singleton that creates and owns the [BeatsMusicPlayer] instance.
+///
+/// Using a Future (not a busy-wait while loop) to serialize concurrent
+/// initialization calls. The old pattern with `while (_isInitializing)`
+/// polled every 50ms and could theoretically spin indefinitely if init threw
+/// an exception that bypassed the `finally` block.
 class PlayerInitializer {
   static final PlayerInitializer _instance = PlayerInitializer._internal();
   factory PlayerInitializer() => _instance;
   PlayerInitializer._internal();
 
-  BeatsMusicPlayer? _BeatsMusicPlayer;
-  bool _isInitializing = false;
+  BeatsMusicPlayer? _player;
+  // Completer is set during init, removed when done. Any callers that arrive
+  // while init is in progress simply await the same future.
+  Future<BeatsMusicPlayer>? _initFuture;
 
   Future<BeatsMusicPlayer> getBeatsMusicPlayer() async {
-    // Return immediately if already healthy
-    if (_BeatsMusicPlayer != null) {
-      if (!_BeatsMusicPlayer!.isPlayerHealthy) {
-        await _BeatsMusicPlayer!.revive();
-      }
-      return _BeatsMusicPlayer!;
+    // 1. Already initialized and healthy — fast path.
+    final p = _player;
+    if (p != null) {
+      if (!p.isPlayerHealthy) await p.revive();
+      return p;
     }
 
-    // Prevent race conditions if multiple UI components request the player simultaneously
-    while (_isInitializing) {
-      await Future.delayed(const Duration(milliseconds: 50));
+    // 2. Initialization in progress — wait for it.
+    final running = _initFuture;
+    if (running != null) return running;
+
+    // 3. Start initialization.
+    _initFuture = _initializeInternal();
+    try {
+      return await _initFuture!;
+    } finally {
+      _initFuture = null;
     }
+  }
 
-    if (_BeatsMusicPlayer == null) {
-      _isInitializing = true;
-      try {
-        _BeatsMusicPlayer = await AudioService.init(
-          builder: () => BeatsMusicPlayer(),
-          config: const AudioServiceConfig(
-            androidNotificationChannelId:
-                'com.BeatsPlayer.notification.status',
-            androidNotificationChannelName: 'Beats',
-            androidNotificationIcon: 'mipmap/ic_launcher',
-            androidResumeOnClick: true,
-            androidShowNotificationBadge: true,
-            // Allows user to swipe away the notification when paused
-            androidStopForegroundOnPause: true,
-            notificationColor: Default_Theme.accentColor2,
-          ),
-        );
-
-        // // Brief delay on Android for native side to stabilize
-        // if (Platform.isAndroid) {
-        //   await Future.delayed(const Duration(milliseconds: 200));
-        // }
-      } finally {
-        _isInitializing = false;
-      }
-    }
-
-    return _BeatsMusicPlayer!;
+  Future<BeatsMusicPlayer> _initializeInternal() async {
+    final player = await AudioService.init(
+      builder: () => BeatsMusicPlayer(),
+      config: const AudioServiceConfig(
+        androidNotificationChannelId: 'com.beats.app.notification',
+        androidNotificationChannelName: 'Beats',
+        androidNotificationIcon: 'mipmap/ic_launcher',
+        androidResumeOnClick: true,
+        androidShowNotificationBadge: true,
+        // Keep foreground service alive while paused — reduces OEM process kills.
+        androidStopForegroundOnPause: false,
+        notificationColor: Default_Theme.accentColor2,
+      ),
+    );
+    _player = player;
+    return player;
   }
 }
-
-

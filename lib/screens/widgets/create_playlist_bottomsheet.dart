@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
+import 'package:beats_music/l10n/app_localizations.dart';
 
 void createPlaylistBottomSheet(BuildContext context) {
   final TextEditingController controller = TextEditingController();
@@ -20,6 +21,7 @@ void createPlaylistBottomSheet(BuildContext context) {
     elevation: 30,
     backgroundColor: Colors.transparent,
     builder: (context) {
+      final l10n = AppLocalizations.of(context)!;
       return BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Padding(
@@ -61,7 +63,7 @@ void createPlaylistBottomSheet(BuildContext context) {
                       children: [
                         const SizedBox(height: 8),
                         Text(
-                          "New Playlist",
+                          l10n.playlistCreateNew,
                           style: AppTheme.secondoryTextStyleMedium.copyWith(
                             color: Colors.white,
                             fontSize: 28,
@@ -90,7 +92,7 @@ void createPlaylistBottomSheet(BuildContext context) {
                           ),
                           cursorColor: AppTheme.successAccent,
                           decoration: InputDecoration(
-                            hintText: "Playlist Name",
+                            hintText: l10n.createPlaylistDialogNameHint,
                             hintStyle: AppTheme.secondoryTextStyleMedium.copyWith(
                               fontSize: 24,
                               color: Colors.white.withValues(alpha: 0.1),
@@ -122,7 +124,7 @@ void createPlaylistBottomSheet(BuildContext context) {
                                   ),
                                 ),
                                 child: Text(
-                                  "Cancel",
+                                  l10n.buttonCancel,
                                   style: AppTheme.secondoryTextStyleMedium.copyWith(
                                     color: Colors.white.withOpacity(0.6),
                                     fontSize: 16,
@@ -156,7 +158,7 @@ void createPlaylistBottomSheet(BuildContext context) {
                                       disabledBackgroundColor: AppTheme.successAccent.withOpacity(0.2),
                                     ),
                                     child: Text(
-                                      "Create",
+                                      l10n.createPlaylistDialogCreate,
                                       style: AppTheme.secondoryTextStyleMedium.copyWith(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w800,

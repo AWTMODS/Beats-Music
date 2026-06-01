@@ -12,6 +12,8 @@ import 'package:beats_music/plugins/utils/media_id.dart';
 import 'package:beats_music/plugins/errors/plugin_exceptions.dart';
 import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:beats_music/services/db/db_provider.dart';
+import 'package:beats_music/services/db/dao/playlist_dao.dart';
+import 'package:beats_music/services/db/dao/track_dao.dart';
 import 'package:beats_music/services/db/dao/settings_dao.dart';
 import 'package:beats_music/services/player/media_resolver_service.dart';
 import 'package:beats_music/services/player/player_engine.dart';
@@ -38,6 +40,9 @@ class BeatsMusicPlayer extends BaseAudioHandler
   late PlayerEngine engine;
 
   // Modular components
+  late final PlaylistDAO _playlistDao;
+  bool _isCurrentTrackLiked = false;
+  StreamSubscription? _playlistWatchSub;
   late PlayerErrorHandler _errorHandler;
   late QueueManager _queueManager;
   late RelatedSongsManager _relatedSongsManager;
@@ -130,6 +135,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
     _initSubscriptions();
     _initAudioSession();
     _restoreEngineSettings();
+    _restoreLastSession();
   }
 
   // ─── Initialization ────────────────────────────────────────────────────────
@@ -315,7 +321,28 @@ class BeatsMusicPlayer extends BaseAudioHandler
     }
   }
 
+  /// Restores the last queue from SettingsDAO so the user sees it on relaunch.
+  ///
+  /// Intentionally does NOT auto-play — the user must tap play to resume.
+  /// Guarded by [_isDisposed] so a rapid dispose() during cold start is safe.
+  Future<void> _restoreLastSession() async {
+    if (_isDisposed) return;
+    try {
+      final restored = await _queueManager.restoreQueueState();
+      if (_isDisposed) return; // re-check after await
+      if (restored) {
+        final track = _queueManager.currentTrack;
+        if (track != null) {
+          _updateCurrentTrack(track);
+        }
+      }
+    } catch (e) {
+      log('Session restore failed: $e', name: 'BeatsMusicPlayer');
+    }
+  }
+
   void _initModules() {
+    _playlistDao = PlaylistDAO(DBProvider.db, TrackDAO(DBProvider.db));
     _errorHandler = PlayerErrorHandler();
     _queueManager = QueueManager();
     _relatedSongsManager = RelatedSongsManager(ServiceLocator.pluginService);
@@ -365,6 +392,16 @@ class BeatsMusicPlayer extends BaseAudioHandler
       _broadcastPlaybackState(state, playing, engine.position, buffered, speed);
     });
 
+    _playlistDao.watchAllPlaylists().then((stream) {
+      if (!_isDisposed) {
+        _playlistWatchSub = stream.listen((_) {
+          if (_currentTrack.id != trackNull.id) {
+            _checkLikedStatus(_currentTrack);
+          }
+        });
+      }
+    });
+
     _positionSuccessSub = engine.positionStream.listen((pos) {
       // MATHEMATICAL HEALTH CHECK:
       // If the playback head organically surpasses 2 continuous seconds without error,
@@ -394,6 +431,12 @@ class BeatsMusicPlayer extends BaseAudioHandler
       queue.add(
         List<MediaItem>.from(tracks.map((t) => trackToMediaItem(t))),
       );
+      if (_queueManager.isRestoring) return;
+      EasyThrottle.throttle(
+        'persist_queue',
+        const Duration(seconds: 2),
+        () => unawaited(_queueManager.persistQueueState()),
+      );
     });
 
     _relatedSongTimer = Timer.periodic(const Duration(seconds: 10), (_) {
@@ -421,6 +464,19 @@ class BeatsMusicPlayer extends BaseAudioHandler
         MediaControl.skipToPrevious,
         playing ? MediaControl.pause : MediaControl.play,
         MediaControl.skipToNext,
+        _isCurrentTrackLiked
+            ? const MediaControl(
+                androidIcon: 'drawable/ic_favorite',
+                label: 'Unlike',
+                action: MediaAction.setRating,
+                customAction: CustomMediaAction(name: 'unlike'),
+              )
+            : const MediaControl(
+                androidIcon: 'drawable/ic_favorite_border',
+                label: 'Like',
+                action: MediaAction.setRating,
+                customAction: CustomMediaAction(name: 'like'),
+              ),
       ],
       processingState: processingState,
       systemActions: const {
@@ -428,8 +484,9 @@ class BeatsMusicPlayer extends BaseAudioHandler
         MediaAction.playPause,
         MediaAction.skipToNext,
         MediaAction.seek,
+        MediaAction.setRating,
       },
-      androidCompactActionIndices: const [0, 1, 2],
+      androidCompactActionIndices: const [0, 1, 2, 3],
       updatePosition: position,
       updateTime: DateTime.now(),
       playing: playing,
@@ -448,6 +505,36 @@ class BeatsMusicPlayer extends BaseAudioHandler
         );
       },
     );
+  }
+
+  @override
+  Future<dynamic> customAction(String name, [Map<String, dynamic>? extras]) async {
+    if (name == 'like') {
+      if (_currentTrack.id != trackNull.id) {
+        await _playlistDao.setTrackLiked(_currentTrack, true);
+        _isCurrentTrackLiked = true;
+        _broadcastPlaybackState(
+          engine.state,
+          engine.playing,
+          engine.position,
+          engine.buffered,
+          engine.speed,
+        );
+      }
+    } else if (name == 'unlike') {
+      if (_currentTrack.id != trackNull.id) {
+        await _playlistDao.setTrackLiked(_currentTrack, false);
+        _isCurrentTrackLiked = false;
+        _broadcastPlaybackState(
+          engine.state,
+          engine.playing,
+          engine.position,
+          engine.buffered,
+          engine.speed,
+        );
+      }
+    }
+    return super.customAction(name, extras);
   }
 
   // ─── Current Track ─────────────────────────────────────────────────────────
@@ -473,7 +560,11 @@ class BeatsMusicPlayer extends BaseAudioHandler
       SnackbarService.showMessage('Audio focus denied. Cannot start playback.');
       return;
     }
-    await engine.play();
+    if (engine.state == EngineState.idle && _currentTrack.id != trackNull.id) {
+      await _enqueuePlayTrack(_currentTrack, doPlay: true);
+    } else {
+      await engine.play();
+    }
   }
 
   @override
@@ -838,9 +929,28 @@ class BeatsMusicPlayer extends BaseAudioHandler
   void _updateCurrentTrack(Track track) {
     _statsService.trackSongEnd();
     _currentTrack = track;
+    _checkLikedStatus(track);
     mediaItem.add(trackToMediaItem(_currentTrack));
     _syncCurrentMediaItemDuration(engine.state, engine.position);
     _statsService.trackSongStart(trackToMediaItem(track));
+  }
+
+  Future<void> _checkLikedStatus(Track track) async {
+    if (track.id == trackNull.id) {
+      _isCurrentTrackLiked = false;
+      return;
+    }
+    final liked = await _playlistDao.isTrackLiked(track.id);
+    if (_currentTrack.id == track.id) {
+      _isCurrentTrackLiked = liked;
+      _broadcastPlaybackState(
+        engine.state,
+        engine.playing,
+        engine.position,
+        engine.buffered,
+        engine.speed,
+      );
+    }
   }
 
   void _syncCurrentMediaItemDuration(EngineState state, Duration position) {
@@ -1106,6 +1216,13 @@ class BeatsMusicPlayer extends BaseAudioHandler
       fromPlaylist.add(true);
       _relatedSongsManager.clearRelatedSongs();
 
+      // Capture the intended track before sanitizing so we can remap the
+      // index afterwards. Blank/invalid tracks filtered out would otherwise
+      // shift every subsequent index, causing the wrong song to start.
+      final trackToPlay = (idx >= 0 && idx < playlist.tracks.length)
+          ? playlist.tracks[idx]
+          : null;
+
       final sanitizedTracks = playlist.tracks
           .where((track) =>
               track.id.trim().isNotEmpty && track.title.trim().isNotEmpty)
@@ -1121,10 +1238,17 @@ class BeatsMusicPlayer extends BaseAudioHandler
 
       _clearPreloadedMarker();
 
+      // Remap to the sanitized list so we always start the correct track.
+      int newIdx = 0;
+      if (trackToPlay != null) {
+        final pos = sanitizedTracks.indexWhere((t) => t.id == trackToPlay.id);
+        newIdx = pos != -1 ? pos : 0;
+      }
+
       _queueManager.loadTracks(
         sanitizedTracks,
         playlistName: playlist.title,
-        idx: idx,
+        idx: newIdx,
         shuffling: shuffling,
       );
       queueTitle.add(playlist.title);
@@ -1230,12 +1354,16 @@ class BeatsMusicPlayer extends BaseAudioHandler
 
   @override
   Future<void> onTaskRemoved() async {
-    await stop();
-    try {
-      await engine.dispose();
-    } catch (_) {}
-
-    await _cleanup();
+    // Always persist queue before the OS kills us — this is our last chance.
+    await _queueManager.persistQueueState();
+    // Keep playing in background — only stop if nothing is active.
+    if (!engine.playing) {
+      await stop();
+      try {
+        await engine.dispose();
+      } catch (_) {}
+      await _cleanup();
+    }
     return super.onTaskRemoved();
   }
 
@@ -1256,6 +1384,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
     _currentResolveOp?.cancel();
 
     _relatedSongTimer?.cancel();
+    await _playlistWatchSub?.cancel();
     await _engineStateSub?.cancel();
     await _completionSub?.cancel();
     await _errorSub?.cancel();

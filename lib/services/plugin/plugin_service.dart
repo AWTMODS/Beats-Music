@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'package:beats_music/plugins/errors/plugin_exceptions.dart';
-import 'package:beats_music/services/db/dao/settings_dao.dart';
-import 'package:beats_music/services/db/db_provider.dart';
 import 'package:beats_music/src/rust/api/bridge.dart' as bridge;
 import 'package:beats_music/src/rust/api/plugin/commands.dart';
 import 'package:beats_music/src/rust/api/plugin/manifest.dart';
@@ -15,8 +13,6 @@ import 'package:beats_music/src/rust/api/plugin/plugin_info.dart';
 import 'package:beats_music/src/rust/api/plugin/types.dart';
 import 'package:beats_music/services/plugin/plugin_event_bus.dart';
 import 'package:beats_music/src/rust/api/plugin/events.dart';
-import 'package:beats_music/utils/country_info.dart';
-import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
@@ -350,23 +346,10 @@ class PluginService {
   }) async {
     try {
       final packedManifest = await inspectPlugin(packedFilePath: packedFilePath);
-      var countryCode =
-          CountryInfoService.normalizeCountryCode(policyCountryCode);
-      if (countryCode.isEmpty) {
-        countryCode = await CountryInfoService.resolveCountryCodeForPolicyCheck(
-          settingsDao: SettingsDAO(DBProvider.db),
-        );
-      }
 
-      if (packedManifest.countryAllowlist.isNotEmpty &&
-          (countryCode.isEmpty ||
-              !packedManifest.countryAllowlist.contains(countryCode))) {
-        throw PluginCountryRestrictedException(
-          pluginId: packedManifest.id,
-          countryCode: countryCode,
-          allowlist: packedManifest.countryAllowlist,
-        );
-      }
+      // Bypass/disable installation country checks for plugins (e.g. JioSaavn restriction to IN).
+      // Rust skips country checks entirely if policyCountryCode is empty.
+      const countryCode = '';
 
       if (_isDeactivated) {
         log('PluginService (Degraded): Simulating installation for ${packedManifest.id}',
@@ -400,15 +383,6 @@ class PluginService {
         policyCountryCode: countryCode,
         manager: manager,
       );
-
-      if (result.status == PluginInstallStatus.failed &&
-          (result.error?.contains('country') ?? false)) {
-        throw PluginCountryRestrictedException(
-          pluginId: result.pluginId,
-          countryCode: countryCode,
-          allowlist: packedManifest.countryAllowlist,
-        );
-      }
 
       log('Installed plugin: ${result.pluginId} (status: ${result.status})',
           name: 'PluginService');
@@ -556,20 +530,63 @@ class PluginService {
   PluginException _mapError(String pluginId, Object error) {
     final message = error.toString();
 
-    // Rust bridge encodes errors as "PLUGIN_ERROR::{variant}::{message}"
-    if (message.contains('PLUGIN_ERROR::PluginNotLoaded')) {
-      return PluginNotLoadedException(pluginId: pluginId);
-    }
-    if (message.contains('PLUGIN_ERROR::PluginNotFound')) {
-      return PluginNotFoundException(pluginId: pluginId);
+    final parsed = _parseBridgePluginError(message);
+    if (parsed != null) {
+      final variant = parsed.variant;
+      final detail = parsed.message;
+
+      if (variant == 'PluginNotLoaded') {
+        return PluginNotLoadedException(pluginId: pluginId, message: detail);
+      }
+      if (variant == 'PluginNotFound') {
+        return PluginNotFoundException(pluginId: pluginId, message: detail);
+      }
+
+      return PluginExecutionException(
+        pluginId: pluginId,
+        message: detail,
+        errorCode: 'PLUGIN_ERROR::$variant',
+        cause: error,
+      );
     }
 
     return PluginExecutionException(
       pluginId: pluginId,
-      message: 'Command execution failed',
+      message: 'Command execution failed: $message',
       errorCode: message,
       cause: error,
     );
   }
+
+  _ParsedBridgePluginError? _parseBridgePluginError(String raw) {
+    const prefix = 'PLUGIN_ERROR::';
+    if (!raw.startsWith(prefix)) return null;
+
+    final withoutPrefix = raw.substring(prefix.length);
+    final separatorIndex = withoutPrefix.indexOf('::');
+    if (separatorIndex <= 0) return null;
+
+    final variantRaw = withoutPrefix.substring(0, separatorIndex).trim();
+    final detail = withoutPrefix.substring(separatorIndex + 2).trim();
+    if (variantRaw.isEmpty || detail.isEmpty) return null;
+
+    final canonicalVariant = variantRaw.split('(').first.trim();
+    if (canonicalVariant.isEmpty) return null;
+
+    return _ParsedBridgePluginError(
+      variant: canonicalVariant,
+      message: detail,
+    );
+  }
+}
+
+class _ParsedBridgePluginError {
+  final String variant;
+  final String message;
+
+  _ParsedBridgePluginError({
+    required this.variant,
+    required this.message,
+  });
 }
 

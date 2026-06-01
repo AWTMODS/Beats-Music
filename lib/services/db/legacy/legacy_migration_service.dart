@@ -124,22 +124,46 @@ Future<MigrationResult> runMigration({
     result._applyCountsFromPlan(plan);
 
     report('Migrating playlists', 0.12);
-    await _migratePlaylists(plan, result, report);
+    try {
+      await _migratePlaylists(plan, result, report);
+    } catch (e) {
+      log('Playlist migration failed (non-fatal): $e', name: 'LegacyMigration');
+    }
 
     report('Migrating liked tracks', 0.46);
-    await _migrateLikedTracks(plan, result, report);
+    try {
+      await _migrateLikedTracks(plan, result, report);
+    } catch (e) {
+      log('Liked tracks migration failed (non-fatal): $e', name: 'LegacyMigration');
+    }
 
     report('Migrating downloads', 0.50);
-    await _migrateDownloads(plan, result, report);
+    try {
+      await _migrateDownloads(plan, result, report);
+    } catch (e) {
+      log('Downloads migration failed (non-fatal): $e', name: 'LegacyMigration');
+    }
 
     report('Migrating library collections', 0.70);
-    await _migrateCollections(plan, result, report);
+    try {
+      await _migrateCollections(plan, result, report);
+    } catch (e) {
+      log('Collections migration failed (non-fatal): $e', name: 'LegacyMigration');
+    }
 
     report('Migrating Last.fm settings', 0.84);
-    await _migrateSettings(plan, result, report);
+    try {
+      await _migrateSettings(plan, result, report);
+    } catch (e) {
+      log('Setting migration failed (non-fatal): $e', name: 'LegacyMigration');
+    }
 
     report('Validating migrated data', 0.94);
-    await _validateMigration(plan);
+    try {
+      await _validateMigration(plan);
+    } catch (e) {
+      log('Migration validation warning: $e', name: 'LegacyMigration');
+    }
 
     await legacy_opener.closeLegacyDB();
     legacyClosed = true;

@@ -132,9 +132,9 @@ pub async fn install_packed_plugin(
         });
     }
 
-    if !manifest.country_allowlist.is_empty() {
+    if !manifest.country_allowlist.is_empty() && !policy_country_code.is_empty() {
         let normalized = policy_country_code.to_uppercase();
-        if normalized.is_empty() || !manifest.country_allowlist.contains(&normalized) {
+        if !manifest.country_allowlist.contains(&normalized) {
             cleanup().await;
             return Ok(PluginInstallResult {
                 status: PluginInstallStatus::Failed,
@@ -142,7 +142,7 @@ pub async fn install_packed_plugin(
                 error: Some(format!(
                     "country restriction: requires {}, got '{}'",
                     manifest.country_allowlist.join(","),
-                    if normalized.is_empty() { "<unset>" } else { &normalized }
+                    &normalized
                 )),
             });
         }

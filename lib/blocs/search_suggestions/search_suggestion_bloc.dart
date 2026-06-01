@@ -11,8 +11,10 @@ import 'package:rxdart/rxdart.dart';
 part 'search_suggestion_event.dart';
 part 'search_suggestion_state.dart';
 
-EventTransformer<E> _debounce<E>(Duration duration) {
-  return (events, mapper) => events.debounceTime(duration).asyncExpand(mapper);
+/// Restartable debounce: cancels any in-flight request when a new event arrives.
+/// This prevents stale responses from older queries clobbering newer ones.
+EventTransformer<E> _debounceRestartable<E>(Duration duration) {
+  return (events, mapper) => events.debounceTime(duration).switchMap(mapper);
 }
 
 class SearchSuggestionBloc
@@ -20,6 +22,11 @@ class SearchSuggestionBloc
   final SearchHistoryDAO _searchHistoryDao;
   final PluginService _pluginService;
   final SettingsDAO _settingsDao;
+  bool _isDisposed = false;
+
+  /// Monotonically increasing counter used to discard responses from
+  /// superseded fetch operations (guards against race conditions).
+  int _fetchVersion = 0;
 
   SearchSuggestionBloc({
     required SearchHistoryDAO searchHistoryDao,
@@ -31,15 +38,35 @@ class SearchSuggestionBloc
         super(const SearchSuggestionLoading()) {
     on<SearchSuggestionFetch>(
       (event, emit) async {
-        final pastSearches = await getPastSearches(event.query, limit: 2);
-        final (queries, entities) = await _getPluginSuggestions(event.query);
+        if (_isDisposed) return;
+        final version = ++_fetchVersion;
+        final query = event.query.trim();
+
+        // 1. Immediately show history results while the plugin loads.
+        final pastSearches = await getPastSearches(
+          query,
+          limit: _historyLimitForQuery(query),
+        );
+        if (_isDisposed || emit.isDone || version != _fetchVersion) return;
+
         emit(SearchSuggestionLoaded(
-          queries,
+          const [],
+          pastSearches,
+          isPluginLoading: true,
+        ));
+
+        // 2. Fetch plugin suggestions asynchronously.
+        final (queries, entities) = await _getPluginSuggestions(query);
+        if (_isDisposed || emit.isDone || version != _fetchVersion) return;
+
+        emit(SearchSuggestionLoaded(
+          _dedupePluginQueries(queries, pastSearches),
           pastSearches,
           entitySuggestionList: entities,
+          isPluginLoading: false,
         ));
       },
-      transformer: _debounce(const Duration(milliseconds: 350)),
+      transformer: _debounceRestartable(const Duration(milliseconds: 250)),
     );
 
     on<SearchSuggestionSave>((event, emit) async {
@@ -65,12 +92,19 @@ class SearchSuggestionBloc
             state.suggestionList,
             List<Map<String, String>>.from(res),
             entitySuggestionList: state.entitySuggestionList,
+            isPluginLoading: state.isPluginLoading,
           ));
         }
       } catch (e) {
         log("Error Clearing Search History: $e", name: "SearchSuggestionBloc");
       }
     });
+  }
+
+  @override
+  Future<void> close() {
+    _isDisposed = true;
+    return super.close();
   }
 
   /// Returns a tuple of (query strings, entity suggestions) from the plugin.
@@ -125,6 +159,34 @@ class SearchSuggestionBloc
     return (<String>[], <plugin_models.EntitySuggestion>[]);
   }
 
+  /// How many history rows to show; more when the field is empty.
+  int _historyLimitForQuery(String query) => query.isEmpty ? 8 : 5;
+
+  /// Removes plugin query strings that are already present in history,
+  /// preventing the same text appearing twice in the suggestions panel.
+  List<String> _dedupePluginQueries(
+    List<String> pluginQueries,
+    List<Map<String, String>> historyRows,
+  ) {
+    final seen = <String>{};
+    for (final row in historyRows) {
+      if (row.values.isNotEmpty) {
+        seen.add(_suggestionKey(row.values.first));
+      }
+    }
+    final result = <String>[];
+    for (final query in pluginQueries) {
+      final normalized = query.trim().replaceAll(RegExp(r'\s+'), ' ');
+      if (normalized.isEmpty) continue;
+      if (seen.add(_suggestionKey(normalized))) {
+        result.add(normalized);
+      }
+    }
+    return result;
+  }
+
+  String _suggestionKey(String value) => value.trim().toLowerCase();
+
   Future<List<Map<String, String>>> getPastSearches(String query,
       {int limit = 10}) async {
     List<Map<String, String>> searchSuggestions;
@@ -145,5 +207,3 @@ class SearchSuggestionBloc
     return searchSuggestions;
   }
 }
-
-

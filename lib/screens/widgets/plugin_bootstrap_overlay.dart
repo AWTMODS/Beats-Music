@@ -14,6 +14,7 @@ import 'package:beats_music/services/plugin_bootstrap_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 
 enum _Phase { running, success, failed, noInternet }
 
@@ -104,7 +105,7 @@ class _PluginBootstrapOverlayState extends State<PluginBootstrapOverlay>
         settingsDao,
       );
       _phase.value = _Phase.success;
-      await Future<void>.delayed(const Duration(milliseconds: 600));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
       if (mounted) widget.onComplete();
     } else if (result.failureReason ==
         PluginBootstrapFailureReason.noInternet) {
@@ -199,33 +200,33 @@ class _SpinnerBody extends StatelessWidget {
               opacity: isDone ? 1.0 : pulse.value,
               child: child,
             ),
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Default_Theme.accentColor2.withValues(alpha: 0.12),
-                border: Border.all(
-                  color: Default_Theme.accentColor2.withValues(alpha: 0.4),
-                  width: 1.5,
-                ),
-              ),
-              child: Center(
-                child: isDone
-                    ? const Icon(
-                        Icons.check_rounded,
-                        color: Default_Theme.accentColor2,
-                        size: 36,
-                      )
-                    : const SizedBox(
-                        width: 36,
-                        height: 36,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Default_Theme.accentColor2,
+            child: SizedBox(
+              width: 120,
+              height: 120,
+              child: isDone
+                  ? Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Default_Theme.accentColor2.withValues(alpha: 0.12),
+                        border: Border.all(
+                          color: Default_Theme.accentColor2.withValues(alpha: 0.4),
+                          width: 1.5,
                         ),
                       ),
-              ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.check_rounded,
+                          color: Default_Theme.accentColor2,
+                          size: 36,
+                        ),
+                      ),
+                    )
+                  : Lottie.asset(
+                      'assets/icons/equalizer.json',
+                      fit: BoxFit.contain,
+                    ),
             ),
           ),
           const SizedBox(height: 32),

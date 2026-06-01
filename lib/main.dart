@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io' as io;
 import 'package:beats_music/services/auth_service.dart';
+import 'package:beats_music/services/shared_url_resolver_service.dart';
 import 'package:beats_music/blocs/downloader/cubit/downloader_cubit.dart';
 import 'package:beats_music/blocs/global_events/global_events_cubit.dart';
 import 'package:beats_music/blocs/internet_connectivity/cubit/connectivity_cubit.dart';
@@ -58,6 +59,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 import 'package:beats_music/blocs/recommendation/cubit/recommendation_cubit.dart';
 import 'package:beats_music/services/listening_statistics_service.dart';
 import 'package:beats_music/services/beats_player.dart';
+import 'package:beats_music/services/audio_service_initializer.dart';
 import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:beats_music/services/discord_service.dart';
@@ -76,17 +78,62 @@ import 'package:beats_music/services/notification_manager.dart';
 import 'package:app_links/app_links.dart';
 import 'dart:ui';
 
+/// Module-level reference set once in [main] after [AudioService.init] so
+/// top-level handlers (e.g. [_handleYoutubeVideoIntent]) can reach the player
+/// without going through a BuildContext.
+BeatsMusicPlayer? _activePlayer;
+
 void processIncomingIntent(SharedMedia sharedMedia) {
   if (sharedMedia.content != null && isUrl(sharedMedia.content!)) {
-    SnackbarService.showMessage(
-        'Open the Import screen in Library to import from this URL.');
-  } else if (sharedMedia.attachments != null &&
+    final content = sharedMedia.content!;
+    // Detect YouTube video links and play them directly via a loaded plugin.
+    if (extractVideoId(content) != null) {
+      _handleYoutubeVideoIntent(content);
+    } else {
+      SnackbarService.showMessage(
+          'Open the Import screen in Library to import from this URL.');
+    }
+  } else if (
+      sharedMedia.attachments != null &&
       sharedMedia.attachments!.isNotEmpty) {
     final attachment = sharedMedia.attachments!.first;
     if (attachment != null) {
       SnackbarService.showMessage('Processing File...');
       importItems(attachment.path);
     }
+  }
+}
+
+Future<void> _handleYoutubeVideoIntent(String url) async {
+  SnackbarService.showMessage('Getting YouTube Audio...');
+
+  final result = await SharedUrlResolverService.resolveYoutubeVideo(url);
+
+  if (result.status == SharedUrlResolveStatus.invalidUrl) {
+    SnackbarService.showMessage('Invalid YouTube URL');
+    return;
+  }
+
+  if (result.status == SharedUrlResolveStatus.noResolver) {
+    SnackbarService.showMessage(
+        'No loaded content resolver can handle this URL.');
+    return;
+  }
+
+  final track = result.track;
+  if (result.status == SharedUrlResolveStatus.success && track != null) {
+    final player = _activePlayer;
+    if (player == null) {
+      SnackbarService.showMessage('Player not ready. Please try again.');
+      return;
+    }
+    await player.updateQueueTracks([track], doPlay: true);
+    SnackbarService.showMessage('Playing: ${track.title}');
+    return;
+  }
+
+  if (result.status == SharedUrlResolveStatus.failed) {
+    SnackbarService.showMessage('Failed to get YouTube audio.');
   }
 }
 
@@ -150,7 +197,7 @@ Future<void> main() async {
     };
     
     // Small delay to allow Firebase Auth to restore the user session
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 100));
   } catch (e) {
     debugPrint("Firebase init failed: $e");
   }
@@ -185,18 +232,10 @@ Future<void> main() async {
 
   DiscordService.initialize();
 
-  final player = await AudioService.init(
-    builder: () => BeatsMusicPlayer(),
-    config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.beats.app.notification',
-      androidNotificationChannelName: 'Beats',
-      androidNotificationIcon: 'mipmap/ic_launcher',
-      androidResumeOnClick: true,
-      androidShowNotificationBadge: true,
-      androidStopForegroundOnPause: false,
-      notificationColor: Default_Theme.accentColor2,
-    ),
-  );
+  await setupAudioSession();
+  final player = await PlayerInitializer().getBeatsMusicPlayer();
+
+  _activePlayer = player;
 
   await NotificationManager().init();
 

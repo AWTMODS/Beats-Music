@@ -797,6 +797,7 @@ class _SuggestionsSliver extends StatelessWidget {
               state.dbSuggestionList.map((e) => e.values.first).toList();
           final apiList = state.suggestionList;
           final entityList = state.entitySuggestionList;
+          final isPluginLoading = state.isPluginLoading;
 
           final combined = <({String query, ContentSearchFilter filter})>[
             ...dbList.map(
@@ -811,6 +812,24 @@ class _SuggestionsSliver extends StatelessWidget {
 
           WidgetsBinding.instance
               .addPostFrameCallback((_) => onSuggestionsGenerated(combined));
+
+          // Show a centred spinner while the plugin hasn't returned yet and
+          // there's nothing else to display.
+          if (combined.isEmpty && isPluginLoading) {
+            return const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Default_Theme.accentColor2,
+                  ),
+                ),
+              ),
+            );
+          }
 
           if (combined.isEmpty && textEditingController.text.isEmpty) {
             return SliverFillRemaining(
@@ -829,6 +848,23 @@ class _SuggestionsSliver extends StatelessWidget {
 
           final children = <Widget>[
             const SizedBox(height: 12),
+            // Thin progress bar shown at the top when plugin is still loading
+            // but history results are already displayed.
+            if (isPluginLoading) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(99),
+                  child: LinearProgressIndicator(
+                    minHeight: 2,
+                    color: Default_Theme.accentColor2.withValues(alpha: 0.7),
+                    backgroundColor:
+                        Default_Theme.primaryColor1.withValues(alpha: 0.06),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             if (dbList.isNotEmpty) ...[
               _buildSuggestionSectionHeader('Recent', MingCute.history_line),
               ...dbList.asMap().entries.map((e) => _SuggestionTile(
