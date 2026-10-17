@@ -8,11 +8,28 @@ import 'package:flutter/material.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
-  factory AuthService() => _instance;
-  AuthService._internal();
+  factory AuthService({FirebaseAuth? auth, GoogleSignIn? googleSignIn}) {
+    if (auth != null || googleSignIn != null) {
+      return AuthService._custom(
+        auth: auth ?? FirebaseAuth.instance,
+        googleSignIn: googleSignIn ?? GoogleSignIn(),
+      );
+    }
+    return _instance;
+  }
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  AuthService._internal()
+      : _auth = FirebaseAuth.instance,
+        _googleSignIn = GoogleSignIn();
+
+  AuthService._custom({
+    required FirebaseAuth auth,
+    required GoogleSignIn googleSignIn,
+  })  : _auth = auth,
+        _googleSignIn = googleSignIn;
+
+  final FirebaseAuth _auth;
+  final GoogleSignIn _googleSignIn;
 
   // Stream to listen to auth state changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
