@@ -173,21 +173,19 @@ class _ImportMediaFromPlatformsViewState
           ),
           FilledButton(
             onPressed: () {
+              final l10n = AppLocalizations.of(context)!;
               Navigator.of(context).pop();
               FilePicker.platform.pickFiles().then((value) {
                 if (value != null && value.files[0].path != null) {
                   final path = value.files[0].path!;
                   if (path.endsWith('.blm') || path.endsWith('.json')) {
-                    SnackbarService.showMessage(
-                        AppLocalizations.of(context)!.snackbarImportingMedia);
+                    SnackbarService.showMessage(l10n.snackbarImportingMedia);
                     ImportExportService.importJSON(path).then((_) {
-                      SnackbarService.showMessage(AppLocalizations.of(context)!
-                          .snackbarImportCompleted);
+                      SnackbarService.showMessage(l10n.snackbarImportCompleted);
                     });
                   } else {
                     log('Invalid File Format', name: 'Import File');
-                    SnackbarService.showMessage(AppLocalizations.of(context)!
-                        .snackbarInvalidFileFormat);
+                    SnackbarService.showMessage(l10n.snackbarInvalidFileFormat);
                   }
                 }
               });
