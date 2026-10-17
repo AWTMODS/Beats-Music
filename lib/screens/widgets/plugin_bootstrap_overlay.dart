@@ -133,13 +133,15 @@ class _PluginBootstrapOverlayState extends State<PluginBootstrapOverlay>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-      child: FadeTransition(
-        opacity: _fadeIn,
-        child: Container(
-          color: _bgBase,
-          child: Center(
+    return Material(
+      color: Colors.transparent,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+        child: FadeTransition(
+          opacity: _fadeIn,
+          child: Container(
+            color: _bgBase,
+            child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: _maxContentWidth),
               child: ValueListenableBuilder<_Phase>(
@@ -170,6 +172,7 @@ class _PluginBootstrapOverlayState extends State<PluginBootstrapOverlay>
           ),
         ),
       ),
+    ),
     );
   }
 }
