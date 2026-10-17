@@ -75,40 +75,43 @@ class LibraryItemsCubit extends Cubit<LibraryItemsState> {
   /// Convert DB rows to view-model items using only domain types.
   Future<List<PlaylistItemProperties>> _toItemProperties(
       List<PlaylistDB> dbs) async {
-    final items = <PlaylistItemProperties>[];
-
-    for (final p in dbs) {
-      // Map using the playlist mapper to get a domain Playlist.
+    return Future.wait(dbs.map((p) async {
       final domainPlaylist = playlistDBToPlaylist(p);
+
+      List<TrackDB>? userTracks;
+      if (domainPlaylist.type == PlaylistType.userPlaylist) {
+        userTracks = await _playlistDao.getPlaylistTracks(p.id);
+      }
 
       String? subtitle;
       if (domainPlaylist.subtitle != null &&
           domainPlaylist.subtitle!.trim().isNotEmpty) {
         subtitle = domainPlaylist.subtitle!.trim();
       } else if (domainPlaylist.type == PlaylistType.userPlaylist) {
-        final trackCount = (await _playlistDao.getPlaylistTracks(p.id)).length;
+        final trackCount = userTracks?.length ?? 0;
         subtitle = '$trackCount ${trackCount == 1 ? 'track' : 'tracks'}';
       }
 
-      items.add(
-        PlaylistItemProperties(
-          playlistName: domainPlaylist.title,
-          storageKey: p.name,
-          subTitle: subtitle,
-          imageUrls: await _resolveCoverUrls(p),
-          type: domainPlaylist.type,
-          isPinned: p.isPinned,
-          sortOrder: p.sortOrder,
-          playlistId: p.id,
-        ),
-      );
-    }
+      final coverUrls = await _resolveCoverUrls(p, preloadedTracks: userTracks);
 
-    return items;
+      return PlaylistItemProperties(
+        playlistName: domainPlaylist.title,
+        storageKey: p.name,
+        subTitle: subtitle,
+        imageUrls: coverUrls,
+        type: domainPlaylist.type,
+        isPinned: p.isPinned,
+        sortOrder: p.sortOrder,
+        playlistId: p.id,
+      );
+    }));
   }
 
   /// Resolve cover image URLs: direct thumbnail for remote, up to 4 tracks for user.
-  Future<List<String>> _resolveCoverUrls(PlaylistDB playlist) async {
+  Future<List<String>> _resolveCoverUrls(
+    PlaylistDB playlist, {
+    List<TrackDB>? preloadedTracks,
+  }) async {
     // Try direct thumbnail first (works for all types).
     final thumb = playlist.thumbnail;
     if (thumb != null && thumb.url.isNotEmpty) {
@@ -127,7 +130,7 @@ class LibraryItemsCubit extends Cubit<LibraryItemsState> {
 
     // For user playlists, use up to first 4 track's artwork.
     if (playlist.type == PlaylistTypeDB.userPlaylist) {
-      final tracks = await _playlistDao.getPlaylistTracks(playlist.id);
+      final tracks = preloadedTracks ?? await _playlistDao.getPlaylistTracks(playlist.id);
       if (tracks.isNotEmpty) {
         return tracks
             .take(4)
