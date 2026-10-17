@@ -37,6 +37,7 @@ class ApkUpdateService {
   static Future<ApkUpdateResult> downloadAndInstall(
     String url, {
     void Function(double progress)? onProgress,
+    void Function(int received, int total)? onBytesProgress,
     CancelToken? cancelToken,
   }) async {
     try {
@@ -47,80 +48,49 @@ class ApkUpdateService {
           : await getTemporaryDirectory();
 
       final savePath = '${cacheDir.path}/beats_update.apk';
+      final tempPath = '$savePath.part';
 
-      // Delete stale download if present
+      // Delete stale downloads if present
       final file = File(savePath);
       if (await file.exists()) await file.delete();
+      final tempFile = File(tempPath);
+      if (await tempFile.exists()) await tempFile.delete();
 
-      log('ApkUpdateService: Downloading $url → $savePath', name: 'ApkUpdate');
+      log('ApkUpdateService: Downloading $url → $tempPath', name: 'ApkUpdate');
 
-      log('ApkUpdateService: Fetching content length for parallel download...', name: 'ApkUpdate');
-      
-      // ── 2. Get Content Length ───
-      final headResponse = await _dio.head(url, options: Options(headers: {
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/112.0.0.0 Mobile Safari/537.36',
-      }));
-      final totalLengthStr = headResponse.headers.value('content-length');
-      final totalLength = int.tryParse(totalLengthStr ?? '') ?? 0;
-      final acceptRanges = headResponse.headers.value('accept-ranges') == 'bytes';
+      try {
+        await _dio.download(
+          url,
+          tempPath,
+          cancelToken: cancelToken,
+          options: Options(
+            headers: {
+              'User-Agent':
+                  'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/112.0.0.0 Mobile Safari/537.36',
+            },
+            followRedirects: true,
+            maxRedirects: 5,
+          ),
+          onReceiveProgress: (received, total) {
+            if (total > 0) onProgress?.call(received / total);
+            onBytesProgress?.call(received, total);
+          },
+        );
 
-      if (totalLength <= 0 || !acceptRanges) {
-        log('ApkUpdateService: Range download not supported or length unknown. Falling back to single stream.', name: 'ApkUpdate');
-        await _dio.download(url, savePath, cancelToken: cancelToken, onReceiveProgress: (received, total) {
-          if (total > 0) onProgress?.call(received / total);
-        });
-      } else {
-        // ── 3. Parallel Chunked Download ───
-        const int concurrentThreads = 3;
-        final chunkSize = (totalLength / concurrentThreads).ceil();
-        final List<Future<void>> downloadFutures = [];
-        final Map<int, int> progressMap = {};
-        
-        await file.create(recursive: true);
-        final raf = await file.open(mode: FileMode.write);
-        await raf.truncate(totalLength);
-        await raf.close();
-
-        for (int i = 0; i < concurrentThreads; i++) {
-          final start = i * chunkSize;
-          final end = (i == concurrentThreads - 1) ? totalLength - 1 : (i + 1) * chunkSize - 1;
-          
-          downloadFutures.add(() async {
-            final threadDio = Dio(); // Separate instance for each thread
-            final response = await threadDio.get<ResponseBody>(
-              url,
-              options: Options(
-                responseType: ResponseType.stream,
-                headers: {
-                  'Range': 'bytes=$start-$end',
-                  'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/112.0.0.0 Mobile Safari/537.36',
-                },
-              ),
-              cancelToken: cancelToken,
-            );
-
-            final threadRaf = await file.open(mode: FileMode.append);
-            // Move pointer to the start of this chunk's range
-            // NOTE: Dart's RandomAccessFile.setPosition combined with append Mode 
-            // is tricky. We'll use write Only mode with setPosition.
-            final writeRaf = await file.open(mode: FileMode.write);
-            await writeRaf.setPosition(start);
-            
-            int received = 0;
-            await for (final chunk in response.data!.stream) {
-              await writeRaf.writeFrom(chunk);
-              received += chunk.length;
-              progressMap[i] = received;
-              
-              // Calculate aggregate progress
-              final totalReceived = progressMap.values.fold(0, (sum, v) => sum + v);
-              onProgress?.call(totalReceived / totalLength);
-            }
-            await writeRaf.close();
-          }());
+        // Atomically rename .part file to final .apk upon verified completion
+        if (await tempFile.exists()) {
+          await tempFile.rename(savePath);
+        } else {
+          throw const FileSystemException('Downloaded temporary file not found');
         }
-
-        await Future.wait(downloadFutures);
+      } catch (e) {
+        // Clean up partial file on failure or cancellation
+        if (await tempFile.exists()) {
+          try {
+            await tempFile.delete();
+          } catch (_) {}
+        }
+        rethrow;
       }
 
       log('ApkUpdateService: Download complete, opening installer…',
