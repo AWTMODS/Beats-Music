@@ -1,4 +1,6 @@
+import 'dart:developer' as developer;
 import 'dart:ui';
+import 'package:beats_music/blocs/jam_session/jam_session_cubit.dart';
 
 import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
 import 'package:beats_music/plugins/blocs/import/content_import_cubit.dart';
@@ -472,28 +474,111 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
   }
 
   Widget _buildOfflineShortcutTile(BuildContext context) {
-    return BlocBuilder<DownloaderCubit, DownloaderState>(
-      builder: (context, state) {
-        final downloadedCount = state.downloaded.length;
-        final thumbnails = state.downloaded.take(4)
-            .map((t) => t.thumbnail.url ?? '')
-            .where((url) => url.isNotEmpty)
-            .toList();
-        final subtitle =
-            '$downloadedCount ${downloadedCount == 1 ? 'track' : 'tracks'}';
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        BlocBuilder<DownloaderCubit, DownloaderState>(
+          builder: (context, state) {
+            final downloadedCount = state.downloaded.length;
+            final thumbnails = state.downloaded.take(4)
+                .map((t) => t.thumbnail.url)
+                .where((url) => url.isNotEmpty)
+                .toList();
+            final subtitle =
+                '$downloadedCount ${downloadedCount == 1 ? 'track' : 'tracks'}';
 
-        return Padding(
-          padding: const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+            return Padding(
+              padding: const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+              child: AnimatedListItem(
+                index: 0,
+                child: InkWell(
+                  splashColor: Default_Theme.primaryColor2.withValues(alpha: 0.1),
+                  hoverColor: Colors.white.withValues(alpha: 0.05),
+                  highlightColor: Default_Theme.primaryColor2.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () {
+                    context.pushNamed(RoutePaths.offlineScreen);
+                  },
+                  child: SizedBox(
+                    height: 80,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: SizedBox.square(
+                            dimension: 70,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: ThumbnailGrid(
+                              imageUrls: thumbnails,
+                              size: 70,
+                              fallbackIcon: MingCute.folder_download_fill,
+                            ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Downloaded Songs",
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: Default_Theme.secondoryTextStyle.merge(
+                                  const TextStyle(
+                                    fontSize: 16.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Default_Theme.primaryColor1,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                subtitle,
+                                maxLines: 1,
+                                style: Default_Theme.secondoryTextStyle.merge(
+                                  const TextStyle(
+                                    fontSize: 14,
+                                    overflow: TextOverflow.fade,
+                                    fontWeight: FontWeight.w500,
+                                    color: Default_Theme.primaryColor1,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 14),
+                          child: Icon(MingCute.right_line,
+                              size: 20,
+                              color: Default_Theme.primaryColor1
+                                  .withValues(alpha: 0.3)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        // ── Shared Playlists shortcut ─────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.only(left: 8, right: 8, top: 0, bottom: 4),
           child: AnimatedListItem(
-            index: 0,
+            index: 1,
             child: InkWell(
-              splashColor: Default_Theme.primaryColor2.withValues(alpha: 0.1),
-              hoverColor: Colors.white.withValues(alpha: 0.05),
-              highlightColor: Default_Theme.primaryColor2.withValues(alpha: 0.1),
+              splashColor: AppTheme.successAccent.withValues(alpha: 0.08),
+              hoverColor: Colors.white.withValues(alpha: 0.03),
+              highlightColor: AppTheme.successAccent.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
-              onTap: () {
-                context.pushNamed(RoutePaths.offlineScreen);
-              },
+              onTap: () => context.pushNamed(RoutePaths.collabPlaylistList),
               child: SizedBox(
                 height: 80,
                 child: Row(
@@ -503,15 +588,17 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: SizedBox.square(
-                        dimension: 70,
-                        child: ClipRRect(
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: AppTheme.successAccent.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
-                          child: ThumbnailGrid(
-                          imageUrls: thumbnails,
-                          size: 70,
-                          fallbackIcon: MingCute.folder_download_fill,
                         ),
+                        child: const Icon(
+                          MingCute.group_line,
+                          color: AppTheme.successAccent,
+                          size: 28,
                         ),
                       ),
                     ),
@@ -522,7 +609,7 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Downloaded Songs",
+                            'Shared Playlists',
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                             style: Default_Theme.secondoryTextStyle.merge(
@@ -534,14 +621,15 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
                             ),
                           ),
                           Text(
-                            subtitle,
+                            'Collaborate with friends',
                             maxLines: 1,
                             style: Default_Theme.secondoryTextStyle.merge(
-                              const TextStyle(
-                                fontSize: 14,
+                              TextStyle(
+                                fontSize: 13,
                                 overflow: TextOverflow.fade,
                                 fontWeight: FontWeight.w500,
-                                color: Default_Theme.primaryColor1,
+                                color: Default_Theme.primaryColor1
+                                    .withValues(alpha: 0.55),
                               ),
                             ),
                           ),
@@ -560,11 +648,115 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
               ),
             ),
           ),
-        );
-      },
+        ),
+        // ── Live Room shortcut ────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.only(left: 8, right: 8, top: 0, bottom: 4),
+          child: AnimatedListItem(
+            index: 2,
+            child: InkWell(
+              splashColor: AppTheme.successAccent.withValues(alpha: 0.08),
+              hoverColor: Colors.white.withValues(alpha: 0.03),
+              highlightColor: AppTheme.successAccent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              onTap: () => _showJamEntrySheet(context),
+              child: SizedBox(
+                height: 80,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: AppTheme.successAccent.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          MingCute.headphone_fill,
+                          color: AppTheme.successAccent,
+                          size: 28,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Live Room',
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: Default_Theme.secondoryTextStyle.merge(
+                              const TextStyle(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w700,
+                                color: Default_Theme.primaryColor1,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            'Listen live with friends',
+                            maxLines: 1,
+                            style: Default_Theme.secondoryTextStyle.merge(
+                              TextStyle(
+                                fontSize: 13,
+                                overflow: TextOverflow.fade,
+                                fontWeight: FontWeight.w500,
+                                color: Default_Theme.primaryColor1
+                                    .withValues(alpha: 0.55),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 14),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppTheme.successAccent,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(MingCute.right_line,
+                              size: 20,
+                              color: Default_Theme.primaryColor1
+                                  .withValues(alpha: 0.3)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showJamEntrySheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _JamEntrySheet(parentContext: context),
     );
   }
 }
+
 
 class _ListOfPlaylists extends StatelessWidget {
   final List<PlaylistItemProperties> playlists;
@@ -768,3 +960,339 @@ Widget _proxyDecorator(Widget child, int index, Animation<double> animation) {
 }
 
 
+// ─── Jam Entry Sheet ─────────────────────────────────────────────────────────
+
+class _JamEntrySheet extends StatefulWidget {
+  final BuildContext parentContext;
+  const _JamEntrySheet({required this.parentContext});
+
+  @override
+  State<_JamEntrySheet> createState() => _JamEntrySheetState();
+}
+
+class _JamEntrySheetState extends State<_JamEntrySheet> {
+  bool _isLoading = false;
+  String? _errorMessage;
+  final TextEditingController _codeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _hostRoom(BuildContext ctx) async {
+    if (_isLoading) return;
+    developer.log('[LIVE_ROOM] Host button clicked', name: 'LIVE_ROOM');
+    debugPrint('[LIVE_ROOM] Host button clicked');
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final parentCtx = widget.parentContext;
+      final cubit = parentCtx.read<JamSessionCubit>();
+      final success = await cubit.createRoom();
+
+      if (!mounted || !parentCtx.mounted) return;
+
+      if (success) {
+        developer.log('[LIVE_ROOM] Navigation started', name: 'LIVE_ROOM');
+        debugPrint('[LIVE_ROOM] Navigation started');
+        Navigator.pop(ctx);
+        parentCtx.pushNamed(RoutePaths.jamRoom);
+      } else {
+        final errorMsg = cubit.state is JamSessionError
+            ? (cubit.state as JamSessionError).message
+            : 'Failed to create room. Please try again.';
+        developer.log('[LIVE_ROOM][ERROR] Host room failed: $errorMsg', name: 'LIVE_ROOM');
+        debugPrint('[LIVE_ROOM][ERROR] Host room failed: $errorMsg');
+        setState(() {
+          _errorMessage = errorMsg;
+        });
+        ScaffoldMessenger.maybeOf(parentCtx)?.showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('[LIVE_ROOM][ERROR] Host room unhandled exception: $e', name: 'LIVE_ROOM');
+      debugPrint('[LIVE_ROOM][ERROR] Host room unhandled exception: $e');
+      if (mounted) {
+        final msg = 'Error hosting room: $e';
+        setState(() {
+          _errorMessage = msg;
+        });
+        final parentCtx = widget.parentContext;
+        if (parentCtx.mounted) {
+          ScaffoldMessenger.maybeOf(parentCtx)?.showSnackBar(
+            SnackBar(
+              content: Text(msg),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _joinRoom(BuildContext ctx) async {
+    final code = _codeController.text.trim();
+    if (code.isEmpty || _isLoading) return;
+    developer.log('[LIVE_ROOM] Join button clicked with code: $code', name: 'LIVE_ROOM');
+    debugPrint('[LIVE_ROOM] Join button clicked with code: $code');
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final parentCtx = widget.parentContext;
+      final cubit = parentCtx.read<JamSessionCubit>();
+      final success = await cubit.joinRoom(code);
+
+      if (!mounted || !parentCtx.mounted) return;
+
+      if (success) {
+        developer.log('[LIVE_ROOM] Join success - navigation started', name: 'LIVE_ROOM');
+        debugPrint('[LIVE_ROOM] Join success - navigation started');
+        Navigator.pop(ctx);
+        parentCtx.pushNamed(RoutePaths.jamRoom);
+      } else {
+        final errorMsg = cubit.state is JamSessionError
+            ? (cubit.state as JamSessionError).message
+            : 'Failed to join room. Check the code and try again.';
+        developer.log('[LIVE_ROOM][ERROR] Join room failed: $errorMsg', name: 'LIVE_ROOM');
+        debugPrint('[LIVE_ROOM][ERROR] Join room failed: $errorMsg');
+        setState(() {
+          _errorMessage = errorMsg;
+        });
+        ScaffoldMessenger.maybeOf(parentCtx)?.showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('[LIVE_ROOM][ERROR] Join room unhandled exception: $e', name: 'LIVE_ROOM');
+      debugPrint('[LIVE_ROOM][ERROR] Join room unhandled exception: $e');
+      if (mounted) {
+        final msg = 'Error joining room: $e';
+        setState(() {
+          _errorMessage = msg;
+        });
+        final parentCtx = widget.parentContext;
+        if (parentCtx.mounted) {
+          ScaffoldMessenger.maybeOf(parentCtx)?.showSnackBar(
+            SnackBar(
+              content: Text(msg),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: Container(
+          color: const Color(0xFF0A0A1E).withValues(alpha: 0.97),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                '🎧 Live Room',
+                style: TextStyle(
+                  fontFamily: 'Fjalla',
+                  fontSize: 24,
+                  color: Default_Theme.primaryColor1,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Listen to music live with your friends',
+                style: TextStyle(
+                  color: Default_Theme.primaryColor1.withValues(alpha: 0.5),
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 28),
+              if (_errorMessage != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+              // Host room button
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.successAccent,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: _isLoading ? null : () => _hostRoom(context),
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.black),
+                          ),
+                        )
+                      : const Icon(MingCute.headphone_fill,
+                          color: Colors.black, size: 20),
+                  label: Text(
+                    _isLoading ? 'Creating Room...' : 'Host a Live Room',
+                    style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Divider
+              Row(
+                children: [
+                  Expanded(
+                      child: Divider(
+                          color: Colors.white.withValues(alpha: 0.1))),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'or join with a code',
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.35),
+                          fontSize: 12),
+                    ),
+                  ),
+                  Expanded(
+                      child: Divider(
+                          color: Colors.white.withValues(alpha: 0.1))),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Code input
+              TextField(
+                controller: _codeController,
+                textCapitalization: TextCapitalization.characters,
+                style: const TextStyle(
+                  color: Default_Theme.primaryColor1,
+                  fontFamily: 'CodePro',
+                  fontSize: 20,
+                  letterSpacing: 4,
+                ),
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  hintText: 'ROOM CODE',
+                  hintStyle: TextStyle(
+                    color: Default_Theme.primaryColor1.withValues(alpha: 0.25),
+                    fontFamily: 'CodePro',
+                    letterSpacing: 4,
+                    fontSize: 18,
+                  ),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                        color: AppTheme.successAccent.withValues(alpha: 0.5)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: _isLoading ? null : () => _joinRoom(context),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(AppTheme.successAccent),
+                          ),
+                        )
+                      : const Text(
+                          'Join Room',
+                          style: TextStyle(
+                              color: AppTheme.successAccent,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
