@@ -1,6 +1,7 @@
 import 'package:beats_music/core/constants/route_paths.dart';
 import 'package:beats_music/screens/widgets/global_footer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:beats_music/screens/screen/common_views/add_to_playlist_screen.dart';
 import 'package:beats_music/screens/screen/explore_screen.dart';
@@ -17,6 +18,9 @@ import 'package:beats_music/screens/auth/permission_screen.dart';
 import 'package:beats_music/screens/screen/home_views/preference_selection_screen.dart';
 import 'package:beats_music/screens/screen/home_views/wrapped_view.dart';
 import 'package:beats_music/screens/auth/email_auth_screen.dart';
+import 'package:beats_music/screens/screen/collaborative/collab_playlist_list_screen.dart';
+import 'package:beats_music/blocs/collaborative_playlist/collab_playlist_cubit.dart';
+import 'package:beats_music/screens/screen/jam_session/jam_room_screen.dart';
 
 /// Canonical app router configuration.
 ///
@@ -139,6 +143,22 @@ class AppRouter {
                       name: RoutePaths.offlineScreen,
                       path: 'Offline',
                       builder: (context, state) => const OfflineScreen(),
+                    ),
+                    GoRoute(
+                      name: RoutePaths.collabPlaylistList,
+                      path: 'CollabPlaylists',
+                      builder: (context, state) => BlocProvider(
+                        create: (_) => CollabPlaylistCubit(),
+                        child: const CollabPlaylistListScreen(),
+                      ),
+                    ),
+                    GoRoute(
+                      name: RoutePaths.jamRoom,
+                      path: 'JamRoom',
+                      builder: (context, state) {
+                        final code = state.uri.queryParameters['code'];
+                        return JamRoomScreen(joinCode: code);
+                      },
                     ),
                   ]),
             ]),
