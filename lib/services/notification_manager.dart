@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:beats_music/model/statistics/song_statistics.dart';
@@ -18,8 +19,17 @@ class NotificationManager {
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
   
-  /// Emits the song ID when a re-engagement notification is tapped.
-  final ValueNotifier<String?> onNotificationTap = ValueNotifier<String?>(null);
+  final StreamController<String> _tapStreamController = StreamController<String>.broadcast();
+  Stream<String> get tapStream => _tapStreamController.stream;
+
+  String? _pendingTapPayload;
+
+  /// Returns and clears any pending notification tap payload (e.g. from cold start).
+  String? consumePendingTapPayload() {
+    final payload = _pendingTapPayload;
+    _pendingTapPayload = null;
+    return payload;
+  }
   
   static const String _lastReengagementKey = 'last_reengagement_shown_at';
   
@@ -42,14 +52,27 @@ class NotificationManager {
     await _notificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        if (response.payload != null && response.payload!.isNotEmpty) {
-          debugPrint('NotificationManager: Tap detected with payload: ${response.payload}');
-          onNotificationTap.value = response.payload;
-          // Reset to null so subsequent identical taps are detected
-          onNotificationTap.value = null; 
+        final payload = response.payload;
+        if (payload != null && payload.isNotEmpty) {
+          debugPrint('NotificationManager: Tap detected with payload: $payload');
+          _pendingTapPayload = payload;
+          _tapStreamController.add(payload);
         }
       },
     );
+
+    // Cold-start notification launch detection
+    try {
+      final launchDetails = await _notificationsPlugin.getNotificationAppLaunchDetails();
+      if (launchDetails != null &&
+          launchDetails.didNotificationLaunchApp &&
+          launchDetails.notificationResponse?.payload != null &&
+          launchDetails.notificationResponse!.payload!.isNotEmpty) {
+        _pendingTapPayload = launchDetails.notificationResponse!.payload;
+      }
+    } catch (e) {
+      debugPrint('NotificationManager: Error checking launch details: $e');
+    }
 
     // 2. Init Firebase Remote Config
     await _setupRemoteConfig();
