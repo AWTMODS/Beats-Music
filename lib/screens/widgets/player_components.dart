@@ -20,9 +20,9 @@ import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:beats_music/utils/load_image.dart';
 import 'package:beats_music/utils/pallete_generator.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../screen/player_views/fullscreen_lyrics_view.dart';
 import 'package:beats_music/services/player/player_engine.dart';
+import 'package:beats_music/services/db/global_db.dart';
 
 class CoverImageVolSlider extends StatelessWidget {
   const CoverImageVolSlider({super.key});
@@ -138,8 +138,16 @@ class _SongInfoRow extends StatelessWidget {
   }
 }
 
-class _DownloadButton extends StatelessWidget {
+class _DownloadButton extends StatefulWidget {
   const _DownloadButton();
+
+  @override
+  State<_DownloadButton> createState() => _DownloadButtonState();
+}
+
+class _DownloadButtonState extends State<_DownloadButton> {
+  String? _lastTrackId;
+  Future<DownloadDB?>? _downloadFuture;
 
   @override
   Widget build(BuildContext context) {
@@ -151,10 +159,16 @@ class _DownloadButton extends StatelessWidget {
         builder: (context, mediaSnapshot) {
           final currentMedia = mediaSnapshot.data;
           if (currentMedia == null) return const SizedBox.shrink();
-          return FutureBuilder(
-            future: context
+
+          if (_lastTrackId != currentMedia.id || _downloadFuture == null) {
+            _lastTrackId = currentMedia.id;
+            _downloadFuture = context
                 .read<DownloaderCubit>()
-                .getDownloadInfo(mediaItemToTrack(currentMedia)),
+                .getDownloadInfo(mediaItemToTrack(currentMedia));
+          }
+
+          return FutureBuilder<DownloadDB?>(
+            future: _downloadFuture,
             builder: (context, snapshot) {
               if (snapshot.hasData && snapshot.data != null) {
                 return IconButton(
@@ -175,8 +189,16 @@ class _DownloadButton extends StatelessWidget {
   }
 }
 
-class _LikeButton extends StatelessWidget {
+class _LikeButton extends StatefulWidget {
   const _LikeButton();
+
+  @override
+  State<_LikeButton> createState() => _LikeButtonState();
+}
+
+class _LikeButtonState extends State<_LikeButton> {
+  String? _lastTrackId;
+  Future<bool>? _likeFuture;
 
   @override
   Widget build(BuildContext context) {
@@ -190,10 +212,15 @@ class _LikeButton extends StatelessWidget {
             final currentMedia = mediaSnapshot.data;
             if (currentMedia == null) return const SizedBox.shrink();
 
-            return FutureBuilder<bool>(
-              future: context
+            if (_lastTrackId != currentMedia.id || _likeFuture == null) {
+              _lastTrackId = currentMedia.id;
+              _likeFuture = context
                   .read<LibraryItemsCubit>()
-                  .isTrackLiked(mediaItemToTrack(currentMedia)),
+                  .isTrackLiked(mediaItemToTrack(currentMedia));
+            }
+
+            return FutureBuilder<bool>(
+              future: _likeFuture,
               builder: (context, snapshot) {
                 final isLiked = snapshot.data ?? false;
                 return StreamBuilder<bool>(
@@ -204,14 +231,20 @@ class _LikeButton extends StatelessWidget {
                       isPlaying: isPlaying,
                       isLiked: isLiked,
                       iconSize: 25,
-                      onLiked: () {
-                        context.read<LibraryItemsCubit>().setTrackLiked(
+                      onLiked: () async {
+                        setState(() {
+                          _likeFuture = Future.value(true);
+                        });
+                        await context.read<LibraryItemsCubit>().setTrackLiked(
                             mediaItemToTrack(currentMedia), true);
                         SnackbarService.showMessage(
                             l10n.playerLiked(currentMedia.title));
                       },
-                      onDisliked: () {
-                        context.read<LibraryItemsCubit>().setTrackLiked(
+                      onDisliked: () async {
+                        setState(() {
+                          _likeFuture = Future.value(false);
+                        });
+                        await context.read<LibraryItemsCubit>().setTrackLiked(
                             mediaItemToTrack(currentMedia), false);
                         SnackbarService.showMessage(
                             l10n.playerUnliked(currentMedia.title));
@@ -408,27 +441,6 @@ class _ShuffleControl extends StatelessWidget {
   }
 }
 
-class _ExternalLinkControl extends StatelessWidget {
-  const _ExternalLinkControl();
-
-  @override
-  Widget build(BuildContext context) {
-    final player = context.read<BeatsPlayerCubit>().BeatsPlayer;
-    return IconButton(
-      icon: const Icon(MingCute.external_link_line,
-          color: Default_Theme.primaryColor1, size: 24),
-      onPressed: () async {
-        final url = player.currentTrackInfo.url;
-        if (url != null) {
-          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-        } else {
-          SnackbarService.showMessage(
-              AppLocalizations.of(context)!.snackbarCouldNotOpenLink);
-        }
-      },
-    );
-  }
-}
 
 class _PlayPauseButton extends StatelessWidget {
   const _PlayPauseButton();
