@@ -217,7 +217,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playlistNoMatchSearch => '没有匹配搜索的歌单';
 
   @override
-  String get playlistCreateNew => '创建新歌单 😍';
+  String get playlistCreateNew => '创建新歌单';
 
   @override
   String get playlistCreateFirstOne => '暂无歌单。创建一个来开始吧！';
