@@ -6,12 +6,12 @@ import 'package:bloc/bloc.dart';
 
 part 'history_state.dart';
 
-/// Cubit for the full playback history screen.
-///
-/// Uses [HistoryDAO.getHistory] (no limit) to fetch all recorded plays.
+/// Cubit for the full playback history screen with efficient pagination.
 class HistoryCubit extends Cubit<HistoryState> {
   final HistoryDAO _historyDao;
   StreamSubscription<void>? _watcher;
+  static const int _pageSize = 50;
+  int _currentLimit = _pageSize;
 
   HistoryCubit({required HistoryDAO historyDao})
       : _historyDao = historyDao,
@@ -28,8 +28,24 @@ class HistoryCubit extends Cubit<HistoryState> {
   }
 
   Future<void> _fetchHistory() async {
-    final tracks = await _historyDao.getHistory(limit: 0);
-    emit(state.copyWith(tracks: tracks));
+    final tracks = await _historyDao.getHistory(limit: _currentLimit);
+    emit(state.copyWith(
+      tracks: tracks,
+      hasMore: tracks.length >= _currentLimit,
+      isLoadingMore: false,
+    ));
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoadingMore || !state.hasMore) return;
+    emit(state.copyWith(isLoadingMore: true));
+    _currentLimit += _pageSize;
+    final tracks = await _historyDao.getHistory(limit: _currentLimit);
+    emit(state.copyWith(
+      tracks: tracks,
+      hasMore: tracks.length >= _currentLimit,
+      isLoadingMore: false,
+    ));
   }
 
   @override
@@ -38,5 +54,6 @@ class HistoryCubit extends Cubit<HistoryState> {
     return super.close();
   }
 }
+
 
 
