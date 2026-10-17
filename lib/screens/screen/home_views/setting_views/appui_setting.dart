@@ -110,8 +110,9 @@ class _AppUISettingsState extends State<AppUISettings> {
                     onChanged: (v) {
                       context.read<SettingsCubit>().setLastFMExpore(v);
                       if (v && LastFmAPI.initialized == false) {
+                        final settingsCubit = context.read<SettingsCubit>();
                         Future.delayed(const Duration(milliseconds: 500), () {
-                          context.read<SettingsCubit>().setLastFMExpore(false);
+                          settingsCubit.setLastFMExpore(false);
                         });
                         SnackbarService.showMessage(l10n.appuiLoginToLastFm);
                       }
