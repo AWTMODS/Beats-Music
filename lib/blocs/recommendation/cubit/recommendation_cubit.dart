@@ -4,7 +4,6 @@ import 'package:beats_music/blocs/recommendation/cubit/recommendation_state.dart
 import 'package:beats_music/core/models/exported.dart';
 import 'package:beats_music/services/cloud_sync_service.dart';
 import 'package:beats_music/services/listening_statistics_service.dart';
-import 'package:beats_music/services/meta_resolver/chart_item_resolver.dart';
 import 'package:beats_music/services/plugin/plugin_service.dart';
 import 'package:beats_music/src/rust/api/plugin/commands.dart';
 import 'package:bloc/bloc.dart';
@@ -48,7 +47,6 @@ class RecommendationCubit extends Cubit<RecommendationState> {
 
       // 2. Fetch related tracks from active plugins
       final List<Track> allRecommended = [];
-      final resolver = ChartItemResolver.create(_pluginService);
       
       // We'll pick the top 3 seeds to avoid over-fetching
       final seedsToProcess = seedArtistNames.take(3).toList();
