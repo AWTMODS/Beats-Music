@@ -19,193 +19,187 @@ class SettingsCubit extends Cubit<SettingsState> {
     autoUpdate();
   }
 
-// Initialize the settings from the database
+  // Initialize the settings from the database with a single consolidated state update
   Future<void> _initSettings() async {
+    final autoUpdateNotifyFuture = _settingsRepo.getSettingBool(SettingKeys.autoUpdateNotify);
+    final autoSlideChartsFuture = _settingsRepo.getSettingBool(SettingKeys.autoSlideCharts);
+    final downPathFuture = _settingsRepo.getSettingStr(SettingKeys.downPathSetting);
+    final downQualityFuture = _settingsRepo.getSettingStr(
+      SettingKeys.downQuality,
+      defaultValue: AudioStreamQualityPreference.medium.label,
+    );
+    final strmQualityFuture = _settingsRepo.getSettingStr(SettingKeys.strmQuality);
+    final historyClearTimeFuture = _settingsRepo.getSettingStr(SettingKeys.historyClearTime);
+    final lastFMScrobbleFuture = _settingsRepo.getSettingBool(CacheKeys.lFMScrobbleSetting);
+    final autoPlayFuture = _settingsRepo.getSettingBool(SettingKeys.autoPlay);
+    final autoResolveUnavailableTracksFuture = _settingsRepo.getSettingBool(SettingKeys.autoResolveUnavailableTracks);
+    final lFMPicksFuture = _settingsRepo.getSettingBool(CacheKeys.lFMUIPicks);
+    final backupPathFuture = _settingsRepo.getSettingStr(SettingKeys.backupPath);
+    final autoBackupFuture = _settingsRepo.getSettingBool(SettingKeys.autoBackup);
+    final autoGetCountryFuture = _settingsRepo.getSettingBool(SettingKeys.autoGetCountry);
+    final languageCodeFuture = _settingsRepo.getSettingStr(SettingKeys.languageCode);
+    final countryCodeFuture = _settingsRepo.getSettingStr(SettingKeys.countryCode);
+    final autoSaveLyricsFuture = _settingsRepo.getSettingBool(SettingKeys.autoSaveLyrics);
+    final chartShowMapFuture = _settingsRepo.getSettingStr(SettingKeys.chartShowMap);
+    final crossfadeDurationFuture = _settingsRepo.getSettingStr(SettingKeys.crossfadeDuration);
+    final eqEnabledFuture = _settingsRepo.getSettingBool(SettingKeys.eqEnabled);
+    final eqBandGainsFuture = _settingsRepo.getSettingStr(SettingKeys.eqBandGains);
+    final eqPresetFuture = _settingsRepo.getSettingStr(SettingKeys.eqPreset, defaultValue: 'Flat');
+    final homePluginIdFuture = _settingsRepo.getSettingStr(SettingKeys.homePluginId, defaultValue: '');
+    final searchPluginIdFuture = _settingsRepo.getSettingStr(SettingKeys.searchPluginId, defaultValue: '');
+    final resolverPriorityFuture = _settingsRepo.getSettingStr(SettingKeys.resolverPriority, defaultValue: '[]');
+    final lyricsPriorityFuture = _settingsRepo.getSettingStr(SettingKeys.lyricsPriority, defaultValue: '[]');
+    final suggestionPluginIdFuture = _settingsRepo.getSettingStr(SettingKeys.suggestionPluginId, defaultValue: '');
+
     await Future.wait([
-      _settingsRepo.getSettingBool(SettingKeys.autoUpdateNotify).then((value) {
-        emit(state.copyWith(autoUpdateNotify: value ?? false));
-      }),
-      _settingsRepo.getSettingBool(SettingKeys.autoSlideCharts).then((value) {
-        emit(state.copyWith(autoSlideCharts: value ?? true));
-      }),
-      _settingsRepo
-          .getSettingStr(SettingKeys.downPathSetting)
-          .then((value) async {
-        String path;
-        if (value != null) {
-          path = value;
-        } else {
-          path = ((await getDownloadsDirectory()) ??
-                  (await getApplicationDocumentsDirectory()))
-              .path;
-          setDownPath(path);
-          log("Download path set to: $path", name: 'SettingsCubit');
-        }
-        emit(state.copyWith(downPath: path));
-      }),
-      _settingsRepo
-          .getSettingStr(
-        SettingKeys.downQuality,
-        defaultValue: AudioStreamQualityPreference.medium.label,
-      )
-          .then((value) {
-        final normalized = normalizeStoredStreamQualityLabel(
-          value,
-          fallback: AudioStreamQualityPreference.medium.label,
-        );
-        if (value != normalized) {
-          _settingsRepo.putSettingStr(SettingKeys.downQuality, normalized);
-        }
-        emit(state.copyWith(downQuality: normalized));
-      }),
-      _settingsRepo
-          .getSettingStr(
-        SettingKeys.strmQuality,
-      )
-          .then((value) {
-        final normalized = normalizeStoredStreamQualityLabel(
-          value,
-          fallback: AudioStreamQualityPreference.high.label,
-        );
-        if (value != normalized) {
-          _settingsRepo.putSettingStr(SettingKeys.strmQuality, normalized);
-        }
-        emit(state.copyWith(strmQuality: normalized));
-      }),
-      _settingsRepo.getSettingStr(SettingKeys.historyClearTime).then((value) {
-        emit(state.copyWith(historyClearTime: value ?? "30"));
-      }),
-      _settingsRepo.getSettingBool(CacheKeys.lFMScrobbleSetting).then((value) {
-        emit(state.copyWith(lastFMScrobble: value ?? false));
-      }),
-      _settingsRepo
-          .getSettingBool(
-        SettingKeys.autoPlay,
-      )
-          .then((value) {
-        emit(state.copyWith(autoPlay: value ?? true));
-      }),
-      _settingsRepo
-          .getSettingBool(SettingKeys.autoResolveUnavailableTracks)
-          .then((value) {
-        emit(state.copyWith(autoResolveUnavailableTracks: value ?? true));
-      }),
-      _settingsRepo.getSettingBool(CacheKeys.lFMUIPicks).then((value) {
-        emit(state.copyWith(lFMPicks: value ?? false));
-      }),
-      _settingsRepo.getSettingStr(SettingKeys.backupPath).then((value) async {
-        final defaultBackUpDir = await DBProvider.getDbBackupFilePath();
-
-        await _settingsRepo.putSettingStr(
-            SettingKeys.backupPath, defaultBackUpDir);
-        emit(state.copyWith(backupPath: defaultBackUpDir));
-      }),
-      _settingsRepo.getSettingBool(SettingKeys.autoBackup).then((value) {
-        emit(state.copyWith(autoBackup: value ?? false));
-      }),
-      _settingsRepo.getSettingBool(SettingKeys.autoGetCountry).then((value) {
-        emit(state.copyWith(autoGetCountry: value ?? true));
-      }),
-      _settingsRepo.getSettingStr(SettingKeys.languageCode).then((value) {
-        emit(state.copyWith(languageCode: value ?? ''));
-      }),
-      _settingsRepo.getSettingStr(SettingKeys.countryCode).then((value) {
-        final normalized = CountryInfoService.normalizeCountryCode(value);
-        if (normalized.isNotEmpty) {
-          emit(state.copyWith(countryCode: normalized));
-          return;
-        }
-
-        // If no cached country, use the default and let bootstrap try to resolve it later.
-        emit(
-            state.copyWith(countryCode: CountryInfoService.defaultCountryCode));
-      }),
-      _settingsRepo.getSettingBool(SettingKeys.autoSaveLyrics).then((value) {
-        emit(state.copyWith(autoSaveLyrics: value ?? false));
-      }),
-      _settingsRepo.getSettingStr(SettingKeys.chartShowMap).then((value) {
-        Map chartMap = Map.from(state.chartMap);
-        if (value != null) {
-          chartMap = jsonDecode(value);
-        }
-        emit(state.copyWith(chartMap: Map.from(chartMap)));
-      }),
-      _settingsRepo.getSettingStr(SettingKeys.crossfadeDuration).then((value) {
-        final parsed = int.tryParse((value ?? '').trim());
-        final seconds = parsed ?? 2;
-        if (value != seconds.toString()) {
-          _settingsRepo.putSettingStr(
-            SettingKeys.crossfadeDuration,
-            seconds.toString(),
-          );
-        }
-        emit(state.copyWith(crossfadeDuration: seconds));
-      }),
-      _settingsRepo.getSettingBool(SettingKeys.eqEnabled).then((value) {
-        emit(state.copyWith(eqEnabled: value ?? false));
-      }),
-      _settingsRepo.getSettingStr(SettingKeys.eqBandGains).then((value) {
-        if (value != null) {
-          try {
-            final decoded = jsonDecode(value) as List;
-            final gains = decoded.map((e) => (e as num).toDouble()).toList();
-            if (gains.length == 10) {
-              emit(state.copyWith(eqBandGains: gains));
-            }
-          } catch (e) {
-            log('Failed to decode EQ gains: $e', name: 'SettingsCubit');
-          }
-        }
-      }),
-      _settingsRepo
-          .getSettingStr(SettingKeys.eqPreset, defaultValue: 'Flat')
-          .then((value) {
-        emit(state.copyWith(eqPreset: value ?? 'Flat'));
-      }),
-      _settingsRepo
-          .getSettingStr(SettingKeys.homePluginId, defaultValue: '')
-          .then((value) {
-        emit(state.copyWith(homePluginId: value ?? ''));
-      }),
-      _settingsRepo
-          .getSettingStr(SettingKeys.searchPluginId, defaultValue: '')
-          .then((value) {
-        emit(state.copyWith(searchPluginId: value ?? ''));
-      }),
-      _settingsRepo
-          .getSettingStr(SettingKeys.resolverPriority, defaultValue: '[]')
-          .then((value) {
-        List<String> priority = const [];
-        if (value != null && value.isNotEmpty) {
-          try {
-            priority = (jsonDecode(value) as List).cast<String>();
-          } catch (e) {
-            log('Failed to decode resolver priority: $e',
-                name: 'SettingsCubit');
-          }
-        }
-        emit(state.copyWith(resolverPriority: priority));
-      }),
-      _settingsRepo
-          .getSettingStr(SettingKeys.lyricsPriority, defaultValue: '[]')
-          .then((value) {
-        List<String> priority = const [];
-        if (value != null && value.isNotEmpty) {
-          try {
-            priority = (jsonDecode(value) as List).cast<String>();
-          } catch (e) {
-            log('Failed to decode lyrics priority: $e', name: 'SettingsCubit');
-          }
-        }
-        emit(state.copyWith(lyricsPriority: priority));
-      }),
-      _settingsRepo
-          .getSettingStr(SettingKeys.suggestionPluginId, defaultValue: '')
-          .then((value) {
-        emit(state.copyWith(suggestionPluginId: value ?? ''));
-      }),
+      autoUpdateNotifyFuture,
+      autoSlideChartsFuture,
+      downPathFuture,
+      downQualityFuture,
+      strmQualityFuture,
+      historyClearTimeFuture,
+      lastFMScrobbleFuture,
+      autoPlayFuture,
+      autoResolveUnavailableTracksFuture,
+      lFMPicksFuture,
+      backupPathFuture,
+      autoBackupFuture,
+      autoGetCountryFuture,
+      languageCodeFuture,
+      countryCodeFuture,
+      autoSaveLyricsFuture,
+      chartShowMapFuture,
+      crossfadeDurationFuture,
+      eqEnabledFuture,
+      eqBandGainsFuture,
+      eqPresetFuture,
+      homePluginIdFuture,
+      searchPluginIdFuture,
+      resolverPriorityFuture,
+      lyricsPriorityFuture,
+      suggestionPluginIdFuture,
     ]);
-    emit(state.copyWith(settingsReady: true));
+
+    String resolvedDownPath;
+    final rawDownPath = await downPathFuture;
+    if (rawDownPath != null) {
+      resolvedDownPath = rawDownPath;
+    } else {
+      resolvedDownPath = ((await getDownloadsDirectory()) ??
+              (await getApplicationDocumentsDirectory()))
+          .path;
+      setDownPath(resolvedDownPath);
+      log("Download path set to: $resolvedDownPath", name: 'SettingsCubit');
+    }
+
+    final rawDownQuality = await downQualityFuture;
+    final normalizedDownQuality = normalizeStoredStreamQualityLabel(
+      rawDownQuality,
+      fallback: AudioStreamQualityPreference.medium.label,
+    );
+    if (rawDownQuality != normalizedDownQuality) {
+      _settingsRepo.putSettingStr(SettingKeys.downQuality, normalizedDownQuality);
+    }
+
+    final rawStrmQuality = await strmQualityFuture;
+    final normalizedStrmQuality = normalizeStoredStreamQualityLabel(
+      rawStrmQuality,
+      fallback: AudioStreamQualityPreference.high.label,
+    );
+    if (rawStrmQuality != normalizedStrmQuality) {
+      _settingsRepo.putSettingStr(SettingKeys.strmQuality, normalizedStrmQuality);
+    }
+
+    final defaultBackUpDir = await DBProvider.getDbBackupFilePath();
+    await _settingsRepo.putSettingStr(SettingKeys.backupPath, defaultBackUpDir);
+
+    final rawCountry = await countryCodeFuture;
+    final normalizedCountry = CountryInfoService.normalizeCountryCode(rawCountry);
+    final resolvedCountry = normalizedCountry.isNotEmpty
+        ? normalizedCountry
+        : CountryInfoService.defaultCountryCode;
+
+    final rawChartMap = await chartShowMapFuture;
+    Map chartMap = Map.from(state.chartMap);
+    if (rawChartMap != null) {
+      try {
+        chartMap = jsonDecode(rawChartMap);
+      } catch (_) {}
+    }
+
+    final rawCrossfade = await crossfadeDurationFuture;
+    final parsedCrossfade = int.tryParse((rawCrossfade ?? '').trim());
+    final crossfadeSeconds = parsedCrossfade ?? 2;
+    if (rawCrossfade != crossfadeSeconds.toString()) {
+      _settingsRepo.putSettingStr(
+        SettingKeys.crossfadeDuration,
+        crossfadeSeconds.toString(),
+      );
+    }
+
+    List<double> eqGains = state.eqBandGains;
+    final rawEqGains = await eqBandGainsFuture;
+    if (rawEqGains != null) {
+      try {
+        final decoded = jsonDecode(rawEqGains) as List;
+        final gains = decoded.map((e) => (e as num).toDouble()).toList();
+        if (gains.length == 10) {
+          eqGains = gains;
+        }
+      } catch (e) {
+        log('Failed to decode EQ gains: $e', name: 'SettingsCubit');
+      }
+    }
+
+    List<String> resolverPriority = const [];
+    final rawResolverPriority = await resolverPriorityFuture;
+    if (rawResolverPriority != null && rawResolverPriority.isNotEmpty) {
+      try {
+        resolverPriority = (jsonDecode(rawResolverPriority) as List).cast<String>();
+      } catch (e) {
+        log('Failed to decode resolver priority: $e', name: 'SettingsCubit');
+      }
+    }
+
+    List<String> lyricsPriority = const [];
+    final rawLyricsPriority = await lyricsPriorityFuture;
+    if (rawLyricsPriority != null && rawLyricsPriority.isNotEmpty) {
+      try {
+        lyricsPriority = (jsonDecode(rawLyricsPriority) as List).cast<String>();
+      } catch (e) {
+        log('Failed to decode lyrics priority: $e', name: 'SettingsCubit');
+      }
+    }
+
+    emit(state.copyWith(
+      autoUpdateNotify: (await autoUpdateNotifyFuture) ?? false,
+      autoSlideCharts: (await autoSlideChartsFuture) ?? true,
+      downPath: resolvedDownPath,
+      downQuality: normalizedDownQuality,
+      strmQuality: normalizedStrmQuality,
+      historyClearTime: (await historyClearTimeFuture) ?? "30",
+      lastFMScrobble: (await lastFMScrobbleFuture) ?? false,
+      autoPlay: (await autoPlayFuture) ?? true,
+      autoResolveUnavailableTracks: (await autoResolveUnavailableTracksFuture) ?? true,
+      lFMPicks: (await lFMPicksFuture) ?? false,
+      backupPath: defaultBackUpDir,
+      autoBackup: (await autoBackupFuture) ?? false,
+      autoGetCountry: (await autoGetCountryFuture) ?? true,
+      languageCode: (await languageCodeFuture) ?? '',
+      countryCode: resolvedCountry,
+      autoSaveLyrics: (await autoSaveLyricsFuture) ?? false,
+      chartMap: Map.from(chartMap),
+      crossfadeDuration: crossfadeSeconds,
+      eqEnabled: (await eqEnabledFuture) ?? false,
+      eqBandGains: eqGains,
+      eqPreset: (await eqPresetFuture) ?? 'Flat',
+      homePluginId: (await homePluginIdFuture) ?? '',
+      searchPluginId: (await searchPluginIdFuture) ?? '',
+      resolverPriority: resolverPriority,
+      lyricsPriority: lyricsPriority,
+      suggestionPluginId: (await suggestionPluginIdFuture) ?? '',
+      settingsReady: true,
+    ));
   }
 
   void setChartShow(String title, bool value) {
