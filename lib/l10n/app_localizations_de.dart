@@ -228,7 +228,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Keine Playlists entsprechen deiner Suche';
 
   @override
-  String get playlistCreateNew => 'Neue Playlist erstellen 😍';
+  String get playlistCreateNew => 'Neue Playlist erstellen';
 
   @override
   String get playlistCreateFirstOne =>
