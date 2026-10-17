@@ -202,6 +202,10 @@ Future<_MigrationPlan> _buildMigrationPlan(Isar legacyIsar) async {
   for (final item in mediaItems) {
     if (item.mediaID.isEmpty) continue;
     mediaByLegacyMediaId.putIfAbsent(item.mediaID, () => item);
+    final cleaned = item.mediaID.replaceFirst('youtube', '');
+    if (cleaned.isNotEmpty) {
+      mediaByLegacyMediaId.putIfAbsent(cleaned, () => item);
+    }
   }
 
   final playlistInfos =
@@ -283,7 +287,9 @@ Future<_MigrationPlan> _buildMigrationPlan(Isar legacyIsar) async {
       legacyIsar.collection<legacy.DownloadDB>().where().findAllSync();
   for (var index = 0; index < legacyDownloads.length; index++) {
     final download = legacyDownloads[index];
-    final mediaItem = mediaByLegacyMediaId[download.mediaId];
+    final cleanedId = download.mediaId.replaceFirst('youtube', '');
+    final mediaItem = mediaByLegacyMediaId[download.mediaId] ??
+        mediaByLegacyMediaId[cleanedId];
     final newMediaId = mediaItem != null
         ? _buildNewMediaId(
             download.mediaId,
