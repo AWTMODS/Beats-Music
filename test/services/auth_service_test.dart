@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:beats_music/services/auth_service.dart';
 
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 class MockGoogleSignIn extends Mock implements GoogleSignIn {}
@@ -23,17 +24,39 @@ void main() {
       when(() => mockAuth.signInAnonymously())
           .thenAnswer((_) async => mockCredential);
 
-      // Note: AuthService currently uses `FirebaseAuth.instance` internally (Singleton).
-      // To make this fully testable in CI, `AuthService` should be refactored to accept 
-      // `FirebaseAuth` via constructor dependency injection.
-      expect(true, isTrue);
+      final service = AuthService(auth: mockAuth, googleSignIn: mockGoogleSignIn);
+      final result = await service.signInAnonymously();
+
+      expect(result, equals(mockCredential));
+      verify(() => mockAuth.signInAnonymously()).called(1);
     });
 
-    test('Sign Out clears user session', () async {
-      when(() => mockAuth.signOut()).thenAnswer((_) async => {});
-      when(() => mockGoogleSignIn.signOut()).thenAnswer((_) async => null);
-      
-      expect(true, isTrue);
+    test('Guest Mode Sign-In returns null on error', () async {
+      when(() => mockAuth.signInAnonymously()).thenThrow(Exception('Network error'));
+
+      final service = AuthService(auth: mockAuth, googleSignIn: mockGoogleSignIn);
+      final result = await service.signInAnonymously();
+
+      expect(result, isNull);
+    });
+
+    test('Sign in with Email and Password delegates to FirebaseAuth', () async {
+      final mockCredential = MockUserCredential();
+      final mockUser = MockUser();
+      when(() => mockCredential.user).thenReturn(mockUser);
+      when(() => mockAuth.signInWithEmailAndPassword(
+            email: 'test@example.com',
+            password: 'password123',
+          )).thenAnswer((_) async => mockCredential);
+
+      final service = AuthService(auth: mockAuth, googleSignIn: mockGoogleSignIn);
+      final result = await service.signInWithEmail('test@example.com', 'password123');
+
+      expect(result, equals(mockCredential));
+      verify(() => mockAuth.signInWithEmailAndPassword(
+            email: 'test@example.com',
+            password: 'password123',
+          )).called(1);
     });
   });
 }
