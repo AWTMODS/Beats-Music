@@ -113,15 +113,12 @@ class _DownloadSettingsState extends State<DownloadSettings> {
                     onTap: Platform.isAndroid
                         ? () {}
                         : () async {
-                            FilePicker.platform
-                                .getDirectoryPath()
-                                .then((value) {
-                              if (value != null) {
-                                context
-                                    .read<SettingsCubit>()
-                                    .setDownPath(value);
-                              }
-                            });
+                            final settingsCubit = context.read<SettingsCubit>();
+                            final value =
+                                await FilePicker.platform.getDirectoryPath();
+                            if (value != null) {
+                              settingsCubit.setDownPath(value);
+                            }
                           },
                   ),
                   if (!Platform.isAndroid) ...[
