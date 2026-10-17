@@ -229,7 +229,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'आपकी खोज से मेल खाने वाली कोई प्लेलिस्ट नहीं है';
 
   @override
-  String get playlistCreateNew => 'नई प्लेलिस्ट बनाएँ 😍';
+  String get playlistCreateNew => 'नई प्लेलिस्ट बनाएँ';
 
   @override
   String get playlistCreateFirstOne =>
