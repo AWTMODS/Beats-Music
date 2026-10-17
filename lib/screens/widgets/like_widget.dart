@@ -20,19 +20,7 @@ class LikeBtnWidget extends StatefulWidget {
   State<LikeBtnWidget> createState() => _LikeBtnWidgetState();
 }
 
-class _LikeBtnWidgetState extends State<LikeBtnWidget>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _colorController;
-  late Animation<Color?> _colorAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-
-
-
+class _LikeBtnWidgetState extends State<LikeBtnWidget> {
   @override
   Widget build(BuildContext context) {
     return IconButton(
