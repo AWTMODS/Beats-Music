@@ -16,3 +16,31 @@
 # flutter_local_notifications – keep scheduled notification model classes
 -keep class com.dexterous.flutterlocalnotifications.** { *; }
 -dontwarn com.dexterous.flutterlocalnotifications.**
+
+# ============================================================
+# MediaKit (libmpv native player)
+# ============================================================
+-keep class com.alexmercerind.mediakit.** { *; }
+-dontwarn com.alexmercerind.mediakit.**
+
+# ============================================================
+# AudioService (Android AudioService / MediaBrowserService / MediaSession)
+# ============================================================
+-keep class com.ryanheise.audioservice.** { *; }
+-dontwarn com.ryanheise.audioservice.**
+
+# ============================================================
+# Isar Core Database (JNI / Native bindings)
+# ============================================================
+-keep class dev.isar.** { *; }
+-dontwarn dev.isar.**
+
+# ============================================================
+# Native JNI Methods & Rust FFI
+# ============================================================
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+-keep class com.beats.app.rust.** { *; }
+-dontwarn com.beats.app.rust.**
+
