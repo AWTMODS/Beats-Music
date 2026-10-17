@@ -4,7 +4,6 @@ import 'package:beats_music/src/rust/api/plugin/models.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:beats_music/utils/load_image.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 
 class ChartWidget extends StatelessWidget {
   final ChartSummary chart;
@@ -18,9 +17,6 @@ class ChartWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = ResponsiveBreakpoints.of(context).isMobile;
-    final isTablet = ResponsiveBreakpoints.of(context).isTablet;
-
     final artwork = chart.thumbnail;
     final thumbnailUrl = artwork?.urlHigh ?? artwork?.url ?? artwork?.urlLow;
 
