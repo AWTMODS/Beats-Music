@@ -486,7 +486,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
         MediaAction.seek,
         MediaAction.setRating,
       },
-      androidCompactActionIndices: const [0, 1, 2, 3],
+      androidCompactActionIndices: const [0, 1, 2],
       updatePosition: position,
       updateTime: DateTime.now(),
       playing: playing,
@@ -507,32 +507,33 @@ class BeatsMusicPlayer extends BaseAudioHandler
     );
   }
 
+  Future<void> _setLikedInternal(bool liked) async {
+    if (_currentTrack.id == trackNull.id) return;
+    if (_isCurrentTrackLiked == liked) return; // Prevent duplicate writes
+    await _playlistDao.setTrackLiked(_currentTrack, liked);
+    _isCurrentTrackLiked = liked;
+    _broadcastPlaybackState(
+      engine.state,
+      engine.playing,
+      engine.position,
+      engine.buffered,
+      engine.speed,
+    );
+  }
+
+  @override
+  Future<void> setRating(Rating rating, [Map<String, dynamic>? extras]) async {
+    if (_currentTrack.id == trackNull.id) return;
+    final bool newLiked = rating.hasHeart();
+    await _setLikedInternal(newLiked);
+  }
+
   @override
   Future<dynamic> customAction(String name, [Map<String, dynamic>? extras]) async {
     if (name == 'like') {
-      if (_currentTrack.id != trackNull.id) {
-        await _playlistDao.setTrackLiked(_currentTrack, true);
-        _isCurrentTrackLiked = true;
-        _broadcastPlaybackState(
-          engine.state,
-          engine.playing,
-          engine.position,
-          engine.buffered,
-          engine.speed,
-        );
-      }
+      await _setLikedInternal(true);
     } else if (name == 'unlike') {
-      if (_currentTrack.id != trackNull.id) {
-        await _playlistDao.setTrackLiked(_currentTrack, false);
-        _isCurrentTrackLiked = false;
-        _broadcastPlaybackState(
-          engine.state,
-          engine.playing,
-          engine.position,
-          engine.buffered,
-          engine.speed,
-        );
-      }
+      await _setLikedInternal(false);
     }
     return super.customAction(name, extras);
   }
@@ -1170,6 +1171,12 @@ class BeatsMusicPlayer extends BaseAudioHandler
   }
 
   Future<void> _internalSkipToPrevious() async {
+    // If current playback is past 3 seconds, rewind to the beginning
+    if (engine.position > const Duration(seconds: 3)) {
+      await engine.seek(Duration.zero);
+      return;
+    }
+
     _isAdvancing = true;
     try {
       final advanced =
@@ -1178,10 +1185,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
         final prev = _queueManager.currentTrack;
         if (prev != null) await _enqueuePlayTrack(prev, doPlay: true);
       } else {
-        _playCompleter?.operation.cancel();
-        _playCompleter = null;
-        _currentResolveOp?.cancel();
-        await engine.stop();
+        await engine.seek(Duration.zero);
       }
     } finally {
       _isAdvancing = false;
