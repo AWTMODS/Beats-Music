@@ -118,12 +118,12 @@ class _GlobalEventListenerState extends State<GlobalEventListener> {
         switch (state.runtimeType) {
           case UpdateAvailable:
             final s = state as UpdateAvailable;
-            final l10n = AppLocalizations.of(dialogContext)!;
             log("Update Available: ${s.newVersion}+${s.newBuild}");
             showUpdateSheet(
               context: dialogContext,
               newVersion: s.newVersion,
               newBuild: s.newBuild,
+              downloadUrl: s.downloadUrl,
               onUpdate: () => openURL(s.downloadUrl),
             );
             break;
