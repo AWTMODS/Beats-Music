@@ -29,7 +29,7 @@ void createPlaylistBottomSheet(BuildContext context) {
               EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Container(
             decoration: BoxDecoration(
-              color: AppTheme.themeColor.withOpacity(0.85),
+              color: AppTheme.themeColor.withValues(alpha: 0.85),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(32),
                 topRight: Radius.circular(32),
@@ -50,7 +50,7 @@ void createPlaylistBottomSheet(BuildContext context) {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -74,7 +74,7 @@ void createPlaylistBottomSheet(BuildContext context) {
                         Text(
                           "Give your collection a name",
                           style: AppTheme.secondoryTextStyle.copyWith(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 14,
                           ),
                         ),
@@ -126,7 +126,7 @@ void createPlaylistBottomSheet(BuildContext context) {
                                 child: Text(
                                   l10n.buttonCancel,
                                   style: AppTheme.secondoryTextStyleMedium.copyWith(
-                                    color: Colors.white.withOpacity(0.6),
+                                    color: Colors.white.withValues(alpha: 0.6),
                                     fontSize: 16,
                                   ),
                                 ),
@@ -155,7 +155,7 @@ void createPlaylistBottomSheet(BuildContext context) {
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(16),
                                       ),
-                                      disabledBackgroundColor: AppTheme.successAccent.withOpacity(0.2),
+                                      disabledBackgroundColor: AppTheme.successAccent.withValues(alpha: 0.2),
                                     ),
                                     child: Text(
                                       l10n.createPlaylistDialogCreate,
