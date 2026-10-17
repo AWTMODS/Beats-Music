@@ -287,6 +287,8 @@ Future<void> _onRestoreTap(BuildContext context) async {
       return;
     }
 
+    if (!context.mounted) return;
+
     // 3) Show options dialog: which parts to restore (defaults all true)
     final options = await showDialog<_RestoreOptions?>(
       context: context,
@@ -397,6 +399,7 @@ Future<void> _onRestoreTap(BuildContext context) async {
 
     // If user cancelled options dialog
     if (options == null) return;
+    if (!context.mounted) return;
 
     // 4) Show final confirmation with warning (user must confirm)
     final confirmed = await showDialog<bool>(
@@ -441,6 +444,7 @@ Future<void> _onRestoreTap(BuildContext context) async {
       // user cancelled final confirmation
       return;
     }
+    if (!context.mounted) return;
 
     // 5) Show non-dismissible progress dialog and capture its context
     BuildContext? progressDialogContext;
@@ -493,7 +497,7 @@ Future<void> _onRestoreTap(BuildContext context) async {
       };
     } finally {
       // Always attempt to close the progress dialog using captured context
-      if (progressDialogContext != null) {
+      if (progressDialogContext != null && progressDialogContext!.mounted) {
         try {
           if (Navigator.of(progressDialogContext!).canPop()) {
             Navigator.of(progressDialogContext!).pop();
@@ -501,7 +505,7 @@ Future<void> _onRestoreTap(BuildContext context) async {
         } catch (e) {
           log("Failed to pop progress dialog: $e", name: "StorageSetting");
         }
-      } else {
+      } else if (context.mounted) {
         // Fallback: try to pop root navigator (best-effort)
         try {
           if (Navigator.of(context, rootNavigator: true).canPop()) {
