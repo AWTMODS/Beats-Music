@@ -48,6 +48,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:beats_music/l10n/app_localizations.dart';
 import 'package:beats_music/blocs/add_to_playlist/cubit/add_to_playlist_cubit.dart';
+import 'package:beats_music/blocs/jam_session/jam_session_cubit.dart';
 import 'package:beats_music/blocs/library/cubit/library_items_cubit.dart';
 import 'package:beats_music/plugins/blocs/import/content_import_cubit.dart';
 import 'package:beats_music/routes/app_router.dart';
@@ -253,6 +254,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   StreamSubscription<SharedMedia>? _intentSub;
   StreamSubscription<Uri>? _linkSub;
+  StreamSubscription<String>? _notificationTapSub;
   SharedMedia? sharedMedia;
   late final AppLinks _appLinks;
 
@@ -288,13 +290,22 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       });
     }
 
-    // Listen for notification "Tap to Play"
-    NotificationManager().onNotificationTap.addListener(_handleNotificationTap);
+    // Listen for notification "Tap to Play" (while app is active or in background)
+    _notificationTapSub = NotificationManager().tapStream.listen((songId) {
+      _handleNotificationTap(songId);
+    });
+
+    // Check if app was cold-launched by tapping a notification
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final coldLaunchPayload = NotificationManager().consumePendingTapPayload();
+      if (coldLaunchPayload != null) {
+        _handleNotificationTap(coldLaunchPayload);
+      }
+    });
   }
 
-  void _handleNotificationTap() async {
-    final songId = NotificationManager().onNotificationTap.value;
-    if (songId == null || songId.isEmpty) return;
+  void _handleNotificationTap(String songId) async {
+    if (songId.isEmpty) return;
 
     debugPrint('Main: Notification tap received for songId: $songId');
     
@@ -324,7 +335,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    NotificationManager().onNotificationTap.removeListener(_handleNotificationTap);
+    _notificationTapSub?.cancel();
     _linkSub?.cancel();
     _intentSub?.cancel();
     if (io.Platform.isWindows || io.Platform.isLinux || io.Platform.isMacOS) {
@@ -594,6 +605,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             pluginService: ServiceLocator.pluginService,
             statsService: ListeningStatisticsService(),
           ),
+          lazy: true,
+        ),
+        BlocProvider(
+          create: (_) => JamSessionCubit(),
           lazy: true,
         ),
       ],
