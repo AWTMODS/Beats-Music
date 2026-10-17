@@ -13,7 +13,7 @@ class PermissionScreen extends StatefulWidget {
   State<PermissionScreen> createState() => _PermissionScreenState();
 }
 
-class _PermissionScreenState extends State<PermissionScreen> {
+class _PermissionScreenState extends State<PermissionScreen> with WidgetsBindingObserver {
   bool _notificationGranted = false;
   bool _storageGranted = false;
   bool _batteryGranted = false;
@@ -21,38 +21,101 @@ class _PermissionScreenState extends State<PermissionScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkPermissions();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissions();
+    }
   }
 
   Future<void> _checkPermissions() async {
     final notificationStatus = await Permission.notification.status;
-    final storageStatus = await Permission.audio.status; // Android 13+ use audio
+    final audioGranted = await Permission.audio.status.isGranted;
+    final storageGranted = await Permission.storage.status.isGranted;
+    final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
     
     if (mounted) {
       setState(() {
         _notificationGranted = notificationStatus.isGranted;
-        _storageGranted = storageStatus.isGranted;
+        _storageGranted = audioGranted || storageGranted;
+        _batteryGranted = batteryStatus.isGranted;
       });
     }
   }
 
-  Future<void> _requestPermission(Permission permission, Function(bool) onResult) async {
-    final status = await permission.request();
-    onResult(status.isGranted);
+  Future<void> _requestNotificationPermission() async {
+    final status = await Permission.notification.request();
+    if (mounted) {
+      setState(() => _notificationGranted = status.isGranted);
+      if (status.isPermanentlyDenied) {
+        _showSettingsPrompt("Notification permission");
+      }
+    }
   }
 
-  Future<void> _continue() async {
-    if (_storageGranted) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('seen_permission', true);
-      
-      if (mounted) {
-        context.goNamed(RoutePaths.loginScreen);
+  Future<void> _requestAudioPermission() async {
+    // Android 13+ (API 33+) uses Permission.audio (READ_MEDIA_AUDIO)
+    var status = await Permission.audio.request();
+    // Android 12 and below uses Permission.storage (READ_EXTERNAL_STORAGE)
+    if (!status.isGranted) {
+      status = await Permission.storage.request();
+    }
+
+    if (mounted) {
+      setState(() => _storageGranted = status.isGranted);
+      if (status.isPermanentlyDenied) {
+        _showSettingsPrompt("Music & Audio permission");
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Music permission is required to play songs!")),
-      );
+    }
+  }
+
+  Future<void> _requestBatteryPermission() async {
+    final status = await Permission.ignoreBatteryOptimizations.request();
+    if (mounted) {
+      setState(() => _batteryGranted = status.isGranted);
+      if (status.isPermanentlyDenied) {
+        _showSettingsPrompt("Battery optimization permission");
+      }
+    }
+  }
+
+  void _showSettingsPrompt(String permissionName) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("$permissionName is disabled. You can enable it in Settings."),
+        action: SnackBarAction(
+          label: "Settings",
+          onPressed: () => openAppSettings(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _continue({bool isSkipping = false}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seen_permission', true);
+    
+    if (mounted) {
+      if (isSkipping && !_storageGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Online streaming enabled. You can grant local music access anytime in Settings."),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      context.goNamed(RoutePaths.loginScreen);
     }
   }
 
@@ -92,45 +155,27 @@ class _PermissionScreenState extends State<PermissionScreen> {
                 title: "Notifications",
                 subtitle: "To show playback controls in the notification bar.",
                 isGranted: _notificationGranted,
-                onTap: () => _requestPermission(Permission.notification, (val) {
-                  setState(() => _notificationGranted = val);
-                }),
+                onTap: _requestNotificationPermission,
               ),
               
               const SizedBox(height: 16),
               
-                _buildPermissionTile(
+              _buildPermissionTile(
                 icon: MingCute.music_fill,
                 title: "Music & Audio",
                 subtitle: "To access and play your local music files.",
                 isGranted: _storageGranted,
-                onTap: () async {
-                  // Android 13+ (SDK 33) uses Permission.audio
-                  // Older versions use Permission.storage
-                  if (await Permission.audio.request().isGranted || 
-                      await Permission.storage.request().isGranted) {
-                    setState(() => _storageGranted = true);
-                  } else {
-                    openAppSettings();
-                  }
-                },
+                onTap: _requestAudioPermission,
               ),
               
               const SizedBox(height: 16),
               
-               _buildPermissionTile(
+              _buildPermissionTile(
                 icon: MingCute.battery_fill,
                 title: "Battery",
                 subtitle: "Disable optimization for uninterrupted background play.",
                 isGranted: _batteryGranted,
-                onTap: () async {
-                   final status = await Permission.ignoreBatteryOptimizations.request();
-                   if (status.isGranted) {
-                     setState(() => _batteryGranted = true);
-                   } else {
-                     openAppSettings();
-                   }
-                },
+                onTap: _requestBatteryPermission,
               ),
 
               const Spacer(),
@@ -139,7 +184,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _continue,
+                  onPressed: () => _continue(isSkipping: false),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Default_Theme.accentColor2,
                     foregroundColor: Default_Theme.themeColor,
@@ -147,16 +192,32 @@ class _PermissionScreenState extends State<PermissionScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text(
-                    "Continue",
-                    style: TextStyle(
+                  child: Text(
+                    _storageGranted ? "Continue" : "Continue with Local & Online",
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              if (!_storageGranted) ...[
+                const SizedBox(height: 12),
+                Center(
+                  child: TextButton(
+                    onPressed: () => _continue(isSkipping: true),
+                    child: const Text(
+                      "Skip for now (Stream Online Only)",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
             ],
           ),
         ),
