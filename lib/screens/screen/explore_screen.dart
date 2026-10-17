@@ -188,7 +188,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
               );
             },
             child: CustomScrollView(
-              shrinkWrap: true,
               physics: const ClampingScrollPhysics(),
               slivers: [
                 const CustomDiscoverBar(),
