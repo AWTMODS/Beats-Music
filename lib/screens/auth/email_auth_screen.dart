@@ -86,6 +86,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
 
       if (mounted) {
         final preferences = await CloudSyncService().getUserPreferences();
+        if (!mounted) return;
         if (preferences['languages']!.isEmpty) {
           context.goNamed(RoutePaths.preferenceSelectionScreen);
         } else {
