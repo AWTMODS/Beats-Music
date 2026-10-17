@@ -219,7 +219,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get playlistNoMatchSearch => '一致するプレイリストがありません';
 
   @override
-  String get playlistCreateNew => '新しいプレイリストを作成 😍';
+  String get playlistCreateNew => '新しいプレイリストを作成';
 
   @override
   String get playlistCreateFirstOne => 'プレイリストがありません。お気に入りを作ってみましょう！';
