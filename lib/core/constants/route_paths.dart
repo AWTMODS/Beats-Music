@@ -30,4 +30,11 @@ class RoutePaths {
   static const String importProcess = "ImportProcess";
   static const String chartScreen = "ChartScreen";
   static const String localMusicScreen = "LocalMusic";
+
+  // ── Social / Collaborative ──────────────────────────────────────────────────
+  static const String collabPlaylistList = "CollabPlaylists";
+  static const String collabPlaylistDetail = "CollabPlaylistDetail";
+
+  // ── Live Listening Room ──────────────────────────────────────────────
+  static const String jamRoom = "JamRoom";
 }
