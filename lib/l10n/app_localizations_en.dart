@@ -226,7 +226,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistNoMatchSearch => 'No playlists match your search';
 
   @override
-  String get playlistCreateNew => 'Create New Playlist 😍';
+  String get playlistCreateNew => 'Create New Playlist';
 
   @override
   String get playlistCreateFirstOne =>
