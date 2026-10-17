@@ -77,7 +77,7 @@
   "playlistShuffle": "Shuffle",
   "playlistMoreOptions": "More Options",
   "playlistNoMatchSearch": "No playlists match your search",
-  "playlistCreateNew": "Create New Playlist 😍",
+  "playlistCreateNew": "Create New Playlist",
   "playlistCreateFirstOne": "No playlists yet. Create one to get started!",
   "addToPlaylistNoSongSelected": "No song selected",
   "createPlaylistDialogBarrierLabel": "Create playlist dialog",
