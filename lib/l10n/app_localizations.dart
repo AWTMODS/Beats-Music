@@ -517,7 +517,7 @@ abstract class AppLocalizations {
   /// No description provided for @playlistCreateNew.
   ///
   /// In en, this message translates to:
-  /// **'Create New Playlist 😍'**
+  /// **'Create New Playlist'**
   String get playlistCreateNew;
 
   /// No description provided for @playlistCreateFirstOne.
