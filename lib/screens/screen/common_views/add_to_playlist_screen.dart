@@ -15,6 +15,8 @@ import 'package:beats_music/utils/load_image.dart';
 import 'package:beats_music/screens/widgets/thumbnail_grid.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:beats_music/l10n/app_localizations.dart';
+import 'package:beats_music/screens/widgets/snackbar.dart';
+import 'package:beats_music/services/collaborative_playlist_service.dart';
 
 class AddToPlaylistScreen extends StatefulWidget {
   const AddToPlaylistScreen({super.key});
@@ -29,6 +31,9 @@ class _AddToPlaylistScreenState extends State<AddToPlaylistScreen> {
   final ValueNotifier<String> _searchQuery = ValueNotifier('');
   final ValueNotifier<Set<String>> _songInPlaylists = ValueNotifier({});
   final ValueNotifier<Set<String>> _pendingPlaylistOps = ValueNotifier({});
+  List<CollabPlaylistMeta> _collabPlaylists = [];
+  final ValueNotifier<Set<String>> _songInCollabPlaylists = ValueNotifier({});
+  final ValueNotifier<Set<String>> _pendingCollabOps = ValueNotifier({});
 
   @override
   void initState() {
@@ -47,6 +52,8 @@ class _AddToPlaylistScreenState extends State<AddToPlaylistScreen> {
     _searchQuery.dispose();
     _songInPlaylists.dispose();
     _pendingPlaylistOps.dispose();
+    _songInCollabPlaylists.dispose();
+    _pendingCollabOps.dispose();
     super.dispose();
   }
 
@@ -65,6 +72,31 @@ class _AddToPlaylistScreenState extends State<AddToPlaylistScreen> {
     } catch (e) {
       if (!mounted) return;
       _songInPlaylists.value = {};
+    }
+
+    final collabService = CollaborativePlaylistService();
+    if (collabService.isSignedIn) {
+      try {
+        final collabs = await collabService.fetchMyPlaylists();
+        if (mounted) {
+          setState(() {
+            _collabPlaylists = collabs;
+          });
+        }
+        final inCollab = <String>{};
+        for (final p in collabs) {
+          try {
+            final tracks =
+                await collabService.watchTracks(p.playlistId).first;
+            if (tracks.any((t) => t.track.id == mediaItem.id)) {
+              inCollab.add(p.playlistId);
+            }
+          } catch (_) {}
+        }
+        if (mounted) {
+          _songInCollabPlaylists.value = inCollab;
+        }
+      } catch (_) {}
     }
   }
 
@@ -145,6 +177,51 @@ class _AddToPlaylistScreenState extends State<AddToPlaylistScreen> {
       if (mounted) {
         _pendingPlaylistOps.value = Set<String>.from(_pendingPlaylistOps.value)
           ..remove(playlist.playlistName);
+      }
+    }
+  }
+
+  List<CollabPlaylistMeta> _filterCollabPlaylists(
+    List<CollabPlaylistMeta> collabs,
+    String query,
+  ) {
+    if (query.isEmpty) return collabs;
+    return collabs
+        .where((p) => p.name.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+  }
+
+  Future<void> _toggleSongInCollabPlaylist(
+    Track song,
+    CollabPlaylistMeta playlist,
+  ) async {
+    if (_pendingCollabOps.value.contains(playlist.playlistId)) return;
+    final isIn = _songInCollabPlaylists.value.contains(playlist.playlistId);
+
+    _pendingCollabOps.value = Set<String>.from(_pendingCollabOps.value)
+      ..add(playlist.playlistId);
+
+    try {
+      if (isIn) {
+        SnackbarService.showMessage('Already in "${playlist.name}"');
+      } else {
+        final success = await CollaborativePlaylistService()
+            .addTrack(playlist.playlistId, song);
+        if (success) {
+          _songInCollabPlaylists.value =
+              Set<String>.from(_songInCollabPlaylists.value)
+                ..add(playlist.playlistId);
+          SnackbarService.showMessage('Added to "${playlist.name}"! 🎵');
+        } else {
+          SnackbarService.showMessage('Could not add to "${playlist.name}"');
+        }
+      }
+    } catch (_) {
+      SnackbarService.showMessage('Error updating collaborative playlist');
+    } finally {
+      if (mounted) {
+        _pendingCollabOps.value = Set<String>.from(_pendingCollabOps.value)
+          ..remove(playlist.playlistId);
       }
     }
   }
@@ -250,8 +327,13 @@ class _AddToPlaylistScreenState extends State<AddToPlaylistScreen> {
                             libraryState.playlists,
                             query,
                           );
+                          final filteredCollabs = _filterCollabPlaylists(
+                            _collabPlaylists,
+                            query,
+                          );
 
-                          if (filteredPlaylists.isEmpty) {
+                          if (filteredPlaylists.isEmpty &&
+                              filteredCollabs.isEmpty) {
                             return Center(
                               child: SignBoardWidget(
                                 message: query.isEmpty
@@ -270,44 +352,91 @@ class _AddToPlaylistScreenState extends State<AddToPlaylistScreen> {
                               return ValueListenableBuilder<Set<String>>(
                                 valueListenable: _pendingPlaylistOps,
                                 builder: (context, pendingPlaylists, _) {
-                                  return ListView.builder(
-                                    padding: const EdgeInsets.only(
-                                      left: 16,
-                                      right: 16,
-                                      bottom: 100,
-                                    ),
-                                    physics: const BouncingScrollPhysics(),
-                                    itemCount: filteredPlaylists.length + 1,
-                                    itemBuilder: (context, index) {
-                                      if (index == 0) {
-                                        return _CreatePlaylistTile(
-                                          onTap: () =>
-                                              createPlaylistBottomSheet(
-                                                  context),
-                                        );
-                                      }
+                                  return ValueListenableBuilder<Set<String>>(
+                                    valueListenable: _songInCollabPlaylists,
+                                    builder: (context, songCollabs, _) {
+                                      return ValueListenableBuilder<Set<String>>(
+                                        valueListenable: _pendingCollabOps,
+                                        builder: (context, pendingCollabs, _) {
+                                          final totalCount = 1 +
+                                              filteredCollabs.length +
+                                              filteredPlaylists.length;
+                                          return ListView.builder(
+                                            padding: const EdgeInsets.only(
+                                              left: 16,
+                                              right: 16,
+                                              bottom: 100,
+                                            ),
+                                            physics:
+                                                const BouncingScrollPhysics(),
+                                            itemCount: totalCount,
+                                            itemBuilder: (context, index) {
+                                              if (index == 0) {
+                                                return _CreatePlaylistTile(
+                                                  onTap: () =>
+                                                      createPlaylistBottomSheet(
+                                                          context),
+                                                );
+                                              }
 
-                                      final playlist =
-                                          filteredPlaylists[index - 1];
-                                      final isInPlaylist = songPlaylists
-                                          .contains(playlist.playlistName);
-                                      final isPending = pendingPlaylists
-                                          .contains(playlist.playlistName);
-                                      return AnimatedListItem(
-                                        key: ValueKey(playlist.playlistName),
-                                        index: index,
-                                        child: _PlaylistTile(
-                                          playlist: playlist,
-                                          isInPlaylist: isInPlaylist,
-                                          isPending: isPending,
-                                          onTap: isPending
-                                              ? null
-                                              : () => _toggleSongInPlaylist(
-                                                    context,
-                                                    mediaItem,
-                                                    playlist,
+                                              if (index <=
+                                                  filteredCollabs.length) {
+                                                final collab =
+                                                    filteredCollabs[index - 1];
+                                                final isInCollab = songCollabs
+                                                    .contains(collab.playlistId);
+                                                final isPending = pendingCollabs
+                                                    .contains(collab.playlistId);
+                                                return AnimatedListItem(
+                                                  key: ValueKey(
+                                                      'collab_${collab.playlistId}'),
+                                                  index: index,
+                                                  child: _CollabPlaylistTile(
+                                                    playlist: collab,
+                                                    isInPlaylist: isInCollab,
+                                                    isPending: isPending,
+                                                    onTap: isPending
+                                                        ? null
+                                                        : () =>
+                                                            _toggleSongInCollabPlaylist(
+                                                              mediaItem,
+                                                              collab,
+                                                            ),
                                                   ),
-                                        ),
+                                                );
+                                              }
+
+                                              final playlist =
+                                                  filteredPlaylists[index -
+                                                      1 -
+                                                      filteredCollabs.length];
+                                              final isInPlaylist =
+                                                  songPlaylists.contains(
+                                                      playlist.playlistName);
+                                              final isPending =
+                                                  pendingPlaylists.contains(
+                                                      playlist.playlistName);
+                                              return AnimatedListItem(
+                                                key: ValueKey(
+                                                    playlist.playlistName),
+                                                index: index,
+                                                child: _PlaylistTile(
+                                                  playlist: playlist,
+                                                  isInPlaylist: isInPlaylist,
+                                                  isPending: isPending,
+                                                  onTap: isPending
+                                                      ? null
+                                                      : () =>
+                                                          _toggleSongInPlaylist(
+                                                            context,
+                                                            mediaItem,
+                                                            playlist,
+                                                          ),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
                                       );
                                     },
                                   );
@@ -631,6 +760,168 @@ class _PlaylistTile extends StatelessWidget {
                             child: const Icon(
                               Icons.check_rounded,
                               color: Default_Theme.accentColor1,
+                              size: 20,
+                            ),
+                          )
+                        : SizedBox(
+                            key: const ValueKey('unchecked'),
+                            width: 32,
+                            height: 32,
+                            child: Icon(
+                              Icons.add_rounded,
+                              color: Default_Theme.primaryColor1
+                                  .withValues(alpha: 0.4),
+                              size: 24,
+                            ),
+                          ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CollabPlaylistTile extends StatelessWidget {
+  final CollabPlaylistMeta playlist;
+  final bool isInPlaylist;
+  final bool isPending;
+  final VoidCallback? onTap;
+
+  const _CollabPlaylistTile({
+    required this.playlist,
+    required this.isInPlaylist,
+    required this.isPending,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        splashColor: AppTheme.accentColor1.withValues(alpha: 0.08),
+        highlightColor: AppTheme.accentColor1.withValues(alpha: 0.04),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppTheme.accentColor1.withValues(alpha: 0.35),
+                      AppTheme.successAccent.withValues(alpha: 0.18),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: AppTheme.accentColor1.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(
+                  MingCute.group_line,
+                  color: AppTheme.accentColor1,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            playlist.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Default_Theme.secondoryTextStyleMedium.merge(
+                              const TextStyle(
+                                color: Default_Theme.primaryColor1,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentColor1.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'Shared',
+                            style: TextStyle(
+                              color: AppTheme.accentColor1,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${playlist.trackCount} songs • By ${playlist.ownerName}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Default_Theme.secondoryTextStyle.merge(
+                        TextStyle(
+                          color: Default_Theme.primaryColor1
+                              .withValues(alpha: 0.5),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (child, animation) {
+                  return ScaleTransition(scale: animation, child: child);
+                },
+                child: isPending
+                    ? SizedBox(
+                        key: const ValueKey('pending'),
+                        width: 32,
+                        height: 32,
+                        child: Padding(
+                          padding: const EdgeInsets.all(6),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: AppTheme.accentColor1,
+                            backgroundColor: Default_Theme.primaryColor1
+                                .withValues(alpha: 0.12),
+                          ),
+                        ),
+                      )
+                    : isInPlaylist
+                        ? Container(
+                            key: const ValueKey('checked'),
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: AppTheme.successAccent
+                                  .withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              Icons.check_rounded,
+                              color: AppTheme.successAccent,
                               size: 20,
                             ),
                           )
