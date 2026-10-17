@@ -91,60 +91,64 @@ class _OfflineScreenState extends State<OfflineScreen> {
                   )
                 else
                   SliverList(
-                    delegate: SliverChildListDelegate(
-                      [
-                        ...state.downloads.map((download) =>
-                            DownloadingCardWidget(downloadProgress: download)),
-                        ..._filteredSongs.map((song) => SongCardWidget(
-                              song: song,
-                              showOptions: true,
-                              delDownBtn: true,
-                              onTap: () {
-                                final selectedIndex =
-                                    state.downloaded.indexWhere(
-                                  (item) => item.id == song.id,
-                                );
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        if (index < state.downloads.length) {
+                          return DownloadingCardWidget(
+                            downloadProgress: state.downloads[index],
+                          );
+                        }
+                        final songIndex = index - state.downloads.length;
+                        final song = _filteredSongs[songIndex];
+                        return SongCardWidget(
+                          song: song,
+                          showOptions: true,
+                          delDownBtn: true,
+                          onTap: () {
+                            final selectedIndex = state.downloaded.indexWhere(
+                              (item) => item.id == song.id,
+                            );
 
-                                if (selectedIndex < 0 ||
-                                    state.downloaded.isEmpty) {
-                                  SnackbarService.showMessage(
-                                      l10n.offlineOpenFailed);
-                                  log(
-                                    'Offline play failed: missing track in downloaded list (${song.id})',
-                                    name: 'OfflineScreen',
-                                  );
-                                  return;
-                                }
+                            if (selectedIndex < 0 || state.downloaded.isEmpty) {
+                              SnackbarService.showMessage(
+                                  l10n.offlineOpenFailed);
+                              log(
+                                'Offline play failed: missing track in downloaded list (${song.id})',
+                                name: 'OfflineScreen',
+                              );
+                              return;
+                            }
 
-                                try {
-                                  context
-                                      .read<BeatsPlayerCubit>()
-                                      .BeatsPlayer
-                                      .loadPlaylist(
-                                        Playlist(
-                                          tracks: state.downloaded,
-                                          title: "Offline",
-                                        ),
-                                        idx: selectedIndex,
-                                        doPlay: true,
-                                      );
-                                } catch (e, stack) {
-                                  log(
-                                    'Offline play crashed for ${song.id}',
-                                    name: 'OfflineScreen',
-                                    error: e,
-                                    stackTrace: stack,
+                            try {
+                              context
+                                  .read<BeatsPlayerCubit>()
+                                  .BeatsPlayer
+                                  .loadPlaylist(
+                                    Playlist(
+                                      tracks: state.downloaded,
+                                      title: "Offline",
+                                    ),
+                                    idx: selectedIndex,
+                                    doPlay: true,
                                   );
-                                  SnackbarService.showMessage(
-                                      l10n.offlinePlayFailed);
-                                }
-                              },
-                              onOptionsTap: () {
-                                showMoreBottomSheet(context, song,
-                                    showDelete: false);
-                              },
-                            )),
-                      ],
+                            } catch (e, stack) {
+                              log(
+                                'Offline play crashed for ${song.id}',
+                                name: 'OfflineScreen',
+                                error: e,
+                                stackTrace: stack,
+                              );
+                              SnackbarService.showMessage(
+                                  l10n.offlinePlayFailed);
+                            }
+                          },
+                          onOptionsTap: () {
+                            showMoreBottomSheet(context, song,
+                                showDelete: false);
+                          },
+                        );
+                      },
+                      childCount: state.downloads.length + _filteredSongs.length,
                     ),
                   ),
               ],
