@@ -77,7 +77,7 @@
   "playlistShuffle": "シャッフル",
   "playlistMoreOptions": "その他のオプション",
   "playlistNoMatchSearch": "一致するプレイリストがありません",
-  "playlistCreateNew": "新しいプレイリストを作成 😍",
+  "playlistCreateNew": "新しいプレイリストを作成",
   "playlistCreateFirstOne": "プレイリストがありません。お気に入りを作ってみましょう！",
   "addToPlaylistNoSongSelected": "曲が選択されていません",
   "createPlaylistDialogBarrierLabel": "プレイリスト作成ダイアログ",
