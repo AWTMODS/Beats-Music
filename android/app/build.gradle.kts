@@ -52,28 +52,40 @@ android {
     }
 
     signingConfigs {
-        if (keystorePropertiesFile.exists()) {
-            val keystoreProperties = Properties()
-            keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+        val storePath = System.getenv("ANDROID_KEYSTORE_PATH")
+            ?: (if (keystorePropertiesFile.exists()) {
+                val p = Properties().apply { load(FileInputStream(keystorePropertiesFile)) }
+                p.getProperty("storeFile")
+            } else null)
+
+        val resolvedStoreFile = storePath?.let { path ->
+            val f = rootProject.file(path)
+            if (f.exists()) f else file(path)
+        }
+
+        if (resolvedStoreFile != null && resolvedStoreFile.exists()) {
+            val keyProps = if (keystorePropertiesFile.exists()) {
+                Properties().apply { load(FileInputStream(keystorePropertiesFile)) }
+            } else Properties()
 
             create("release") {
-                keyAlias = keystoreProperties["keyAlias"] as String?
-                keyPassword = keystoreProperties["keyPassword"] as String?
-                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String?
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: keyProps.getProperty("keyAlias")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: keyProps.getProperty("keyPassword")
+                storeFile = resolvedStoreFile
+                storePassword = System.getenv("ANDROID_STORE_PASSWORD") ?: keyProps.getProperty("storePassword")
             }
         }
     }
 
     buildTypes {
         release {
-            if (keystorePropertiesFile.exists()) {
+            val hasReleaseSigning = signingConfigs.findByName("release") != null
+            if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
-                println("   📦 Release build: Using release signing config")
-            }
-            else{
+                println("   Release build: Using release signing config")
+            } else {
                 signingConfig = signingConfigs.getByName("debug")
-                println("   📦 Release build: Using debug signing config (no keystore)")
+                println("   Release build: Using debug signing config (no valid release keystore found)")
             }
             // Enable R8 minification and supply rules that preserve GSON generic
             // signatures – required by flutter_local_notifications to deserialise
