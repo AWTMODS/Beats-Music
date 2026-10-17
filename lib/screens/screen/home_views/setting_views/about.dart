@@ -57,10 +57,12 @@ class About extends StatelessWidget {
                       width: 2,
                     ),
                   ),
-                  child: const Icon(
-                    MingCute.music_2_fill,
-                    color: Colors.white,
-                    size: 48,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Image.asset(
+                      'assets/icons/beats_music_logo.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
@@ -114,6 +116,48 @@ class About extends StatelessWidget {
               _SectionCard(
                 child: Column(
                   children: [
+                    // Developer Profile Picture (Instagram)
+                    GestureDetector(
+                      onTap: () => launchUrl(
+                        Uri.parse('https://instagram.com/aadith.cv'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF833AB4),
+                              Color(0xFFFD1D1D),
+                              Color(0xFFFCAF45),
+                            ],
+                            begin: Alignment.topRight,
+                            end: Alignment.bottomLeft,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFE1306C).withValues(alpha: 0.35),
+                              blurRadius: 16,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(2.5),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF161616),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const CircleAvatar(
+                            radius: 44,
+                            backgroundColor: Colors.transparent,
+                            backgroundImage: AssetImage('assets/icons/aadith_dev.png'),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     Text(
                       'Developed by',
                       style: TextStyle(
@@ -121,7 +165,7 @@ class About extends StatelessWidget {
                         fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     const Text(
                       'Aadith C V',
                       style: TextStyle(
