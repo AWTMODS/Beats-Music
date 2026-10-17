@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:beats_music/services/generative_ai_service.dart';
 import 'package:beats_music/services/meta_resolver/cross_plugin_resolver.dart';
-import 'package:beats_music/services/plugin/plugin_service.dart';
 import 'package:beats_music/services/generative_playlist_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beats_music/core/di/service_locator.dart';
@@ -150,9 +149,9 @@ class _GenerativePlaylistSheetState extends State<GenerativePlaylistSheet> with 
       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 15, 0, 19).withOpacity(0.85),
+          color: const Color.fromARGB(255, 15, 0, 19).withValues(alpha: 0.85),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         padding: EdgeInsets.fromLTRB(25, 15, 25, 25 + bottomPadding),
         child: Column(
@@ -211,12 +210,12 @@ class _GenerativePlaylistSheetState extends State<GenerativePlaylistSheet> with 
                 style: const TextStyle(color: Colors.white, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: "Enter your Gemini API key",
-                  hintStyle: TextStyle(color: Colors.white24),
+                  hintStyle: const TextStyle(color: Colors.white24),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15),
-                    borderSide: BorderSide(color: Colors.white12),
+                    borderSide: const BorderSide(color: Colors.white12),
                   ),
                   suffixIcon: IconButton(
                     icon: const Icon(MingCute.check_line, color: Default_Theme.primaryColor1),
@@ -237,9 +236,9 @@ class _GenerativePlaylistSheetState extends State<GenerativePlaylistSheet> with 
               style: const TextStyle(color: Colors.white, fontSize: 16),
               decoration: InputDecoration(
                 hintText: "e.g. Rain-themed acoustic songs...",
-                hintStyle: TextStyle(color: Colors.white10),
+                hintStyle: const TextStyle(color: Colors.white10),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
+                fillColor: Colors.white.withValues(alpha: 0.05),
                 contentPadding: const EdgeInsets.all(18),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(18),
@@ -274,7 +273,7 @@ class _GenerativePlaylistSheetState extends State<GenerativePlaylistSheet> with 
                 activeTrackColor: Default_Theme.primaryColor1,
                 inactiveTrackColor: Colors.white10,
                 thumbColor: Colors.white,
-                overlayColor: Default_Theme.primaryColor1.withOpacity(0.2),
+                overlayColor: Default_Theme.primaryColor1.withValues(alpha: 0.2),
                 valueIndicatorColor: Default_Theme.primaryColor1,
                 valueIndicatorTextStyle: const TextStyle(color: Colors.white),
               ),
@@ -318,7 +317,7 @@ class _GenerativePlaylistSheetState extends State<GenerativePlaylistSheet> with 
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Default_Theme.primaryColor1.withOpacity(0.2),
+              color: Default_Theme.primaryColor1.withValues(alpha: 0.2),
             ),
             child: Icon(
               _isLoading ? MingCute.loading_3_line : MingCute.magic_3_fill, 
@@ -355,7 +354,7 @@ class _GenerativePlaylistSheetState extends State<GenerativePlaylistSheet> with 
             borderRadius: BorderRadius.circular(18),
             boxShadow: _isLoading ? [] : [
               BoxShadow(
-                color: Default_Theme.primaryColor1.withOpacity(0.3),
+                color: Default_Theme.primaryColor1.withValues(alpha: 0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               )
@@ -382,7 +381,7 @@ class _GenerativePlaylistSheetState extends State<GenerativePlaylistSheet> with 
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(MingCute.magic_3_line, color: Colors.white, size: 20),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       Text(
                         "Generate",
                         style: TextStyle(
@@ -405,7 +404,7 @@ class _GenerativePlaylistSheetState extends State<GenerativePlaylistSheet> with 
       padding: const EdgeInsets.only(right: 10),
       child: ActionChip(
         label: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-        backgroundColor: Colors.white.withOpacity(0.05),
+        backgroundColor: Colors.white.withValues(alpha: 0.05),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: Colors.white10),
