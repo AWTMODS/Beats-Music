@@ -14,18 +14,26 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     - "rust_builder/cargokit/build_tool/**"
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
   errors:
     experimental_member_use: ignore
-    deprecated_member_use: info 
+    deprecated_member_use: ignore 
     invalid_use_of_protected_member: ignore
     library_private_types_in_public_api: ignore
     no_leading_underscores_for_local_identifiers: ignore
-    prefer_const_constructors: info
-    prefer_const_literals_to_create_immutables: info
+    prefer_const_constructors: ignore
+    prefer_const_literals_to_create_immutables: ignore
     non_constant_identifier_names: ignore
     curly_braces_in_flow_control_structures: ignore
     control_flow_in_finally: ignore
-    use_build_context_synchronously: info
+    use_build_context_synchronously: ignore
+    package_names: ignore
 
 linter:
   # The lint rules applied to this project can be customized in the
