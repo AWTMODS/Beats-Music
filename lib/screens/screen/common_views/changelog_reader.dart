@@ -241,6 +241,7 @@ class ChangelogScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white70),
             onPressed: () async {
               await Navigator.of(context).maybePop();
+              if (!context.mounted) return;
               Navigator.of(context).push(PageRouteBuilder(
                 pageBuilder: (_, __, ___) => const About(),
                 transitionsBuilder: (_, animation, secondaryAnimation, child) {
