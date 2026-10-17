@@ -304,7 +304,7 @@ class PluginBloc extends Bloc<PluginEvent, PluginState> {
       log('Install result: ${result.pluginId} — ${result.status}',
           name: 'PluginBloc');
 
-      final message = switch (result.status as PluginInstallStatus) {
+      final message = switch (result.status) {
         PluginInstallStatus.updated =>
           'Plugin "${result.pluginId}" upgraded to a newer version.',
         PluginInstallStatus.alreadyInstalled =>
