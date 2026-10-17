@@ -11,8 +11,35 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:beats_music/l10n/app_localizations.dart';
 import 'package:icons_plus/icons_plus.dart';
 
-class HistoryView extends StatelessWidget {
+class HistoryView extends StatefulWidget {
   const HistoryView({super.key});
+
+  @override
+  State<HistoryView> createState() => _HistoryViewState();
+}
+
+class _HistoryViewState extends State<HistoryView> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      context.read<HistoryCubit>().loadMore();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,32 +75,52 @@ class HistoryView extends StatelessWidget {
         ),
         body: BlocBuilder<HistoryCubit, HistoryState>(
           builder: (context, state) {
-            return (state is HistoryInitial)
-                ? const Center(
-                    child: CircularProgressIndicator(),
-                  )
-                : ListView.builder(
-                    itemCount: state.tracks.length,
-                    shrinkWrap: true,
-                    physics: const BouncingScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      return SongCardWidget(
-                        song: state.tracks[index],
-                        onTap: () {
-                          context
-                              .read<BeatsPlayerCubit>()
-                              .BeatsPlayer
-                              .loadPlaylist(
-                                  Playlist(
-                                      tracks: state.tracks, title: 'History'),
-                                  idx: index,
-                                  doPlay: true);
-                        },
-                        onOptionsTap: () =>
-                            showMoreBottomSheet(context, state.tracks[index]),
-                      );
-                    },
+            if (state is HistoryInitial && state.tracks.isEmpty) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            if (state.tracks.isEmpty) {
+              return Center(
+                child: Text(
+                  'No recent playback history',
+                  style: TextStyle(
+                    color: Default_Theme.primaryColor1.withValues(alpha: 0.6),
+                    fontSize: 16,
+                  ),
+                ),
+              );
+            }
+            return ListView.builder(
+              controller: _scrollController,
+              itemCount: state.tracks.length + (state.isLoadingMore ? 1 : 0),
+              physics: const BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                if (index >= state.tracks.length) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   );
+                }
+                return SongCardWidget(
+                  song: state.tracks[index],
+                  onTap: () {
+                    context
+                        .read<BeatsPlayerCubit>()
+                        .BeatsPlayer
+                        .loadPlaylist(
+                            Playlist(
+                                tracks: state.tracks, title: 'History'),
+                            idx: index,
+                            doPlay: true);
+                  },
+                  onOptionsTap: () =>
+                      showMoreBottomSheet(context, state.tracks[index]),
+                );
+              },
+            );
           },
         ),
       ),
