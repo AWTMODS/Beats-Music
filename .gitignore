@@ -6,6 +6,9 @@
 *.log
 *.pyc
 *.swp
+*.dll
+*.so
+*.dylib
 .DS_Store
 .atom/
 .buildlog/
@@ -79,6 +82,8 @@ unlinked_spec.ds
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
 *.jks
+*.keystore
+**/*.keystore
 **/android/app/google-services.json
 **/ios/Runner/GoogleService-Info.plist
 
