@@ -23,10 +23,10 @@ class ThumbnailGrid extends StatelessWidget {
       return Container(
         width: size,
         height: size,
-        color: Default_Theme.accentColor1.withValues(alpha: 0.15),
+        color: Default_Theme.successAccent.withValues(alpha: 0.15),
         child: Icon(
           fallbackIcon ?? MingCute.music_2_fill,
-          color: Default_Theme.accentColor1,
+          color: Default_Theme.successAccent,
           size: size * 0.4,
         ),
       );
