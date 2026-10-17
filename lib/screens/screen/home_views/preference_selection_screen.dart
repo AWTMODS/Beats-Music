@@ -1,4 +1,3 @@
-import 'package:beats_music/core/constants/route_paths.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:beats_music/services/cloud_sync_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
