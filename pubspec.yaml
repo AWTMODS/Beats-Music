@@ -3,7 +3,7 @@ description: Modern Music Player.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.6.0+160
+version: 1.7.0+170
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -24,7 +24,6 @@ dependencies:
   cached_network_image: ^3.4.1
   flutter_bloc: ^9.1.1
   bloc: ^9.0.0
-  dart_des: ^1.0.2
   http: ^1.5.0
   archive: ^4.0.7
   convert: ^3.1.1
@@ -38,17 +37,14 @@ dependencies:
   flutter_local_notifications: ^17.2.2
   app_links: ^6.3.2
 
-  isar_community: 
-    version: ^3.3.0-dev.3
-  isar_community_flutter_libs: # contains Isar Core
-    version: ^3.3.0-dev.3
+  isar_community: 3.3.0-dev.3
+  isar_community_flutter_libs: 3.3.0-dev.3 # contains Isar Core
 
   path_provider: ^2.1.0
   path: ^1.9.0
   modal_bottom_sheet: ^3.0.0
   html_unescape: ^2.0.0
   marquee: ^2.2.3
-  string_similarity: ^2.0.0
   package_info_plus: ^9.0.0
   url_launcher: ^6.3.2
   badges: ^3.1.2
@@ -100,7 +96,7 @@ dependencies:
   
 
 dependency_overrides:
-  ffi: ^1.1.2  # Override to make dart_discord_rpc work
+  ffi: ^2.1.2  # Required for jni / objective_c nativeFree
 
 
 dev_dependencies:
@@ -110,8 +106,7 @@ dev_dependencies:
   integration_test:
     sdk: flutter
 
-  isar_community_generator: 
-    version: ^3.3.0-dev.3
+  isar_community_generator: 3.3.0-dev.3
     
   build_runner: ^2.7.1
   flutter_launcher_icons: ^0.14.4
