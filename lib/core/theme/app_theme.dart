@@ -45,7 +45,7 @@ class AppTheme {
       primaryColorDark: successAccent,
       fontFamily: 'Gilroy',
       primarySwatch: MaterialColor(
-        successAccent.value,
+        successAccent.toARGB32(),
         {
           50: successAccent.withValues(alpha: 0.1),
           100: successAccent.withValues(alpha: 0.2),
