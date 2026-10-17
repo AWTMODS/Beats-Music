@@ -230,7 +230,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get playlistNoMatchSearch => 'Ninguna lista coincide con tu búsqueda';
 
   @override
-  String get playlistCreateNew => 'Crear nueva lista 😍';
+  String get playlistCreateNew => 'Crear nueva lista';
 
   @override
   String get playlistCreateFirstOne =>
