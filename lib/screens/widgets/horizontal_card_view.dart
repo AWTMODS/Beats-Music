@@ -14,6 +14,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:go_router/go_router.dart';
 import 'package:beats_music/core/constants/route_paths.dart';
+import 'package:beats_music/screens/widgets/create_playlist_bottomsheet.dart';
+import 'package:beats_music/screens/screen/home_views/recents_view.dart';
 
 class HorizontalCardView extends StatefulWidget {
   final Section section;
@@ -229,7 +231,37 @@ class _HorizontalCardViewState extends State<HorizontalCardView> {
         );
       },
       playlist: (playlist) {
-        if (widget.pluginId.isEmpty ||
+        if (playlist.id == 'library_create_playlist') {
+          createPlaylistBottomSheet(context);
+        } else if (playlist.id == 'library_downloads') {
+          context.pushNamed(RoutePaths.offlineScreen);
+        } else if (playlist.id == 'library_history') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const HistoryView()),
+          );
+        } else if (playlist.id == 'library_top_mix') {
+          context.go('/Search');
+        } else if (playlist.id.startsWith('radio_')) {
+          final seedId = playlist.id.substring('radio_'.length);
+          final tracks = <Track>[];
+          for (final mediaItem in widget.section.items) {
+            mediaItem.when(
+              track: (t) => tracks.add(t),
+              album: (_) {},
+              artist: (_) {},
+              playlist: (_) {},
+            );
+          }
+          final matchTrack = tracks.where((t) => t.id == seedId).firstOrNull ??
+              (tracks.isNotEmpty ? tracks.first : null);
+          if (matchTrack != null) {
+            context
+                .read<BeatsPlayerCubit>()
+                .BeatsPlayer
+                .updateQueueTracks([matchTrack], doPlay: true);
+          }
+        } else if (widget.pluginId.isEmpty ||
             playlist.id == 'Liked' ||
             playlist.id.startsWith('user_playlist_') ||
             !playlist.id.contains('_')) {

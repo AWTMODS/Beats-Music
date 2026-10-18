@@ -2,6 +2,7 @@ import 'package:beats_music/services/auto_sync_service.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:beats_music/screens/screen/home_views/setting_views/setting_shared_widgets.dart';
 import 'package:beats_music/screens/screen/home_views/setting_views/restore_downloads_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
@@ -15,7 +16,12 @@ class CloudSyncSettings extends StatefulWidget {
 
 class _CloudSyncSettingsState extends State<CloudSyncSettings> {
   final AutoSyncService _autoSync = AutoSyncService();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth? get _auth {
+    try {
+      if (Firebase.apps.isNotEmpty) return FirebaseAuth.instance;
+    } catch (_) {}
+    return null;
+  }
   
   bool _autoSyncEnabled = true;
   DateTime? _lastSyncTime;
@@ -53,7 +59,8 @@ class _CloudSyncSettingsState extends State<CloudSyncSettings> {
   }
   
   Future<void> _syncNow() async {
-    if (_auth.currentUser == null || _auth.currentUser!.isAnonymous) {
+    final user = _auth?.currentUser;
+    if (user == null || user.isAnonymous) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Sign in required to sync'),
@@ -119,7 +126,8 @@ class _CloudSyncSettingsState extends State<CloudSyncSettings> {
   
   @override
   Widget build(BuildContext context) {
-    final isLoggedIn = _auth.currentUser != null && !_auth.currentUser!.isAnonymous;
+    final user = _auth?.currentUser;
+    final isLoggedIn = user != null && !user.isAnonymous;
     
     return Scaffold(
       backgroundColor: Default_Theme.themeColor,
@@ -171,7 +179,7 @@ class _CloudSyncSettingsState extends State<CloudSyncSettings> {
                               const SizedBox(height: 4),
                               Text(
                                 isLoggedIn 
-                                    ? _auth.currentUser!.email ?? 'Logged in'
+                                    ? user.email ?? 'Logged in'
                                     : 'Sign in to sync your data',
                                 style: Default_Theme.secondoryTextStyle.copyWith(
                                   color: Default_Theme.primaryColor1.withValues(alpha: 0.6),

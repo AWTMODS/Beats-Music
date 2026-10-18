@@ -103,8 +103,12 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
   }
 
   Future<void> _continue({bool isSkipping = false}) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('seen_permission', true);
+    try {
+      final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 2));
+      await prefs.setBool('seen_permission', true);
+    } catch (e) {
+      debugPrint("Error saving seen_permission: $e");
+    }
     
     if (mounted) {
       if (isSkipping && !_storageGranted) {

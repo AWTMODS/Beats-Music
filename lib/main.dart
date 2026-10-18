@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:io' as io;
 import 'package:beats_music/services/auth_service.dart';
 import 'package:beats_music/services/shared_url_resolver_service.dart';
@@ -158,31 +159,99 @@ Future<void> setHighRefreshRate() async {
   }
 }
 
+void _log(String msg) {
+  developer.log(msg, name: 'MAIN');
+  io.stderr.writeln(msg);
+}
+
 Future<void> main() async {
+  _log('[MAIN] Starting main()...');
   WidgetsFlutterBinding.ensureInitialized();
   GestureBinding.instance.resamplingEnabled = true;
-  MediaKit.ensureInitialized();
-  await bootstrapApp();
 
-  try {
-    await Firebase.initializeApp();
+  FlutterError.onError = (FlutterErrorDetails details) {
+    try {
+      io.File('error_crash.log').writeAsStringSync(
+        '=== FLUTTER ERROR ===\n'
+        'Exception: ${details.exception}\n'
+        'Context: ${details.context}\n'
+        'Library: ${details.library}\n'
+        'Stack:\n${details.stack}\n'
+        '=====================\n',
+        mode: io.FileMode.append,
+      );
+    } catch (_) {}
+
+    // Completely swallow expected network image exceptions (like HTTP 404s)
+    if (details.library == 'image resource service' || 
+        details.exception is NetworkImageLoadException) {
+      return;
+    }
     
-    FlutterError.onError = (FlutterErrorDetails details) {
-      // Completely swallow expected network image exceptions (like HTTP 404s)
-      if (details.library == 'image resource service' || 
-          details.exception is NetworkImageLoadException) {
-        return;
-      }
-      
-      if (details.exception is io.SocketException ||
-          details.exception is io.HandshakeException ||
-          details.exception is io.HttpException) {
-        // Report other transient network errors as non-fatal
+    if (details.exception is io.SocketException ||
+        details.exception is io.HandshakeException ||
+        details.exception is io.HttpException) {
+      try {
         FirebaseCrashlytics.instance.recordFlutterError(details);
-        return;
-      }
+      } catch (_) {}
+      return;
+    }
+    try {
       FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-    };
+    } catch (_) {}
+  };
+
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    try {
+      io.File('error_crash.log').writeAsStringSync(
+        '=== ERROR WIDGET CRASH ===\n'
+        'Exception: ${details.exception}\n'
+        'Context: ${details.context}\n'
+        'Library: ${details.library}\n'
+        'Stack:\n${details.stack}\n'
+        '==========================\n',
+        mode: io.FileMode.append,
+      );
+    } catch (_) {}
+    return Container(
+      color: const Color(0xFFB71C1C),
+      padding: const EdgeInsets.all(16),
+      child: SingleChildScrollView(
+        child: SelectableText(
+          'Error: ${details.exception}\n\nStack:\n${details.stack}',
+          style: const TextStyle(color: Colors.white, fontSize: 13),
+        ),
+      ),
+    );
+  };
+
+  _log('[MAIN] Initializing MediaKit...');
+  MediaKit.ensureInitialized();
+
+  _log('[MAIN] Calling bootstrapApp()...');
+  try {
+    await bootstrapApp();
+    _log('[MAIN] bootstrapApp() succeeded');
+  } catch (e, stack) {
+    _log('[MAIN] FATAL ERROR in bootstrapApp(): $e\n$stack');
+  }
+
+  _log('[MAIN] Initializing Firebase...');
+  try {
+    if (io.Platform.isWindows) {
+      await Firebase.initializeApp(
+        options: const FirebaseOptions(
+          apiKey: 'AIzaSyA1UKd5tU516s9GyvFqS-STevWi1iGebGk',
+          appId: '1:99120782266:android:1a68bcaa91612d9a299b83',
+          messagingSenderId: '99120782266',
+          projectId: 'beats-music-7d78b',
+          storageBucket: 'beats-music-7d78b.firebasestorage.app',
+        ),
+      );
+    } else {
+      await Firebase.initializeApp();
+    }
+    _log('[MAIN] Firebase initialized successfully');
 
     PlatformDispatcher.instance.onError = (error, stack) {
       if (error is NetworkImageLoadException) {
@@ -193,19 +262,29 @@ Future<void> main() async {
                             error is io.HandshakeException || 
                             error is io.HttpException;
       
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: !isNetworkError);
+      try {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: !isNetworkError);
+      } catch (_) {}
       return true;
     };
     
     // Small delay to allow Firebase Auth to restore the user session
     await Future.delayed(const Duration(milliseconds: 100));
   } catch (e) {
+    _log('[MAIN] Firebase init failed: $e');
     debugPrint("Firebase init failed: $e");
   }
 
-  final prefs = await SharedPreferences.getInstance();
-  final bool seenPermission = prefs.getBool('seen_permission') ?? false;
-  final bool loginSkipped = prefs.getBool('login_skipped') ?? false;
+  _log('[MAIN] Checking preferences...');
+  SharedPreferences? prefs;
+  try {
+    prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 2));
+    _log('[MAIN] SharedPreferences loaded successfully');
+  } catch (e) {
+    _log('[MAIN] SharedPreferences failed or timed out: $e');
+  }
+  final bool seenPermission = prefs?.getBool('seen_permission') ?? false;
+  final bool loginSkipped = prefs?.getBool('login_skipped') ?? false;
 
   bool isLoggedIn = false;
   String? userEmail;
@@ -216,10 +295,11 @@ Future<void> main() async {
       userEmail = currentUser?.email;
     }
   } catch (e) {
+    _log('[MAIN] Firebase Auth check failed: $e');
     debugPrint("Firebase Auth check failed: $e");
   }
 
-  debugPrint("Main: isLoggedIn=$isLoggedIn, userEmail=$userEmail, loginSkipped=$loginSkipped");
+  _log('[MAIN] isLoggedIn=$isLoggedIn, userEmail=$userEmail, loginSkipped=$loginSkipped');
 
   if (!seenPermission) {
     AppRouter.initialRoute = '/Permission';
@@ -229,18 +309,54 @@ Future<void> main() async {
     AppRouter.initialRoute = '/Explore';
   }
   
-  debugPrint("Main: Initial Route set to: ${AppRouter.initialRoute}");
+  _log('[MAIN] Initial Route set to: ${AppRouter.initialRoute}');
 
   DiscordService.initialize();
 
-  await setupAudioSession();
-  final player = await PlayerInitializer().getBeatsMusicPlayer();
+  _log('[MAIN] Setting up audio session...');
+  try {
+    await setupAudioSession().timeout(const Duration(seconds: 3));
+    _log('[MAIN] Audio session configured');
+  } catch (e) {
+    _log('[MAIN] Audio session setup error: $e');
+  }
 
-  _activePlayer = player;
+  _log('[MAIN] Initializing player...');
+  BeatsMusicPlayer? player;
+  try {
+    player = await PlayerInitializer().getBeatsMusicPlayer().timeout(const Duration(seconds: 5));
+    _activePlayer = player;
+    _log('[MAIN] Player initialized successfully');
+  } catch (e, stack) {
+    _log('[MAIN] PlayerInitializer error: $e\n$stack');
+  }
 
-  await NotificationManager().init();
+  _log('[MAIN] Initializing NotificationManager...');
+  try {
+    await NotificationManager().init().timeout(const Duration(seconds: 3));
+    _log('[MAIN] NotificationManager initialized');
+  } catch (e) {
+    _log('[MAIN] NotificationManager error: $e');
+  }
 
-  runApp(MyApp(player: player));
+  _log('[MAIN] Calling runApp()...');
+  if (player != null) {
+    runApp(MyApp(player: player));
+  } else {
+    runApp(MaterialApp(
+      home: Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Text(
+            'Error starting audio player.\nPlease restart the app.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
+        ),
+      ),
+    ));
+  }
+  _log('[MAIN] runApp() called!');
 }
 
 class MyApp extends StatefulWidget {

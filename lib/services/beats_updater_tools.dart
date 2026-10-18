@@ -37,7 +37,7 @@ bool isUpdateAvailable(
     int parseBuild(String b) {
       try {
         final parsed = int.parse(b);
-        return parsed > 1000 ? parsed % 1000 : parsed;
+        return (parsed > 1000 && parsed < 10000) ? parsed % 1000 : parsed;
       } catch (_) {
         final m = RegExp(r'(\d+)').firstMatch(b);
         return m != null ? int.parse(m.group(1)!) : 0;
@@ -144,7 +144,8 @@ Future<Map<String, dynamic>> sourceforgeUpdate(
         'newBuild': build,
         'download_url': releaseUrl,
         'currVer': packageInfo.version,
-        'currBuild': (int.tryParse(packageInfo.buildNumber) ?? 0) > 1000
+        'currBuild': (int.tryParse(packageInfo.buildNumber) ?? 0) > 1000 &&
+                (int.tryParse(packageInfo.buildNumber) ?? 0) < 10000
             ? ((int.tryParse(packageInfo.buildNumber) ?? 0) % 1000).toString()
             : packageInfo.buildNumber,
         'results': isUpdateAvailable(
@@ -187,6 +188,40 @@ Future<Map<String, dynamic>> customUpdate(
       final build = (release['build']?.toString()) ?? '0';
       final downloadUrl = (release['url'] as String?) ?? '';
 
+      final updateAvailable = isUpdateAvailable(
+        packageInfo.version,
+        packageInfo.buildNumber,
+        version,
+        build,
+        checkBuild: true,
+      );
+
+      // Verify that downloadUrl is actually reachable if an update is detected.
+      // If the release asset has not been uploaded yet (returns 404), throw so fallback updater takes over.
+      if (updateAvailable && downloadUrl.isNotEmpty) {
+        try {
+          final uri = Uri.tryParse(downloadUrl);
+          if (uri != null) {
+            final headRes = await http.head(uri).timeout(const Duration(seconds: 4));
+            int status = headRes.statusCode;
+            if (status == 405) {
+              final rangeRes = await http.get(uri, headers: {'Range': 'bytes=0-0'}).timeout(const Duration(seconds: 4));
+              status = rangeRes.statusCode;
+            }
+            if (status == 404) {
+              log('Custom update download URL returned 404 ($downloadUrl). Release asset not uploaded yet.',
+                  name: 'UpdaterTools');
+              throw Exception('Update download URL returned 404');
+            }
+          }
+        } catch (e) {
+          if (e.toString().contains('404')) {
+            rethrow;
+          }
+          log('Pre-check for custom update URL: $e', name: 'UpdaterTools');
+        }
+      }
+
       return {
         'source': 'custom',
         'newVer': version,
@@ -194,13 +229,7 @@ Future<Map<String, dynamic>> customUpdate(
         'download_url': downloadUrl,
         'currVer': packageInfo.version,
         'currBuild': packageInfo.buildNumber,
-        'results': isUpdateAvailable(
-          packageInfo.version,
-          packageInfo.buildNumber,
-          version,
-          build,
-          checkBuild: true,
-        ),
+        'results': updateAvailable,
       };
     } else {
       throw Exception('Custom update returned ${response.statusCode}');
@@ -239,7 +268,8 @@ Future<Map<String, dynamic>> githubUpdate(
         'newBuild': buildPart,
         'download_url': download,
         'currVer': packageInfo.version,
-        'currBuild': (int.tryParse(packageInfo.buildNumber) ?? 0) > 1000
+        'currBuild': (int.tryParse(packageInfo.buildNumber) ?? 0) > 1000 &&
+                (int.tryParse(packageInfo.buildNumber) ?? 0) < 10000
             ? ((int.tryParse(packageInfo.buildNumber) ?? 0) % 1000).toString()
             : packageInfo.buildNumber,
         'results': isUpdateAvailable(

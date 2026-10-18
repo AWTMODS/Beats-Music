@@ -1,6 +1,7 @@
 import 'package:beats_music/services/cloud_sync_service.dart';
 import 'package:beats_music/services/auto_sync_service.dart';
 import 'package:beats_music/services/listening_statistics_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:beats_music/services/db/db_provider.dart';
@@ -11,36 +12,46 @@ class AuthService {
   factory AuthService({FirebaseAuth? auth, GoogleSignIn? googleSignIn}) {
     if (auth != null || googleSignIn != null) {
       return AuthService._custom(
-        auth: auth ?? FirebaseAuth.instance,
+        auth: auth,
         googleSignIn: googleSignIn ?? GoogleSignIn(),
       );
     }
     return _instance;
   }
 
+  static FirebaseAuth? _safeAuth() {
+    try {
+      if (Firebase.apps.isNotEmpty) return FirebaseAuth.instance;
+    } catch (_) {}
+    return null;
+  }
+
   AuthService._internal()
-      : _auth = FirebaseAuth.instance,
+      : _customAuth = null,
         _googleSignIn = GoogleSignIn();
 
   AuthService._custom({
-    required FirebaseAuth auth,
+    FirebaseAuth? auth,
     required GoogleSignIn googleSignIn,
-  })  : _auth = auth,
+  })  : _customAuth = auth,
         _googleSignIn = googleSignIn;
 
-  final FirebaseAuth _auth;
+  final FirebaseAuth? _customAuth;
+  FirebaseAuth? get _auth => _customAuth ?? _safeAuth();
   final GoogleSignIn _googleSignIn;
 
   // Stream to listen to auth state changes
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  Stream<User?> get authStateChanges => _auth?.authStateChanges() ?? const Stream.empty();
 
   // Get current user
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser => _auth?.currentUser;
 
   // Sign in with Email & Password
   Future<UserCredential?> signInWithEmail(String email, String password) async {
+    final auth = _auth;
+    if (auth == null) throw Exception("Firebase is not initialized.");
     try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
+      final userCredential = await auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -56,8 +67,10 @@ class AuthService {
 
   // Register with Email & Password
   Future<UserCredential?> registerWithEmail(String email, String password) async {
+    final auth = _auth;
+    if (auth == null) throw Exception("Firebase is not initialized.");
     try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
+      final userCredential = await auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -73,6 +86,8 @@ class AuthService {
 
   // Passwordless magic link
   Future<void> sendSignInLinkToEmail(String email) async {
+    final auth = _auth;
+    if (auth == null) throw Exception("Firebase is not initialized.");
     try {
       final actionCodeSettings = ActionCodeSettings(
         url: 'https://beats-music-7d78b.firebaseapp.com/__/auth/action', // Official Firebase Auth Handler
@@ -81,7 +96,7 @@ class AuthService {
         androidInstallApp: true,
         androidMinimumVersion: '21',
       );
-      await _auth.sendSignInLinkToEmail(email: email, actionCodeSettings: actionCodeSettings);
+      await auth.sendSignInLinkToEmail(email: email, actionCodeSettings: actionCodeSettings);
       debugPrint("AuthService: Sign-in link sent to $email");
     } catch (e) {
        debugPrint("AuthService Error (Magic Link): $e");
@@ -91,9 +106,11 @@ class AuthService {
 
   // Complete magic link sign-in
   Future<UserCredential?> completeSignInWithEmailLink(String email, String link) async {
+    final auth = _auth;
+    if (auth == null) throw Exception("Firebase is not initialized.");
     try {
-      if (_auth.isSignInWithEmailLink(link)) {
-        final userCredential = await _auth.signInWithEmailLink(email: email, emailLink: link);
+      if (auth.isSignInWithEmailLink(link)) {
+        final userCredential = await auth.signInWithEmailLink(email: email, emailLink: link);
         if (userCredential.user != null) {
           _restoreDataInBackground();
         }
@@ -108,8 +125,10 @@ class AuthService {
 
   // Reset Password
   Future<void> sendPasswordResetEmail(String email) async {
+    final auth = _auth;
+    if (auth == null) throw Exception("Firebase is not initialized.");
     try {
-      await _auth.sendPasswordResetEmail(email: email);
+      await auth.sendPasswordResetEmail(email: email);
       debugPrint("AuthService: Password reset link sent to $email");
     } catch (e) {
        debugPrint("AuthService Error (Reset Password): $e");
@@ -119,6 +138,8 @@ class AuthService {
 
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
+    final auth = _auth;
+    if (auth == null) throw Exception("Firebase is not initialized.");
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return null; // User canceled
@@ -129,7 +150,7 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
       
-      final userCredential = await _auth.signInWithCredential(credential);
+      final userCredential = await auth.signInWithCredential(credential);
       
       // Trigger Cloud Sync Download (Restore)
       if (userCredential.user != null) {
@@ -147,8 +168,10 @@ class AuthService {
 
   // Sign in Anonymously (Guest Mode)
   Future<UserCredential?> signInAnonymously() async {
+    final auth = _auth;
+    if (auth == null) throw Exception("Firebase is not initialized.");
     try {
-      return await _auth.signInAnonymously();
+      return await auth.signInAnonymously();
     } catch (e) {
        debugPrint("AuthService Error: $e");
        return null;
@@ -157,8 +180,9 @@ class AuthService {
 
   // Sign Out
   Future<void> signOut() async {
+    final auth = _auth;
     try {
-      if (_auth.currentUser != null && !_auth.currentUser!.isAnonymous) {
+      if (auth?.currentUser != null && !auth!.currentUser!.isAnonymous) {
           debugPrint("AuthService: Signing out. Backing up data...");
           // Backup before logout - parallelize for speed
           final syncService = CloudSyncService();
@@ -179,7 +203,7 @@ class AuthService {
     }
 
     await _googleSignIn.signOut();
-    await _auth.signOut();
+    await auth?.signOut();
     
     // Clear local stats and library to ensure privacy for next user
     debugPrint("AuthService: Clearing local stats and library...");

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1] - 2026-10-19
+
+### Highlights & Improvements
+
+- **Collaborative Playlists & Jam Sessions**: Real-time collaborative playlist synchronization, member avatar presence, and shareable room invite sheets.
+- **In-App Updater Enhancements**: Refined download handling, OTA update flows, and fallback resolution.
+- **UI & Performance**: Search suggestion optimisations, smoother queue transitions, and general bug fixes.
+
 ## [1.7.0] - 2026-10-04
 
 ### New Features & Improvements

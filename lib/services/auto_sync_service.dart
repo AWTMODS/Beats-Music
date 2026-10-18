@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:beats_music/services/cloud_sync_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,7 +16,14 @@ class AutoSyncService {
   static const String _lastSyncTimeKey = 'last_auto_sync_time';
   
   final CloudSyncService _cloudSync = CloudSyncService();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
+
+  User? get _currentUser {
+    try {
+      if (Firebase.apps.isNotEmpty) return _auth.currentUser;
+    } catch (_) {}
+    return null;
+  }
   
   Timer? _syncTimer;
   bool _isSyncing = false;
@@ -42,7 +50,8 @@ class AutoSyncService {
   
   /// Start automatic sync timer (runs every 5 minutes)
   void startAutoSync() {
-    if (_auth.currentUser == null || _auth.currentUser!.isAnonymous) {
+    final user = _currentUser;
+    if (user == null || user.isAnonymous) {
       debugPrint('AutoSync: Skipped (not logged in or guest mode)');
       return;
     }

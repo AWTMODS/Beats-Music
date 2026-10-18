@@ -7,12 +7,16 @@ class ThumbnailGrid extends StatelessWidget {
   final List<String> imageUrls;
   final double size;
   final IconData? fallbackIcon;
+  final Color? fallbackColor;
+  final Color? fallbackIconColor;
 
   const ThumbnailGrid({
     super.key,
     required this.imageUrls,
-    this.size = 70,
+    this.size = 58,
     this.fallbackIcon,
+    this.fallbackColor,
+    this.fallbackIconColor,
   });
 
   @override
@@ -20,14 +24,19 @@ class ThumbnailGrid extends StatelessWidget {
     final cleanUrls = imageUrls.where((url) => url.isNotEmpty).take(4).toList();
 
     if (cleanUrls.isEmpty) {
+      final bgColor = fallbackColor ?? Default_Theme.successAccent.withValues(alpha: 0.15);
+      final iconColor = fallbackIconColor ??
+          (fallbackColor != null ? Colors.white : Default_Theme.successAccent);
       return Container(
         width: size,
         height: size,
-        color: Default_Theme.successAccent.withValues(alpha: 0.15),
-        child: Icon(
-          fallbackIcon ?? MingCute.music_2_fill,
-          color: Default_Theme.successAccent,
-          size: size * 0.4,
+        color: bgColor,
+        child: Center(
+          child: Icon(
+            fallbackIcon ?? MingCute.music_2_fill,
+            color: iconColor,
+            size: size * 0.4,
+          ),
         ),
       );
     }
@@ -50,9 +59,9 @@ class ThumbnailGrid extends StatelessWidget {
       child: Wrap(
         children: List.generate(4, (index) {
           final showImage = index < cleanUrls.length;
-          // If we have 2 images, show them in top-left and top-right? 
+          // If we have 2 images, show them in top-left and top-right?
           // Better: 2 images = 2x1 grid, 3 images = 2x2 with one empty, 4 images = 2x2.
-          
+
           return SizedBox(
             width: size / 2,
             height: size / 2,

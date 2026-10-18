@@ -1,4 +1,4 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:icons_plus/icons_plus.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:beats_music/services/db/db_provider.dart';
+import 'package:beats_music/services/db/dao/track_dao.dart';
 import 'package:beats_music/blocs/settings_cubit/cubit/settings_cubit.dart';
 import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
 import 'package:beats_music/blocs/search_suggestions/search_suggestion_bloc.dart';
@@ -793,15 +795,20 @@ class _SuggestionsSliver extends StatelessWidget {
         }
 
         if (state is SearchSuggestionLoaded) {
-          final dbList =
-              state.dbSuggestionList.map((e) => e.values.first).toList();
+          final dbList = state.dbSuggestionList
+              .map((e) =>
+                  e['query'] ?? (e.values.isNotEmpty ? e.values.first : ''))
+              .where((q) => q.isNotEmpty)
+              .toList();
           final apiList = state.suggestionList;
           final entityList = state.entitySuggestionList;
           final isPluginLoading = state.isPluginLoading;
 
           final combined = <({String query, ContentSearchFilter filter})>[
-            ...dbList.map(
-                (q) => (query: _normalize(q), filter: ContentSearchFilter.all)),
+            ...dbList.map((q) => (
+                  query: _normalize(_RecentSearchItem.fromRaw(q).query),
+                  filter: ContentSearchFilter.all
+                )),
             ...apiList.map(
                 (q) => (query: _normalize(q), filter: ContentSearchFilter.all)),
             ...entityList.map((e) => (
@@ -866,17 +873,25 @@ class _SuggestionsSliver extends StatelessWidget {
               const SizedBox(height: 12),
             ],
             if (dbList.isNotEmpty) ...[
-              _buildSuggestionSectionHeader('Recent', MingCute.history_line),
-              ...dbList.asMap().entries.map((e) => _SuggestionTile(
-                    suggestion: e.value,
-                    icon: MingCute.history_line,
-                    isHistory: true,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                child: Text(
+                  'Recent searches',
+                  style: Default_Theme.secondoryTextStyleMedium.copyWith(
+                    color: Default_Theme.primaryColor1.withValues(alpha: 0.95),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+              ...dbList.asMap().entries.map((e) => _RecentSearchTile(
+                    rawSuggestion: e.value,
                     globalIndex: e.key,
                     highlightedIndexNotifier: highlightedIndexNotifier,
                     onSearch: onSearchInAllCategories,
-                    onPopulate: onSetSearchFieldText,
                   )),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
             ],
             if (apiList.isNotEmpty) ...[
               _buildSuggestionSectionHeader(
@@ -936,6 +951,287 @@ class _SuggestionsSliver extends StatelessWidget {
                   letterSpacing: 1.1,
                   fontWeight: FontWeight.w700)),
         ],
+      ),
+    );
+  }
+}
+
+class _RecentSearchItem {
+  final String raw;
+  final String query;
+  final String title;
+  final String? subtitle;
+  final String? imageUrl;
+  final String? type;
+
+  const _RecentSearchItem({
+    required this.raw,
+    required this.query,
+    required this.title,
+    this.subtitle,
+    this.imageUrl,
+    this.type,
+  });
+
+  factory _RecentSearchItem.fromRaw(String raw) {
+    if (raw.startsWith('{') && raw.endsWith('}')) {
+      try {
+        final data = json.decode(raw) as Map<String, dynamic>;
+        return _RecentSearchItem(
+          raw: raw,
+          query: data['q'] as String? ?? '',
+          title: data['title'] as String? ?? (data['q'] as String? ?? ''),
+          subtitle: data['sub'] as String?,
+          imageUrl: data['img'] as String?,
+          type: data['type'] as String?,
+        );
+      } catch (_) {}
+    }
+    return _RecentSearchItem(
+      raw: raw,
+      query: raw,
+      title: raw,
+      subtitle: null,
+      imageUrl: null,
+      type: null,
+    );
+  }
+}
+
+class _RecentSearchTile extends StatefulWidget {
+  final String rawSuggestion;
+  final int globalIndex;
+  final ValueNotifier<int> highlightedIndexNotifier;
+  final void Function(String) onSearch;
+
+  const _RecentSearchTile({
+    required this.rawSuggestion,
+    required this.globalIndex,
+    required this.highlightedIndexNotifier,
+    required this.onSearch,
+  });
+
+  @override
+  State<_RecentSearchTile> createState() => _RecentSearchTileState();
+}
+
+class _RecentSearchTileState extends State<_RecentSearchTile> {
+  late _RecentSearchItem _item;
+  String? _resolvedImageUrl;
+  String? _resolvedSubtitle;
+  String? _resolvedTitle;
+
+  @override
+  void initState() {
+    super.initState();
+    _parseAndResolve();
+  }
+
+  @override
+  void didUpdateWidget(covariant _RecentSearchTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.rawSuggestion != widget.rawSuggestion) {
+      _parseAndResolve();
+    }
+  }
+
+  void _parseAndResolve() {
+    _item = _RecentSearchItem.fromRaw(widget.rawSuggestion);
+    _resolvedImageUrl = _item.imageUrl;
+    _resolvedSubtitle = _item.subtitle;
+    _resolvedTitle = _item.title;
+
+    if (_resolvedImageUrl == null || _resolvedImageUrl!.isEmpty) {
+      _lookupArtwork();
+    }
+  }
+
+  Future<void> _lookupArtwork() async {
+    try {
+      // 1. Check current track in player if it matches
+      final playerCubit = context.read<BeatsPlayerCubit>();
+      final cur = playerCubit.BeatsPlayer.currentTrackInfo;
+      if (cur.id.isNotEmpty && cur.title.isNotEmpty) {
+        final normQuery = _item.query.toLowerCase().trim();
+        final curTitle = cur.title.toLowerCase().trim();
+        if (normQuery.contains(curTitle) ||
+            curTitle.contains(normQuery) ||
+            (normQuery.isNotEmpty &&
+                normQuery.startsWith(curTitle.split(' ').first))) {
+          final art = cur.thumbnail.urlLow ?? cur.thumbnail.url;
+          if (mounted && art.isNotEmpty) {
+            setState(() {
+              _resolvedImageUrl = art;
+              _resolvedTitle = cur.title;
+              if (cur.artists.isNotEmpty) {
+                _resolvedSubtitle =
+                    'Song • ${cur.artists.map((a) => a.name).join(", ")}';
+              }
+            });
+            return;
+          }
+        }
+      }
+
+      // 2. Lookup in TrackDAO
+      final cleaned =
+          _item.query.replaceAll(RegExp(r'[\(\)\[\]\{\}\-_,.]'), ' ');
+      final words =
+          cleaned.split(RegExp(r'\s+')).where((w) => w.length >= 2).toList();
+      String term = words.isNotEmpty ? words.first : _item.query;
+      final results =
+          await TrackDAO(DBProvider.db).searchTracks(term, limit: 5);
+      if (!mounted || results.isEmpty) return;
+
+      final match = results.first;
+      final art = match.thumbnail?.urlLow ?? match.thumbnail?.url;
+      if (art != null && art.isNotEmpty && mounted) {
+        final artistNames = match.artists
+                ?.map((a) => a.name)
+                .whereType<String>()
+                .where((n) => n.isNotEmpty)
+                .join(', ') ??
+            '';
+        setState(() {
+          _resolvedImageUrl = art;
+          _resolvedTitle = match.title;
+          if (artistNames.isNotEmpty) {
+            _resolvedSubtitle = 'Song • $artistNames';
+          } else {
+            _resolvedSubtitle = 'Song';
+          }
+        });
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final title = _resolvedTitle ?? _item.title;
+    final subtitle = _resolvedSubtitle ?? _item.subtitle;
+    final imageUrl = _resolvedImageUrl;
+    final isArtist = _item.type == 'artist';
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => widget.onSearch(_item.query),
+        splashColor: Colors.transparent,
+        highlightColor: Default_Theme.primaryColor1.withValues(alpha: 0.05),
+        child: ValueListenableBuilder<int>(
+          valueListenable: widget.highlightedIndexNotifier,
+          builder: (context, highlightedIndex, child) {
+            final isHighlighted = highlightedIndex == widget.globalIndex;
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: isHighlighted
+                    ? Default_Theme.primaryColor1.withValues(alpha: 0.065)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: child,
+            );
+          },
+          child: Row(
+            children: [
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: isArtist
+                    ? ClipOval(child: _buildImage(imageUrl))
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: _buildImage(imageUrl),
+                      ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color:
+                            Default_Theme.primaryColor1.withValues(alpha: 0.95),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ).merge(Default_Theme.secondoryTextStyleMedium),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle ??
+                          (widget.rawSuggestion.startsWith('{')
+                              ? 'Recent'
+                              : 'Search'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color:
+                            Default_Theme.primaryColor1.withValues(alpha: 0.55),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                      ).merge(Default_Theme.secondoryTextStyle),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => context
+                    .read<SearchSuggestionBloc>()
+                    .add(SearchSuggestionClear(widget.rawSuggestion)),
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(
+                    MingCute.close_line,
+                    color: Default_Theme.primaryColor1.withValues(alpha: 0.45),
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImage(String? url) {
+    if (url != null && url.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        width: 48,
+        height: 48,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => _placeholder(),
+        errorWidget: (_, __, ___) => _placeholder(),
+      );
+    }
+    return _placeholder();
+  }
+
+  Widget _placeholder() {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: Default_Theme.primaryColor1.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Center(
+        child: Icon(
+          MingCute.music_2_line,
+          size: 22,
+          color: Default_Theme.primaryColor1.withValues(alpha: 0.45),
+        ),
       ),
     );
   }
@@ -1059,7 +1355,26 @@ class _EntitySuggestionTile extends StatelessWidget {
       cursor: SystemMouseCursors.click,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => onSearch(query, filter),
+        onTap: () {
+          final cleanTypeLabel = switch (entity.kind) {
+            plugin_models.EntityType.track => 'Song',
+            plugin_models.EntityType.album => 'Album',
+            plugin_models.EntityType.artist => 'Artist',
+            plugin_models.EntityType.playlist => 'Playlist',
+            plugin_models.EntityType.genre => 'Genre',
+            plugin_models.EntityType.unknown => 'Result',
+          };
+          context.read<SearchSuggestionBloc>().add(SearchSuggestionSave(
+                query,
+                title: entity.title,
+                subtitle: entity.subtitle != null && entity.subtitle!.isNotEmpty
+                    ? '$cleanTypeLabel • ${entity.subtitle}'
+                    : cleanTypeLabel,
+                imageUrl: thumbnailUrl,
+                type: entity.kind.name,
+              ));
+          onSearch(query, filter);
+        },
         splashColor: Colors.transparent,
         highlightColor: Default_Theme.primaryColor1.withValues(alpha: 0.05),
         child: ValueListenableBuilder<int>(
@@ -1307,10 +1622,24 @@ class _SliverSearchResults extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                     child: SongCardWidget(
                       song: track,
-                      onTap: () => context
-                          .read<BeatsPlayerCubit>()
-                          .BeatsPlayer
-                          .updateQueueTracks([track], doPlay: true),
+                      onTap: () {
+                        context.read<SearchSuggestionBloc>().add(
+                              SearchSuggestionSave(
+                                track.title,
+                                title: track.title,
+                                subtitle: track.artists.isNotEmpty
+                                    ? 'Song • ${track.artists.map((a) => a.name).join(", ")}'
+                                    : 'Song',
+                                imageUrl: track.thumbnail.urlLow ??
+                                    track.thumbnail.url,
+                                type: 'track',
+                              ),
+                            );
+                        context
+                            .read<BeatsPlayerCubit>()
+                            .BeatsPlayer
+                            .updateQueueTracks([track], doPlay: true);
+                      },
                       onOptionsTap: () => showMoreBottomSheet(context, track,
                           showSinglePlay: true),
                     ),
@@ -1324,19 +1653,63 @@ class _SliverSearchResults extends StatelessWidget {
         if (albums.isNotEmpty) ...[
           _sliverSectionHeader(AppLocalizations.of(context)!.searchAlbums),
           _buildResponsiveGrid(albums
-              .map((a) => AlbumCard(album: a, pluginId: pluginId))
+              .map((a) => GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: () {
+                      context.read<SearchSuggestionBloc>().add(
+                            SearchSuggestionSave(
+                              a.title,
+                              title: a.title,
+                              subtitle: a.artists.isNotEmpty
+                                  ? 'Album • ${a.artists.join(", ")}'
+                                  : 'Album',
+                              imageUrl: a.thumbnail?.urlLow ?? a.thumbnail?.url,
+                              type: 'album',
+                            ),
+                          );
+                    },
+                    child: AlbumCard(album: a, pluginId: pluginId),
+                  ))
               .toList()),
         ],
         if (artists.isNotEmpty) ...[
           _sliverSectionHeader(AppLocalizations.of(context)!.searchArtists),
           _buildResponsiveGrid(artists
-              .map((a) => ArtistCard(artist: a, pluginId: pluginId))
+              .map((a) => GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: () {
+                      context.read<SearchSuggestionBloc>().add(
+                            SearchSuggestionSave(
+                              a.name,
+                              title: a.name,
+                              subtitle: 'Artist',
+                              imageUrl: a.thumbnail?.urlLow ?? a.thumbnail?.url,
+                              type: 'artist',
+                            ),
+                          );
+                    },
+                    child: ArtistCard(artist: a, pluginId: pluginId),
+                  ))
               .toList()),
         ],
         if (playlists.isNotEmpty) ...[
           _sliverSectionHeader(AppLocalizations.of(context)!.searchPlaylists),
           _buildResponsiveGrid(playlists
-              .map((p) => PlaylistCard(playlist: p, pluginId: pluginId))
+              .map((p) => GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: () {
+                      context.read<SearchSuggestionBloc>().add(
+                            SearchSuggestionSave(
+                              p.title,
+                              title: p.title,
+                              subtitle: 'Playlist',
+                              imageUrl: p.thumbnail.urlLow ?? p.thumbnail.url,
+                              type: 'playlist',
+                            ),
+                          );
+                    },
+                    child: PlaylistCard(playlist: p, pluginId: pluginId),
+                  ))
               .toList()),
         ],
         if (isLoadingMore)

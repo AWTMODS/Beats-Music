@@ -441,13 +441,17 @@ class _UpdateSheetState extends State<UpdateSheet> {
                       Center(
                         child: TextButton.icon(
                           onPressed: () {
-                            launch_Url(Uri.parse(widget.downloadUrl));
+                            final targetUrl =
+                                widget.downloadUrl.contains('/releases/download/')
+                                    ? 'https://github.com/AWTMODS/Beats-Music/releases'
+                                    : widget.downloadUrl;
+                            launch_Url(Uri.parse(targetUrl));
                             Navigator.pop(context);
                           },
                           icon: const Icon(Icons.open_in_browser_rounded,
                               size: 16, color: Colors.white70),
                           label: const Text(
-                            'Download from Browser instead',
+                            'Open Releases in Browser',
                             style: TextStyle(
                                 color: Colors.white70, fontSize: 13),
                           ),

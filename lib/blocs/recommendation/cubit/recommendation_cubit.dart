@@ -27,7 +27,12 @@ class RecommendationCubit extends Cubit<RecommendationState> {
     try {
       // 1. Get Seeds (History + Onboarding)
       final topArtists = await _statsService.getTopArtists();
-      final preferences = await _cloudSync.getUserPreferences();
+      Map<String, List<String>> preferences = {'artists': [], 'languages': []};
+      try {
+        preferences = await _cloudSync.getUserPreferences();
+      } catch (e) {
+        log('Recommendation: Failed to get user preferences: $e', name: 'ML');
+      }
       final List<String> preferredArtists = preferences['artists'] ?? [];
       final List<String> preferredLanguages = preferences['languages'] ?? [];
 

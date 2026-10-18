@@ -3,10 +3,11 @@ description: Modern Music Player.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.7.0+170
+version: 1.7.1+26101901
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.47.0'
 
 # isar version for community fork of isar (temporary)
 # isar_version: &isar_version 3.3.0-dev.3 
@@ -18,8 +19,8 @@ dependencies:
     sdk: flutter
   intl: any
 
-  device_info_plus: ^12.1.0
-  equatable: ^2.0.7
+  device_info_plus: ^12.4.0
+  equatable: ^2.1.0
   icons_plus: ^5.0.0
   cached_network_image: ^3.4.1
   flutter_bloc: ^9.1.1
@@ -32,10 +33,10 @@ dependencies:
   carousel_slider: ^5.1.1
   palette_generator: ^0.3.3+2
   rxdart: ^0.28.0
-  go_router: ^16.2.4
+  go_router: ^16.3.0
   easy_debounce: ^2.0.3
-  flutter_local_notifications: ^17.2.2
-  app_links: ^6.3.2
+  flutter_local_notifications: ^17.2.4
+  app_links: ^6.4.1
 
   isar_community: 3.3.0-dev.3
   isar_community_flutter_libs: 3.3.0-dev.3 # contains Isar Core
@@ -45,19 +46,20 @@ dependencies:
   modal_bottom_sheet: ^3.0.0
   html_unescape: ^2.0.0
   marquee: ^2.2.3
-  package_info_plus: ^9.0.0
+  package_info_plus: ^9.0.1
   url_launcher: ^6.3.2
-  badges: ^3.1.2
+  badges: ^3.2.0
   flutter_displaymode: ^0.6.0
   country_codes: ^3.3.0
-  connectivity_plus: ^7.0.0
-  share_plus: ^12.0.0
-  file_picker: ^10.3.3
+  connectivity_plus: ^7.3.1
+  share_plus: ^12.0.2
+  file_picker: ^10.3.10
   fuzzywuzzy: ^1.2.0
   numberpicker: ^2.1.2
-  permission_handler: ^12.0.1
+  permission_handler: ^12.0.3
   share_handler: ^0.0.25
   sliding_up_panel: ^2.0.0+1
+  flutter_svg: ^2.0.17
   responsive_framework: ^1.5.1
   scrollable_positioned_list: ^0.3.8
   crypto: ^3.0.5
@@ -66,15 +68,15 @@ dependencies:
   photo_manager: ^3.9.0
 
 
-  dio: ^5.3.3
+  dio: ^5.8.0
   shimmer: ^3.0.0
   lottie: ^3.1.2
-  firebase_core: ^3.8.1
-  firebase_auth: ^5.4.1
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.7.0
   firebase_remote_config: ^5.5.0
-  cloud_firestore: ^5.6.1
-  google_sign_in: ^6.2.2
-  shared_preferences: ^2.3.3
+  cloud_firestore: ^5.6.12
+  google_sign_in: ^6.3.0
+  shared_preferences: ^2.5.2
 
   # audio service dependencies
   audio_service: ^0.18.18
@@ -88,9 +90,9 @@ dependencies:
   flutter_rust_bridge: 2.11.1
   freezed_annotation: ^3.1.0
   async: ^2.12.0
-  flutter_secure_storage: ^10.0.0
+  flutter_secure_storage: ^10.3.4
   firebase_crashlytics: ^4.3.10
-  open_filex: ^4.6.0
+  open_filex: ^4.7.0
 
 
   

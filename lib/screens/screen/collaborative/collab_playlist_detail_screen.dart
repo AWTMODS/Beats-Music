@@ -22,6 +22,7 @@ import 'package:beats_music/services/db/mappers/media_item_mapper.dart';
 import 'package:beats_music/src/rust/api/plugin/commands.dart';
 import 'package:beats_music/src/rust/api/plugin/models.dart';
 import 'package:beats_music/utils/load_image.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,7 +48,7 @@ class _CollabPlaylistDetailScreenState
   _SortMode _sortMode = _SortMode.topVoted;
   late AnimationController _headerAnim;
 
-  String get _myUid => FirebaseAuth.instance.currentUser?.uid ?? '';
+  String get _myUid => (Firebase.apps.isNotEmpty ? FirebaseAuth.instance.currentUser?.uid : null) ?? '';
 
   @override
   void initState() {

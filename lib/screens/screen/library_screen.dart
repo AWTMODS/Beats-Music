@@ -31,6 +31,10 @@ import 'package:beats_music/screens/widgets/animated_list_item.dart';
 import 'package:beats_music/blocs/downloader/cubit/downloader_cubit.dart';
 import 'package:beats_music/screens/widgets/thumbnail_grid.dart';
 
+enum LibraryFilter { playlists, albums, artists, downloaded }
+
+enum LibrarySort { recents, recentlyAdded, alphabetical, creator }
+
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({super.key});
 
@@ -56,6 +60,8 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
   final ValueNotifier<String> _searchQuery = ValueNotifier('');
   bool _isSearching = false;
   bool _isReordering = false;
+  LibraryFilter? _activeFilter;
+  LibrarySort _currentSort = LibrarySort.recents;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
@@ -105,6 +111,375 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
     _searchFocusNode.unfocus();
   }
 
+  List<PlaylistItemProperties> _applySort(List<PlaylistItemProperties> items) {
+    final pinned = items.where((i) => i.isPinned).toList();
+    final unpinned = items.where((i) => !i.isPinned).toList();
+
+    switch (_currentSort) {
+      case LibrarySort.recents:
+        break;
+      case LibrarySort.recentlyAdded:
+        unpinned.sort((a, b) => b.playlistId.compareTo(a.playlistId));
+        break;
+      case LibrarySort.alphabetical:
+        unpinned.sort((a, b) => a.playlistName
+            .toLowerCase()
+            .compareTo(b.playlistName.toLowerCase()));
+        break;
+      case LibrarySort.creator:
+        unpinned.sort((a, b) => (a.subTitle ?? '')
+            .toLowerCase()
+            .compareTo((b.subTitle ?? '').toLowerCase()));
+        break;
+    }
+
+    return [...pinned, ...unpinned];
+  }
+
+  void _showSortBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Text(
+                    'Sort by',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const Divider(color: Colors.white12),
+                ...[
+                  (LibrarySort.recents, 'Recents'),
+                  (LibrarySort.recentlyAdded, 'Recently added'),
+                  (LibrarySort.alphabetical, 'Alphabetical'),
+                  (LibrarySort.creator, 'Creator / Artist'),
+                ].map((entry) {
+                  final isSelected = _currentSort == entry.$1;
+                  return ListTile(
+                    title: Text(
+                      entry.$2,
+                      style: TextStyle(
+                        color: isSelected
+                            ? Default_Theme.accentColor2
+                            : Colors.white,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.w500,
+                      ),
+                    ),
+                    trailing: isSelected
+                        ? const Icon(
+                            Icons.check_rounded,
+                            color: Default_Theme.accentColor2,
+                          )
+                        : null,
+                    onTap: () {
+                      setState(() {
+                        _currentSort = entry.$1;
+                      });
+                      Navigator.pop(ctx);
+                    },
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterChips() {
+    final filters = [
+      (LibraryFilter.playlists, 'Playlists'),
+      (LibraryFilter.albums, 'Albums'),
+      (LibraryFilter.artists, 'Artists'),
+      (LibraryFilter.downloaded, 'Downloaded'),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.only(top: 2, bottom: 6),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: filters.map((item) {
+            final isSelected = _activeFilter == item.$1;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () {
+                    setState(() {
+                      if (isSelected) {
+                        _activeFilter = null;
+                      } else {
+                        _activeFilter = item.$1;
+                      }
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOutCubic,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSelected ? 12 : 16,
+                      vertical: 7.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Default_Theme.accentColor2
+                          : const Color(0xFF282828),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected
+                            ? Colors.transparent
+                            : Colors.white.withValues(alpha: 0.08),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isSelected) ...[
+                          const Icon(
+                            Icons.close_rounded,
+                            size: 14,
+                            color: Colors.black,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          item.$2,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w600,
+                            color: isSelected ? Colors.black : Colors.white,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSortHeader(BuildContext context) {
+    final sortLabel = switch (_currentSort) {
+      LibrarySort.recents => 'Recents',
+      LibrarySort.recentlyAdded => 'Recently added',
+      LibrarySort.alphabetical => 'Alphabetical',
+      LibrarySort.creator => 'Creator',
+    };
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 12, 4),
+      child: Row(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: _showSortBottomSheet,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.swap_vert_rounded,
+                    size: 18,
+                    color: Colors.white70,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    sortLabel,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const Spacer(),
+          if (!_isSearching &&
+              (_activeFilter == null ||
+                  _activeFilter == LibraryFilter.playlists))
+            IconButton(
+              tooltip: _isReordering ? 'Done reordering' : 'Reorder',
+              icon: Icon(
+                _isReordering
+                    ? Icons.check_circle_rounded
+                    : Icons.format_list_bulleted_rounded,
+                size: 20,
+                color: _isReordering
+                    ? Default_Theme.accentColor2
+                    : Colors.white.withValues(alpha: 0.6),
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () {
+                setState(() {
+                  _isReordering = !_isReordering;
+                });
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReorderTip(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.035),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Default_Theme.accentColor2.withValues(alpha: 0.22),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Default_Theme.accentColor2.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.drag_indicator_rounded,
+                color: Default_Theme.accentColor2.withValues(alpha: 0.95),
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context)!.importReorderTip,
+                style: Default_Theme.secondoryTextStyle.merge(TextStyle(
+                  color: Default_Theme.primaryColor2.withValues(alpha: 0.72),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                )),
+              ),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _isReordering = false),
+              style: TextButton.styleFrom(
+                foregroundColor: Default_Theme.accentColor2,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                AppLocalizations.of(context)!.importDone,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDownloadedList(BuildContext context) {
+    return BlocBuilder<DownloaderCubit, DownloaderState>(
+      builder: (context, dlState) {
+        var downloadedTracks = dlState.downloaded;
+        final query = _searchController.text.trim().toLowerCase();
+        if (_isSearching && query.isNotEmpty) {
+          downloadedTracks = downloadedTracks
+              .where((t) =>
+                  "${t.title.toLowerCase()} ${t.artists.map((a) => a.name).join(', ').toLowerCase()}"
+                      .contains(query))
+              .toList();
+        }
+
+        if (downloadedTracks.isEmpty) {
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: SignBoardWidget(
+                message: _isSearching
+                    ? AppLocalizations.of(context)!.emptyNoResults
+                    : 'No downloaded songs yet',
+                icon: _isSearching
+                    ? MingCute.search_line
+                    : MingCute.folder_download_fill,
+              ),
+            ),
+          );
+        }
+
+        return SliverList.builder(
+          itemCount: downloadedTracks.length,
+          itemBuilder: (context, index) {
+            final track = downloadedTracks[index];
+            return AnimatedListItem(
+              key: ValueKey('downloaded_${track.id}'),
+              index: index,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4, right: 0),
+                child: SongCardWidget(
+                  song: track,
+                  showOptions: true,
+                  onTap: () {
+                    _dismissKeyboard();
+                    final playIdx = dlState.downloaded
+                        .indexWhere((t) => t.id == track.id);
+                    context.read<BeatsPlayerCubit>().BeatsPlayer.loadPlaylist(
+                          Playlist(
+                            tracks: dlState.downloaded,
+                            title: "Offline",
+                          ),
+                          idx: playIdx >= 0 ? playIdx : 0,
+                          doPlay: true,
+                        );
+                  },
+                  onOptionsTap: () {
+                    showMoreBottomSheet(context, track, showDelete: false);
+                  },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -125,164 +500,146 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
               );
             }
 
-            if (itemsState.playlists.isEmpty) {
-              return CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  customDiscoverBar(context),
-                  SliverToBoxAdapter(
-                    child: _buildOfflineShortcutTile(context),
-                  ),
-                  SliverFillRemaining(
-                    child: Center(
-                      child: SignBoardWidget(
-                        message:
-                            AppLocalizations.of(context)!.libraryEmptyState,
-                        icon: MingCute.playlist_fill,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }
-
             return BlocBuilder<LibrarySearchCubit, LibrarySearchState>(
               builder: (context, searchState) {
                 final isSearching = searchState is LibrarySearchSuccess;
                 final isLoading = searchState is LibrarySearchLoading;
 
-                final filteredPlaylists = isSearching
+                final rawPlaylists = isSearching
                     ? searchState.filteredPlaylists
                     : itemsState.playlists;
                 final filteredSongs = isSearching
                     ? searchState.songResults
                     : <SongSearchResult>[];
 
-                final hasResults =
-                    filteredPlaylists.isNotEmpty || filteredSongs.isNotEmpty;
+                // Filter by active category chip
+                List<PlaylistItemProperties> displayPlaylists;
+                switch (_activeFilter) {
+                  case LibraryFilter.playlists:
+                    displayPlaylists = rawPlaylists
+                        .where((p) =>
+                            p.type == PlaylistType.userPlaylist ||
+                            p.type == PlaylistType.remotePlaylist)
+                        .toList();
+                    break;
+                  case LibraryFilter.albums:
+                    displayPlaylists = rawPlaylists
+                        .where((p) => p.type == PlaylistType.album)
+                        .toList();
+                    break;
+                  case LibraryFilter.artists:
+                    displayPlaylists = rawPlaylists
+                        .where((p) => p.type == PlaylistType.artist)
+                        .toList();
+                    break;
+                  case LibraryFilter.downloaded:
+                    displayPlaylists = const [];
+                    break;
+                  case null:
+                    displayPlaylists = List.of(rawPlaylists);
+                    break;
+                }
+
+                // Apply selected sort
+                displayPlaylists = _applySort(displayPlaylists);
+
+                final isDownloadedFilter =
+                    _activeFilter == LibraryFilter.downloaded;
 
                 return CustomScrollView(
                   physics: const BouncingScrollPhysics(),
                   slivers: [
                     customDiscoverBar(context),
-                    if (!_isSearching)
-                      SliverToBoxAdapter(
-                        child: _buildOfflineShortcutTile(context),
-                      ),
+                    SliverToBoxAdapter(
+                      child: _buildFilterChips(),
+                    ),
                     if (_isSearching)
                       SliverToBoxAdapter(
                         child: _buildSearchBar(),
                       ),
-                    if (isLoading)
+                    if (!_isSearching && !isDownloadedFilter)
                       SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 4, bottom: 8),
-                          child: Center(
-                            child: SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Default_Theme.accentColor1
-                                    .withValues(alpha: 0.6),
+                        child: _buildSortHeader(context),
+                      ),
+                    if (!_isSearching)
+                      SliverToBoxAdapter(
+                        child: _buildOfflineShortcutTile(
+                          context,
+                          showDownloaded: _activeFilter == null ||
+                              _activeFilter == LibraryFilter.downloaded,
+                          showShared: _activeFilter == null ||
+                              _activeFilter == LibraryFilter.playlists,
+                          showLiveRoom: _activeFilter == null,
+                        ),
+                      ),
+                    if (isDownloadedFilter)
+                      _buildDownloadedList(context),
+                    if (!isDownloadedFilter) ...[
+                      if (isLoading)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 4, bottom: 8),
+                            child: Center(
+                              child: SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Default_Theme.accentColor1
+                                      .withValues(alpha: 0.6),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    if (_isSearching && !hasResults && !isLoading)
-                      SliverFillRemaining(
-                        child: Center(
-                          child: SignBoardWidget(
-                            message:
-                                AppLocalizations.of(context)!.emptyNoResults,
-                            icon: MingCute.search_line,
-                          ),
-                        ),
-                      ),
-                    if (hasResults) ...[
-                      if (filteredSongs.isNotEmpty)
+                      if (filteredSongs.isNotEmpty &&
+                          (_activeFilter == null ||
+                              _activeFilter == LibraryFilter.playlists))
                         _buildSongSearchResults(context, filteredSongs),
-                      if (filteredPlaylists.isNotEmpty) ...[
+                      if (displayPlaylists.isNotEmpty) ...[
                         if (_isReordering && !isSearching)
                           SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.035),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: Default_Theme.accentColor2
-                                        .withValues(alpha: 0.22),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 28,
-                                      height: 28,
-                                      decoration: BoxDecoration(
-                                        color: Default_Theme.accentColor2
-                                            .withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Icon(
-                                        Icons.drag_indicator_rounded,
-                                        color: Default_Theme.accentColor2
-                                            .withValues(alpha: 0.95),
-                                        size: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Text(
-                                        AppLocalizations.of(context)!
-                                            .importReorderTip,
-                                        style: Default_Theme.secondoryTextStyle
-                                            .merge(TextStyle(
-                                          color: Default_Theme.primaryColor2
-                                              .withValues(alpha: 0.72),
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                        )),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          setState(() => _isReordering = false),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor:
-                                            Default_Theme.accentColor2,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 6),
-                                        minimumSize: Size.zero,
-                                        tapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
-                                      ),
-                                      child: Text(
-                                        AppLocalizations.of(context)!
-                                            .importDone,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                            child: _buildReorderTip(context),
                           ),
                         _ListOfPlaylists(
-                          playlists: filteredPlaylists,
+                          playlists: displayPlaylists,
                           isReorderable: _isReordering && !isSearching,
                           onEnterReorder: isSearching
                               ? null
                               : () => setState(() => _isReordering = true),
                         ),
                       ],
+                      if (displayPlaylists.isEmpty &&
+                          filteredSongs.isEmpty &&
+                          !isLoading)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(
+                            child: SignBoardWidget(
+                              message: switch (_activeFilter) {
+                                LibraryFilter.playlists =>
+                                  'No playlists found',
+                                LibraryFilter.albums =>
+                                  'No albums in your library yet',
+                                LibraryFilter.artists =>
+                                  'No artists in your library yet',
+                                _ => _isSearching
+                                    ? AppLocalizations.of(context)!.emptyNoResults
+                                    : AppLocalizations.of(context)!
+                                        .libraryEmptyState,
+                              },
+                              icon: switch (_activeFilter) {
+                                LibraryFilter.playlists =>
+                                  MingCute.playlist_fill,
+                                LibraryFilter.albums => MingCute.album_fill,
+                                LibraryFilter.artists => MingCute.user_3_fill,
+                                _ => _isSearching
+                                    ? MingCute.search_line
+                                    : MingCute.playlist_fill,
+                              },
+                            ),
+                          ),
+                        ),
                     ],
                   ],
                 );
@@ -473,276 +830,296 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
     );
   }
 
-  Widget _buildOfflineShortcutTile(BuildContext context) {
+  Widget _buildOfflineShortcutTile(
+    BuildContext context, {
+    bool showDownloaded = true,
+    bool showShared = true,
+    bool showLiveRoom = true,
+  }) {
+    if (!showDownloaded && !showShared && !showLiveRoom) {
+      return const SizedBox.shrink();
+    }
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        BlocBuilder<DownloaderCubit, DownloaderState>(
-          builder: (context, state) {
-            final downloadedCount = state.downloaded.length;
-            final thumbnails = state.downloaded.take(4)
-                .map((t) => t.thumbnail.url)
-                .where((url) => url.isNotEmpty)
-                .toList();
-            final subtitle =
-                '$downloadedCount ${downloadedCount == 1 ? 'track' : 'tracks'}';
+        if (showDownloaded)
+          BlocBuilder<DownloaderCubit, DownloaderState>(
+            builder: (context, state) {
+              final downloadedCount = state.downloaded.length;
+              final thumbnails = state.downloaded
+                  .take(4)
+                  .map((t) => t.thumbnail.url)
+                  .where((url) => url.isNotEmpty)
+                  .toList();
+              final subtitle =
+                  '$downloadedCount ${downloadedCount == 1 ? 'track' : 'tracks'}';
 
-            return Padding(
-              padding: const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
-              child: AnimatedListItem(
-                index: 0,
-                child: InkWell(
-                  splashColor: Default_Theme.primaryColor2.withValues(alpha: 0.1),
-                  hoverColor: Colors.white.withValues(alpha: 0.05),
-                  highlightColor: Default_Theme.primaryColor2.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: () {
-                    context.pushNamed(RoutePaths.offlineScreen);
-                  },
-                  child: SizedBox(
-                    height: 80,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: SizedBox.square(
-                            dimension: 70,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: ThumbnailGrid(
-                              imageUrls: thumbnails,
-                              size: 70,
-                              fallbackIcon: MingCute.folder_download_fill,
-                            ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Downloaded Songs",
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                style: Default_Theme.secondoryTextStyle.merge(
-                                  const TextStyle(
-                                    fontSize: 16.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: Default_Theme.primaryColor1,
-                                  ),
+              return Padding(
+                padding:
+                    const EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+                child: AnimatedListItem(
+                  index: 0,
+                  child: InkWell(
+                    splashColor:
+                        Default_Theme.primaryColor2.withValues(alpha: 0.1),
+                    hoverColor: Colors.white.withValues(alpha: 0.05),
+                    highlightColor:
+                        Default_Theme.primaryColor2.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () {
+                      context.pushNamed(RoutePaths.offlineScreen);
+                    },
+                    child: SizedBox(
+                      height: 68,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: SizedBox.square(
+                              dimension: 58,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: ThumbnailGrid(
+                                  imageUrls: thumbnails,
+                                  size: 58,
+                                  fallbackIcon:
+                                      MingCute.folder_download_fill,
+                                  fallbackColor: const Color(0xFF2563EB),
+                                  fallbackIconColor: Colors.white,
                                 ),
                               ),
-                              Text(
-                                subtitle,
-                                maxLines: 1,
-                                style: Default_Theme.secondoryTextStyle.merge(
-                                  const TextStyle(
-                                    fontSize: 14,
-                                    overflow: TextOverflow.fade,
-                                    fontWeight: FontWeight.w500,
-                                    color: Default_Theme.primaryColor1,
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Downloaded Songs",
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: Default_Theme.secondoryTextStyle.merge(
+                                    const TextStyle(
+                                      fontSize: 16.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: Default_Theme.primaryColor1,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                                Text(
+                                  subtitle,
+                                  maxLines: 1,
+                                  style: Default_Theme.secondoryTextStyle.merge(
+                                    const TextStyle(
+                                      fontSize: 14,
+                                      overflow: TextOverflow.fade,
+                                      fontWeight: FontWeight.w500,
+                                      color: Default_Theme.primaryColor1,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 14),
-                          child: Icon(MingCute.right_line,
-                              size: 20,
-                              color: Default_Theme.primaryColor1
-                                  .withValues(alpha: 0.3)),
-                        ),
-                      ],
+                          Padding(
+                            padding: const EdgeInsets.only(right: 14),
+                            child: Icon(MingCute.right_line,
+                                size: 20,
+                                color: Default_Theme.primaryColor1
+                                    .withValues(alpha: 0.3)),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
-        // ── Shared Playlists shortcut ─────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.only(left: 8, right: 8, top: 0, bottom: 4),
-          child: AnimatedListItem(
-            index: 1,
-            child: InkWell(
-              splashColor: AppTheme.successAccent.withValues(alpha: 0.08),
-              hoverColor: Colors.white.withValues(alpha: 0.03),
-              highlightColor: AppTheme.successAccent.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              onTap: () => context.pushNamed(RoutePaths.collabPlaylistList),
-              child: SizedBox(
-                height: 80,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          color: AppTheme.successAccent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          MingCute.group_line,
-                          color: AppTheme.successAccent,
-                          size: 28,
+              );
+            },
+          ),
+        if (showShared)
+          // ── Shared Playlists shortcut ─────────────────────────────────────────
+          Padding(
+            padding:
+                const EdgeInsets.only(left: 8, right: 8, top: 0, bottom: 4),
+            child: AnimatedListItem(
+              index: 1,
+              child: InkWell(
+                splashColor: AppTheme.successAccent.withValues(alpha: 0.08),
+                hoverColor: Colors.white.withValues(alpha: 0.03),
+                highlightColor: AppTheme.successAccent.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => context.pushNamed(RoutePaths.collabPlaylistList),
+                child: SizedBox(
+                  height: 68,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Container(
+                          width: 58,
+                          height: 58,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF97316),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            MingCute.group_fill,
+                            color: Colors.white,
+                            size: 24,
+                          ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Shared Playlists',
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            style: Default_Theme.secondoryTextStyle.merge(
-                              const TextStyle(
-                                fontSize: 16.5,
-                                fontWeight: FontWeight.w700,
-                                color: Default_Theme.primaryColor1,
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Shared Playlists',
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: Default_Theme.secondoryTextStyle.merge(
+                                const TextStyle(
+                                  fontSize: 16.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Default_Theme.primaryColor1,
+                                ),
                               ),
                             ),
-                          ),
-                          Text(
-                            'Collaborate with friends',
-                            maxLines: 1,
-                            style: Default_Theme.secondoryTextStyle.merge(
-                              TextStyle(
-                                fontSize: 13,
-                                overflow: TextOverflow.fade,
-                                fontWeight: FontWeight.w500,
-                                color: Default_Theme.primaryColor1
-                                    .withValues(alpha: 0.55),
+                            Text(
+                              'Collaborate with friends',
+                              maxLines: 1,
+                              style: Default_Theme.secondoryTextStyle.merge(
+                                TextStyle(
+                                  fontSize: 13,
+                                  overflow: TextOverflow.fade,
+                                  fontWeight: FontWeight.w500,
+                                  color: Default_Theme.primaryColor1
+                                      .withValues(alpha: 0.55),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 14),
-                      child: Icon(MingCute.right_line,
-                          size: 20,
-                          color: Default_Theme.primaryColor1
-                              .withValues(alpha: 0.3)),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.only(right: 14),
+                        child: Icon(MingCute.right_line,
+                            size: 20,
+                            color: Default_Theme.primaryColor1
+                                .withValues(alpha: 0.3)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        // ── Live Room shortcut ────────────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.only(left: 8, right: 8, top: 0, bottom: 4),
-          child: AnimatedListItem(
-            index: 2,
-            child: InkWell(
-              splashColor: AppTheme.successAccent.withValues(alpha: 0.08),
-              hoverColor: Colors.white.withValues(alpha: 0.03),
-              highlightColor: AppTheme.successAccent.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              onTap: () => _showJamEntrySheet(context),
-              child: SizedBox(
-                height: 80,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          color: AppTheme.successAccent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          MingCute.headphone_fill,
-                          color: AppTheme.successAccent,
-                          size: 28,
+        if (showLiveRoom)
+          // ── Live Room shortcut ────────────────────────────────────────────────
+          Padding(
+            padding:
+                const EdgeInsets.only(left: 8, right: 8, top: 0, bottom: 4),
+            child: AnimatedListItem(
+              index: 2,
+              child: InkWell(
+                splashColor: AppTheme.successAccent.withValues(alpha: 0.08),
+                hoverColor: Colors.white.withValues(alpha: 0.03),
+                highlightColor: AppTheme.successAccent.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => _showJamEntrySheet(context),
+                child: SizedBox(
+                  height: 68,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Container(
+                          width: 58,
+                          height: 58,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF7C3AED),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            MingCute.headphone_fill,
+                            color: Colors.white,
+                            size: 24,
+                          ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Live Room',
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            style: Default_Theme.secondoryTextStyle.merge(
-                              const TextStyle(
-                                fontSize: 16.5,
-                                fontWeight: FontWeight.w700,
-                                color: Default_Theme.primaryColor1,
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Live Room',
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: Default_Theme.secondoryTextStyle.merge(
+                                const TextStyle(
+                                  fontSize: 16.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Default_Theme.primaryColor1,
+                                ),
                               ),
                             ),
-                          ),
-                          Text(
-                            'Listen live with friends',
-                            maxLines: 1,
-                            style: Default_Theme.secondoryTextStyle.merge(
-                              TextStyle(
-                                fontSize: 13,
-                                overflow: TextOverflow.fade,
-                                fontWeight: FontWeight.w500,
+                            Text(
+                              'Listen live with friends',
+                              maxLines: 1,
+                              style: Default_Theme.secondoryTextStyle.merge(
+                                TextStyle(
+                                  fontSize: 13,
+                                  overflow: TextOverflow.fade,
+                                  fontWeight: FontWeight.w500,
+                                  color: Default_Theme.primaryColor1
+                                      .withValues(alpha: 0.55),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 14),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppTheme.successAccent,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(MingCute.right_line,
+                                size: 20,
                                 color: Default_Theme.primaryColor1
-                                    .withValues(alpha: 0.55),
-                              ),
-                            ),
-                          ),
-                        ],
+                                    .withValues(alpha: 0.3)),
+                          ],
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 14),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppTheme.successAccent,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Icon(MingCute.right_line,
-                              size: 20,
-                              color: Default_Theme.primaryColor1
-                                  .withValues(alpha: 0.3)),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }

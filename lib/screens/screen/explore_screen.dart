@@ -7,6 +7,7 @@ import 'package:beats_music/blocs/recommendation/cubit/recommendation_state.dart
 import 'package:beats_music/blocs/settings_cubit/cubit/settings_cubit.dart';
 import 'package:beats_music/core/di/service_locator.dart';
 import 'package:beats_music/core/models/exported.dart';
+import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
 import 'package:beats_music/plugins/blocs/content/content_bloc.dart';
 import 'package:beats_music/plugins/blocs/content/content_event.dart';
 import 'package:beats_music/plugins/blocs/content/content_state.dart';
@@ -196,59 +197,48 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     [
                       const ShortcutGrid(),
                       const CaraouselWidget(),
-                      // Jump back in (Recently Played) Section
-                      BlocBuilder<RecentlyCubit, RecentlyCubitState>(
-                        builder: (context, state) {
-                          if (state.tracks.isNotEmpty) {
-                            final section = Section(
-                              id: 'recently_played',
-                              title: 'Jump back in',
-                              cardType: CardType.carousel,
-                              items: state.tracks.map((t) => MediaItem.track(t)).toList(),
-                            );
-                            return HorizontalCardView(
-                              section: section,
-                              pluginId: '',
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                      // Recents (User Library Playlists) Section
+                      // Jump back in (Recently Played & Smart Radio) Section
+                      const _JumpBackInWidget(),
+                      // Recents / User Playlists Section (Only visible if user has actual playlists with artwork/tracks)
                       BlocBuilder<LibraryItemsCubit, LibraryItemsState>(
                         builder: (context, state) {
-                          if (state.playlists.isNotEmpty) {
-                            final recentsSection = Section(
-                              id: 'library_recents',
-                              title: 'Recents',
-                              cardType: CardType.carousel,
-                              items: state.playlists.map((p) {
-                                return MediaItem.playlist(
-                                  PlaylistSummary(
-                                    id: p.storageKey,
-                                    title: p.playlistName,
-                                    owner: p.subTitle ?? 'Playlist',
-                                    thumbnail: Artwork(
-                                      url: p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
-                                      urlLow: null,
-                                      urlHigh: null,
-                                      layout: ImageLayout.square,
-                                    ),
-                                    url: null,
-                                  ),
-                                );
-                              }).toList(),
+                          final userPlaylists = state.playlists
+                              .where((p) => p.imageUrls.isNotEmpty)
+                              .map((p) {
+                            return MediaItem.playlist(
+                              PlaylistSummary(
+                                id: p.storageKey,
+                                title: p.playlistName,
+                                owner: p.subTitle ?? 'Playlist',
+                                thumbnail: Artwork(
+                                  url: p.imageUrls.first,
+                                  urlLow: null,
+                                  urlHigh: null,
+                                  layout: ImageLayout.square,
+                                ),
+                                url: null,
+                              ),
                             );
-                            return HorizontalCardView(
-                              section: recentsSection,
-                              pluginId: '',
-                              trailingText: 'Show all',
-                              onTrailingTap: () {
-                                context.go('/Library');
-                              },
-                            );
+                          }).toList();
+
+                          if (userPlaylists.isEmpty) {
+                            return const SizedBox.shrink();
                           }
-                          return const SizedBox.shrink();
+
+                          final recentsSection = Section(
+                            id: 'library_recents',
+                            title: 'Your Playlists',
+                            cardType: CardType.carousel,
+                            items: userPlaylists,
+                          );
+                          return HorizontalCardView(
+                            section: recentsSection,
+                            pluginId: '',
+                            trailingText: 'Show all',
+                            onTrailingTap: () {
+                              context.go('/Library');
+                            },
+                          );
                         },
                       ),
                       // More of what you like (AI Recommendations) Section
@@ -460,6 +450,90 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 }
 
+class _JumpBackInWidget extends StatelessWidget {
+  const _JumpBackInWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<RecentlyCubit, RecentlyCubitState>(
+      builder: (context, recentlyState) {
+        final recentTracks = recentlyState.tracks;
+        if (recentTracks.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return BlocBuilder<RecommendationCubit, RecommendationState>(
+          builder: (context, recState) {
+            final List<Track> pool = [];
+            final Set<String> seenIds = {};
+
+            // 1. Add recent tracks first
+            for (final t in recentTracks) {
+              if (seenIds.add(t.id)) pool.add(t);
+            }
+
+            // 2. If pool < 6, supplement from recommendations
+            if (pool.length < 6 && recState is RecommendationLoaded) {
+              for (final t in recState.tracks) {
+                if (seenIds.add(t.id)) pool.add(t);
+                if (pool.length >= 8) break;
+              }
+            }
+
+            // 3. If pool < 6, supplement from player queue
+            if (pool.length < 6) {
+              try {
+                final queue =
+                    context.read<BeatsPlayerCubit>().BeatsPlayer.queueTracks;
+                for (final t in queue) {
+                  if (seenIds.add(t.id)) pool.add(t);
+                  if (pool.length >= 8) break;
+                }
+              } catch (_) {}
+            }
+
+            final items = <MediaItem>[];
+
+            // Primary recent track(s)
+            for (final t in pool) {
+              items.add(MediaItem.track(t));
+            }
+
+            // Add Song Radio card based on the primary recent track
+            if (recentTracks.isNotEmpty) {
+              final seed = recentTracks.first;
+              items.insert(
+                1.clamp(0, items.length),
+                MediaItem.playlist(
+                  PlaylistSummary(
+                    id: 'radio_${seed.id}',
+                    title: '${seed.title} Radio',
+                    owner: 'Endless mix',
+                    thumbnail: seed.thumbnail,
+                    url: null,
+                  ),
+                ),
+              );
+            }
+
+            final section = Section(
+              id: 'recently_played',
+              title: 'Jump back in',
+              cardType: CardType.carousel,
+              items: items,
+            );
+
+            return HorizontalCardView(
+              section: section,
+              pluginId: '',
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
 class _HomeSectionsList extends StatelessWidget {
   final List<Section> sections;
   final ContentBloc contentBloc;
@@ -535,20 +609,25 @@ class ShortcutGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width > 700 ? 3 : 2;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: GridView.count(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: GridView(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 2.8,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          mainAxisExtent: 54,
+        ),
         children: [
           ShortcutCard(
             title: 'Liked Songs',
             icon: MingCute.heart_fill,
-            color: const Color(0xFF9E54E5), // Purple
+            color: const Color(0xFF8B5CF6), // Purple
             onTap: () {
               context.goNamed(RoutePaths.playlistView, extra: 'Liked');
             },
@@ -556,7 +635,7 @@ class ShortcutGrid extends StatelessWidget {
           ShortcutCard(
             title: 'Recently Played',
             icon: MingCute.time_fill,
-            color: const Color(0xFF1A73E8), // Blue
+            color: const Color(0xFF2563EB), // Blue
             onTap: () {
               Navigator.push(
                 context,
@@ -567,32 +646,31 @@ class ShortcutGrid extends StatelessWidget {
           ShortcutCard(
             title: 'Your Top Mix',
             icon: MingCute.star_fill,
-            color: const Color(0xFFF29900), // Orange
+            color: const Color(0xFFF59E0B), // Orange
             onTap: () {
-              // Usually a custom mix, for now go to discover
               context.go('/Search');
             },
           ),
           ShortcutCard(
             title: 'Discover Weekly',
             icon: MingCute.compass_fill,
-            color: const Color(0xFF34A853), // Green
+            color: const Color(0xFF10B981), // Emerald green
             onTap: () {
-               context.go('/Search');
+              context.go('/Search');
             },
           ),
           ShortcutCard(
             title: 'Release Radar',
             icon: MingCute.radar_line,
-            color: const Color(0xFFEA4335), // Red
+            color: const Color(0xFFEF4444), // Coral red
             onTap: () {
-               context.go('/Search');
+              context.go('/Search');
             },
           ),
           ShortcutCard(
             title: 'Daily Mix 1',
             icon: MingCute.music_2_fill,
-            color: const Color(0xFF512DA8), // Deep purple
+            color: const Color(0xFF7C3AED), // Indigo / Purple
             onTap: () {
               context.go('/Search');
             },
@@ -626,13 +704,13 @@ class ShortcutCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
+            color: const Color(0xFF282828),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [
               Container(
-                width: 56,
+                width: 54,
                 height: double.infinity,
                 decoration: BoxDecoration(
                   color: color,
@@ -641,7 +719,9 @@ class ShortcutCard extends StatelessWidget {
                     bottomLeft: Radius.circular(8),
                   ),
                 ),
-                child: Icon(icon, color: Colors.white, size: 28),
+                child: Center(
+                  child: Icon(icon, color: Colors.white, size: 24),
+                ),
               ),
               Expanded(
                 child: Padding(
@@ -651,7 +731,7 @@ class ShortcutCard extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontSize: 13.5,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

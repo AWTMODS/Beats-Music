@@ -14,7 +14,7 @@ import 'package:beats_music/services/plugin_bootstrap_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:lottie/lottie.dart';
+import 'package:beats_music/screens/widgets/svg_loading_animation.dart';
 
 enum _Phase { running, success, failed, noInternet }
 
@@ -226,10 +226,7 @@ class _SpinnerBody extends StatelessWidget {
                         ),
                       ),
                     )
-                  : Lottie.asset(
-                      'assets/icons/equalizer.json',
-                      fit: BoxFit.contain,
-                    ),
+                  : const SvgLoadingAnimation(size: 96),
             ),
           ),
           const SizedBox(height: 32),

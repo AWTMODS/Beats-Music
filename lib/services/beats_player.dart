@@ -32,6 +32,12 @@ import 'package:async/async.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:rxdart/rxdart.dart';
 
+enum ShuffleModeState {
+  off,
+  shuffle,
+  smartShuffle,
+}
+
 /// Main music player — extends [BaseAudioHandler] for OS notification / media
 /// controls and orchestrates [PlayerEngine],[QueueManager],
 /// and [PlayerErrorHandler].
@@ -92,6 +98,10 @@ class BeatsMusicPlayer extends BaseAudioHandler
   BehaviorSubject<PlayerError?> get lastError => _errorHandler.lastError;
   BehaviorSubject<List<Track>> get relatedSongs =>
       _relatedSongsManager.relatedSongs;
+
+  /// Current shuffle mode state (off, shuffle, smartShuffle).
+  final BehaviorSubject<ShuffleModeState> shuffleState =
+      BehaviorSubject<ShuffleModeState>.seeded(ShuffleModeState.off);
 
   /// Whether the player is currently resolving a media URL (before engine loads).
   final BehaviorSubject<bool> isResolving = BehaviorSubject<bool>.seeded(false);
@@ -643,6 +653,25 @@ class BeatsMusicPlayer extends BaseAudioHandler
 
   Future<void> shuffle(bool enabled) async {
     _queueManager.shuffle(enabled);
+    if (!enabled && shuffleState.value != ShuffleModeState.off) {
+      shuffleState.add(ShuffleModeState.off);
+    } else if (enabled && shuffleState.value == ShuffleModeState.off) {
+      shuffleState.add(ShuffleModeState.shuffle);
+    }
+  }
+
+  void setShuffleModeState(ShuffleModeState state, {List<Track>? recommendations}) {
+    shuffleState.add(state);
+    if (state == ShuffleModeState.off) {
+      _queueManager.shuffle(false);
+    } else {
+      _queueManager.shuffle(true);
+      if (state == ShuffleModeState.smartShuffle &&
+          recommendations != null &&
+          recommendations.isNotEmpty) {
+        _queueManager.addTracks(recommendations, atLast: true);
+      }
+    }
   }
 
   // ─── Track Playing ─────────────────────────────────────────────────────────

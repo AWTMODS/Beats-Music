@@ -5,8 +5,7 @@ import 'package:beats_music/blocs/library/cubit/library_items_cubit.dart';
 import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
 import 'package:beats_music/blocs/mini_player/mini_player_cubit.dart';
 import 'package:beats_music/core/adapters/track_adapter.dart';
-import 'package:beats_music/screens/screen/home_views/timer_view.dart';
-import 'package:beats_music/screens/screen/home_views/setting_views/player_setting.dart';
+import 'package:beats_music/core/models/exported.dart' hide MediaItem;
 import 'package:beats_music/screens/widgets/gradient_progress_bar.dart';
 import 'package:beats_music/screens/widgets/volume_slider.dart';
 import 'package:beats_music/screens/widgets/media_metadata_links.dart';
@@ -15,14 +14,16 @@ import 'package:audio_service/audio_service.dart';
 import 'package:beats_music/l10n/app_localizations.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:beats_music/screens/widgets/like_widget.dart';
-import 'package:beats_music/screens/widgets/play_pause_widget.dart';
 import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:beats_music/utils/load_image.dart';
 import 'package:beats_music/utils/pallete_generator.dart';
-import '../screen/player_views/fullscreen_lyrics_view.dart';
 import 'package:beats_music/services/player/player_engine.dart';
 import 'package:beats_music/services/db/global_db.dart';
+import 'package:beats_music/blocs/recommendation/cubit/recommendation_cubit.dart';
+import 'package:beats_music/blocs/recommendation/cubit/recommendation_state.dart';
+import 'package:beats_music/screens/widgets/up_next_panel.dart';
+import 'package:share_plus/share_plus.dart';
 
 class CoverImageVolSlider extends StatelessWidget {
   const CoverImageVolSlider({super.key});
@@ -66,7 +67,12 @@ class CoverImageVolSlider extends StatelessWidget {
 
 class PlayerCtrlWidgets extends StatelessWidget {
   final BeatsMusicPlayer musicPlayer;
-  const PlayerCtrlWidgets({super.key, required this.musicPlayer});
+  final UpNextPanelController? upNextController;
+  const PlayerCtrlWidgets({
+    super.key,
+    required this.musicPlayer,
+    this.upNextController,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -74,12 +80,22 @@ class PlayerCtrlWidgets extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const _SongInfoRow(),
-        const SizedBox(height: 15),
+        const SizedBox(height: 10),
         const _PlayerProgressBar(),
-        const SizedBox(height: 25),
+        const SizedBox(height: 12),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 450),
-          child: _PlayerControlsRow(musicPlayer: musicPlayer),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _PlayerControlsRow(musicPlayer: musicPlayer),
+              const SizedBox(height: 6),
+              _DeviceAndActionsRow(
+                musicPlayer: musicPlayer,
+                upNextController: upNextController,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -230,7 +246,8 @@ class _LikeButtonState extends State<_LikeButton> {
                     return LikeBtnWidget(
                       isPlaying: isPlaying,
                       isLiked: isLiked,
-                      iconSize: 25,
+                      useSpotifyStyle: true,
+                      iconSize: 28,
                       onLiked: () async {
                         setState(() {
                           _likeFuture = Future.value(true);
@@ -304,114 +321,132 @@ class _PlayerControlsRow extends StatelessWidget {
   final BeatsMusicPlayer musicPlayer;
   const _PlayerControlsRow({required this.musicPlayer});
 
-  Widget _buildControlColumn({required Widget top, required Widget bottom}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Fixed Top Height ensures perfectly horizontal snapping alignment
-        Container(height: 70, alignment: Alignment.center, child: top),
-        SizedBox(height: 40, child: bottom),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment:
-          CrossAxisAlignment.start, // Ensures flush horizontal grid
-      children: [
-        _buildControlColumn(
-          top: IconButton(
-            icon: const Icon(MingCute.alarm_1_line,
-                color: Default_Theme.primaryColor1, size: 28),
-            onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (_) => const TimerView())),
-          ),
-          bottom: const _LoopControl(),
-        ),
-        _buildControlColumn(
-          top: IconButton(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // 1. Shuffle / Smart Shuffle
+          const _ShuffleControl(),
+
+          // 2. Skip Previous
+          IconButton(
             icon: const Icon(MingCute.skip_previous_fill,
-                color: Default_Theme.primaryColor1, size: 35),
+                color: Colors.white, size: 36),
             onPressed: musicPlayer.skipToPrevious,
           ),
-          bottom: IconButton(
-            icon: const Icon(MingCute.align_center_line,
-                color: Default_Theme.primaryColor1, size: 24),
-            onPressed: () {
-              Navigator.of(context).push(PageRouteBuilder(
-                pageBuilder: (_, __, ___) => const FullscreenLyricsView(),
-                transitionsBuilder: (_, a, __, c) =>
-                    FadeTransition(opacity: a, child: c),
-                transitionDuration: const Duration(milliseconds: 300),
-              ));
-            },
-          ),
-        ),
-        _buildControlColumn(
-          top:
-              const _PlayPauseButton(), // Perfectly integrated into the alignment matrix
-          bottom: const SizedBox(height: 40),
-        ),
-        _buildControlColumn(
-          top: IconButton(
+
+          // 3. Play / Pause (Large white circle with black icon)
+          const _PlayPauseButton(),
+
+          // 4. Skip Next
+          IconButton(
             icon: const Icon(MingCute.skip_forward_fill,
-                color: Default_Theme.primaryColor1, size: 35),
+                color: Colors.white, size: 36),
             onPressed: musicPlayer.skipToNext,
           ),
-          bottom: IconButton(
-            icon: const Icon(MingCute.settings_6_line,
-                color: Default_Theme.primaryColor1, size: 24),
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const PlayerSettings())),
-          ),
-        ),
-        _buildControlColumn(
-          top: const _ShuffleControl(),
-          bottom: const SizedBox(height: 40),
-        ),
-      ],
+
+          // 5. Repeat / Loop
+          const _LoopControl(),
+        ],
+      ),
     );
   }
 }
 
-class _LoopControl extends StatelessWidget {
-  const _LoopControl();
+class _DeviceAndActionsRow extends StatelessWidget {
+  final BeatsMusicPlayer musicPlayer;
+  final UpNextPanelController? upNextController;
+
+  const _DeviceAndActionsRow({
+    required this.musicPlayer,
+    this.upNextController,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<LoopMode>(
-      stream: context.read<BeatsPlayerCubit>().BeatsPlayer.loopMode,
-      builder: (context, snapshot) {
-        final loopMode = snapshot.data ?? LoopMode.off;
-        final l10n = AppLocalizations.of(context)!;
-        return PopupMenuButton(
-          itemBuilder: (_) => [
-            PopupMenuItem(value: 0, child: Text(l10n.playerLoopOff)),
-            PopupMenuItem(value: 1, child: Text(l10n.playerLoopOne)),
-            PopupMenuItem(value: 2, child: Text(l10n.playerLoopAll)),
-          ],
-          child: Icon(
-            loopMode == LoopMode.off
-                ? MingCute.repeat_line
-                : loopMode == LoopMode.one
-                    ? MingCute.repeat_one_line
-                    : MingCute.repeat_fill,
-            color: loopMode == LoopMode.off
-                ? Default_Theme.primaryColor1
-                : Default_Theme.accentColor1,
-            size: 24,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Audio Device / Connection status in theme green
+          InkWell(
+            onTap: () {
+              SnackbarService.showMessage('Listening on this device');
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.devices_rounded,
+                    size: 18,
+                    color: AppTheme.successAccent,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Wired Connection',
+                    style: TextStyle(
+                      color: AppTheme.successAccent,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          onSelected: (value) {
-            final player = context.read<BeatsPlayerCubit>().BeatsPlayer;
-            if (value == 0) player.setLoopMode(LoopMode.off);
-            if (value == 1) player.setLoopMode(LoopMode.one);
-            if (value == 2) player.setLoopMode(LoopMode.all);
-          },
-        );
-      },
+
+          // Right action buttons: Share & Queue
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(
+                  MingCute.share_2_line,
+                  color: Colors.white70,
+                  size: 22,
+                ),
+                tooltip: 'Share',
+                onPressed: () {
+                  final current = musicPlayer.currentMedia;
+                  final url = current.url ?? '';
+                  if (url.isNotEmpty) {
+                    SharePlus.instance.share(ShareParams(
+                      text: url,
+                      subject: current.title,
+                    ));
+                  } else {
+                    SharePlus.instance.share(ShareParams(
+                      text:
+                          '${current.title} - ${current.artists.map((a) => a.name).join(", ")}',
+                      subject: current.title,
+                    ));
+                  }
+                },
+              ),
+              IconButton(
+                icon: const Icon(
+                  MingCute.playlist_2_line,
+                  color: Colors.white70,
+                  size: 24,
+                ),
+                tooltip: 'Queue',
+                onPressed: () {
+                  upNextController?.toggle();
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -422,25 +457,107 @@ class _ShuffleControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final player = context.read<BeatsPlayerCubit>().BeatsPlayer;
-    return StreamBuilder<bool>(
-      stream: player.shuffleMode,
+    return StreamBuilder<ShuffleModeState>(
+      stream: player.shuffleState,
       builder: (context, snapshot) {
-        final isShuffle = snapshot.data ?? false;
-        return IconButton(
-          icon: Icon(
-            MingCute.shuffle_2_fill,
-            color: isShuffle
-                ? Default_Theme.accentColor1
-                : Default_Theme.primaryColor1,
-            size: 28,
+        final mode = snapshot.data ?? ShuffleModeState.off;
+        final isActive = mode != ShuffleModeState.off;
+        final color = isActive ? AppTheme.successAccent : Colors.white60;
+
+        Widget iconWidget;
+        if (mode == ShuffleModeState.smartShuffle) {
+          // Spotify Smart Shuffle icon: crossed arrows with a sparkle star!
+          iconWidget = Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(MingCute.shuffle_2_line, color: color, size: 26),
+              Positioned(
+                top: -3,
+                right: -4,
+                child: Icon(MingCute.sparkles_fill, color: color, size: 13),
+              ),
+            ],
+          );
+        } else {
+          iconWidget = Icon(MingCute.shuffle_2_line, color: color, size: 26);
+        }
+
+        return InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: () {
+            // Cycle: off -> shuffle -> smartShuffle -> off
+            if (mode == ShuffleModeState.off) {
+              player.setShuffleModeState(ShuffleModeState.shuffle);
+              SnackbarService.showMessage('Shuffle is on');
+            } else if (mode == ShuffleModeState.shuffle) {
+              final recState = context.read<RecommendationCubit>().state;
+              List<Track>? recTracks;
+              if (recState is RecommendationLoaded &&
+                  recState.tracks.isNotEmpty) {
+                recTracks = recState.tracks.take(5).toList();
+              }
+              player.setShuffleModeState(
+                ShuffleModeState.smartShuffle,
+                recommendations: recTracks,
+              );
+              SnackbarService.showMessage(
+                  'Smart Shuffle is on. Recommendations added to Queue.');
+            } else {
+              player.setShuffleModeState(ShuffleModeState.off);
+              SnackbarService.showMessage('Shuffle is off');
+            }
+          },
+          onLongPress: () {
+            showListeningModesBottomSheet(context, player);
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: iconWidget,
           ),
-          onPressed: () => player.shuffle(!isShuffle),
         );
       },
     );
   }
 }
 
+class _LoopControl extends StatelessWidget {
+  const _LoopControl();
+
+  @override
+  Widget build(BuildContext context) {
+    final player = context.read<BeatsPlayerCubit>().BeatsPlayer;
+    return StreamBuilder<LoopMode>(
+      stream: player.loopMode,
+      builder: (context, snapshot) {
+        final loopMode = snapshot.data ?? LoopMode.off;
+        final isActive = loopMode != LoopMode.off;
+        final color = isActive ? AppTheme.successAccent : Colors.white60;
+
+        IconData iconData = MingCute.repeat_line;
+        if (loopMode == LoopMode.one) {
+          iconData = MingCute.repeat_one_line;
+        }
+
+        return IconButton(
+          icon: Icon(iconData, color: color, size: 26),
+          onPressed: () {
+            // Spotify direct cycle: off -> all -> one -> off
+            if (loopMode == LoopMode.off) {
+              player.setLoopMode(LoopMode.all);
+              SnackbarService.showMessage('Repeat All');
+            } else if (loopMode == LoopMode.all) {
+              player.setLoopMode(LoopMode.one);
+              SnackbarService.showMessage('Repeat Current');
+            } else {
+              player.setLoopMode(LoopMode.off);
+              SnackbarService.showMessage('Repeat Off');
+            }
+          },
+        );
+      },
+    );
+  }
+}
 
 class _PlayPauseButton extends StatelessWidget {
   const _PlayPauseButton();
@@ -451,26 +568,39 @@ class _PlayPauseButton extends StatelessWidget {
     return BlocBuilder<MiniPlayerCubit, MiniPlayerState>(
       builder: (context, state) {
         Widget child;
-        Color buttonColor = Colors.white;
 
         if (state.isLoading || state.isResolving) {
           child = const CircularProgressIndicator(
-              strokeWidth: 3, color: Colors.black);
+            strokeWidth: 3,
+            color: Colors.black,
+          );
         } else if (state.isCompleted) {
-          child = const Icon(FontAwesome.rotate_right_solid,
-              color: Colors.black, size: 32);
+          child = const Icon(
+            FontAwesome.rotate_right_solid,
+            color: Colors.black,
+            size: 28,
+          );
         } else if (state.hasError) {
-          child = const Icon(MingCute.warning_line,
-              color: Colors.black, size: 32);
-        } else if (state.isVisible) {
-          return PlayPauseButton(
-            size: 70, // Resized to perfectly match and feel proportional
-            onPause: musicPlayer.pause,
-            onPlay: musicPlayer.play,
-            isPlaying: state.isPlaying,
+          child = const Icon(
+            MingCute.warning_line,
+            color: Colors.black,
+            size: 28,
+          );
+        } else if (state.isPlaying) {
+          child = const Icon(
+            MingCute.pause_fill,
+            color: Colors.black,
+            size: 32,
           );
         } else {
-          child = const SizedBox();
+          child = const Padding(
+            padding: EdgeInsets.only(left: 3),
+            child: Icon(
+              MingCute.play_fill,
+              color: Colors.black,
+              size: 32,
+            ),
+          );
         }
 
         return GestureDetector(
@@ -480,29 +610,254 @@ class _PlayPauseButton extends StatelessWidget {
               musicPlayer.play();
             } else if (state.hasError) {
               musicPlayer.play();
+            } else if (state.isPlaying) {
+              musicPlayer.pause();
+            } else {
+              musicPlayer.play();
             }
           },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
+          child: Container(
+            width: 68,
+            height: 68,
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: buttonColor,
+              color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    spreadRadius: 1,
-                    blurRadius: 15)
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
               ],
             ),
-            child: Center(child: SizedBox(width: 32, height: 32, child: child)),
+            child: Center(
+              child: SizedBox(
+                width: 32,
+                height: 32,
+                child: Center(child: child),
+              ),
+            ),
           ),
         );
       },
     );
   }
+}
+
+void showListeningModesBottomSheet(
+    BuildContext context, BeatsMusicPlayer player) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      return StreamBuilder<ShuffleModeState>(
+        stream: player.shuffleState,
+        builder: (context, snapshot) {
+          final currentMode = snapshot.data ?? ShuffleModeState.off;
+          final isRegularShuffle = currentMode == ShuffleModeState.shuffle;
+          final isSmartShuffle = currentMode == ShuffleModeState.smartShuffle;
+
+          return Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF242424),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const Center(
+                    child: Text(
+                      'Listening modes',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Option 1: Shuffle
+                  InkWell(
+                    onTap: () {
+                      player.setShuffleModeState(
+                        isRegularShuffle
+                            ? ShuffleModeState.off
+                            : ShuffleModeState.shuffle,
+                      );
+                      Navigator.pop(sheetContext);
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        children: [
+                          Icon(
+                            MingCute.shuffle_2_line,
+                            color: isRegularShuffle
+                                ? AppTheme.successAccent
+                                : Colors.white,
+                            size: 26,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              'Shuffle',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: isRegularShuffle
+                                    ? AppTheme.successAccent
+                                    : Colors.white,
+                              ),
+                            ),
+                          ),
+                          if (isRegularShuffle)
+                            const Icon(
+                              MingCute.check_fill,
+                              color: AppTheme.successAccent,
+                              size: 22,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // Option 2: Smart Shuffle
+                  InkWell(
+                    onTap: () {
+                      final recState =
+                          context.read<RecommendationCubit>().state;
+                      List<Track>? recTracks;
+                      if (recState is RecommendationLoaded &&
+                          recState.tracks.isNotEmpty) {
+                        recTracks = recState.tracks.take(5).toList();
+                      }
+                      player.setShuffleModeState(
+                        isSmartShuffle
+                            ? ShuffleModeState.off
+                            : ShuffleModeState.smartShuffle,
+                        recommendations: recTracks,
+                      );
+                      Navigator.pop(sheetContext);
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Icon(
+                              MingCute.sparkles_line,
+                              color: isSmartShuffle
+                                  ? AppTheme.successAccent
+                                  : Colors.white,
+                              size: 26,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Smart Shuffle',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: isSmartShuffle
+                                        ? AppTheme.successAccent
+                                        : Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'Shuffle and get recommendations in your Queue, refreshed daily.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white60,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isSmartShuffle)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 2),
+                              child: Icon(
+                                MingCute.check_fill,
+                                color: AppTheme.successAccent,
+                                size: 22,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  // Learn More
+                  InkWell(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (dContext) => AlertDialog(
+                          backgroundColor: const Color(0xFF282828),
+                          title: const Text('Smart Shuffle',
+                              style: TextStyle(color: Colors.white)),
+                          content: const Text(
+                            'Smart Shuffle breathes new life into your playlists by automatically mixing in tailored recommendations based on the songs you love.',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(dContext),
+                              child: const Text('Got it',
+                                  style:
+                                      TextStyle(color: AppTheme.successAccent)),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        'Learn More',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
 }
 
 class AmbientImgShadowWidget extends StatefulWidget {

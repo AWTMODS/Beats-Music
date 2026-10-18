@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:beats_music/core/models/exported.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // ─── Domain Models ───────────────────────────────────────────────────────────
@@ -165,14 +166,19 @@ class CollaborativePlaylistService {
   factory CollaborativePlaylistService() => _instance;
   CollaborativePlaylistService._internal();
 
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
   static const String _collection = 'collaborative_playlists';
 
   // ── Auth helpers ─────────────────────────────────────────────────────────
 
-  User? get _currentUser => _auth.currentUser;
+  User? get _currentUser {
+    try {
+      if (Firebase.apps.isNotEmpty) return _auth.currentUser;
+    } catch (_) {}
+    return null;
+  }
 
   bool get isSignedIn =>
       _currentUser != null && !(_currentUser!.isAnonymous);

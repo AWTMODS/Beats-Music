@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
@@ -150,14 +151,19 @@ class JamSessionService {
   factory JamSessionService() => _instance;
   JamSessionService._internal();
 
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
   static const String _collection = 'jam_rooms';
   static const Duration _syncInterval = Duration(seconds: 25);
   JamPlaybackState? _lastSyncedState;
 
-  User? get _currentUser => _auth.currentUser;
+  User? get _currentUser {
+    try {
+      if (Firebase.apps.isNotEmpty) return _auth.currentUser;
+    } catch (_) {}
+    return null;
+  }
   User? get currentUser => _currentUser;
   bool get isSignedIn =>
       _currentUser != null &&

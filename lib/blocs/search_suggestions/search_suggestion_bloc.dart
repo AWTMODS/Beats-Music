@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'package:beats_music/services/db/dao/search_history_dao.dart';
 import 'package:beats_music/services/db/dao/settings_dao.dart';
@@ -72,7 +73,18 @@ class SearchSuggestionBloc
     on<SearchSuggestionSave>((event, emit) async {
       if (event.query.trim().isEmpty) return;
       try {
-        await _searchHistoryDao.putSearchHistory(event.query.trim());
+        final query = event.query.trim();
+        String payloadToSave = query;
+        if (event.title != null || event.imageUrl != null || event.subtitle != null) {
+          payloadToSave = json.encode({
+            'q': query,
+            'title': event.title ?? query,
+            if (event.subtitle != null) 'sub': event.subtitle,
+            if (event.imageUrl != null) 'img': event.imageUrl,
+            if (event.type != null) 'type': event.type,
+          });
+        }
+        await _searchHistoryDao.putSearchHistory(payloadToSave);
       } catch (e) {
         log("Error saving search history: $e", name: "SearchSuggestionBloc");
       }
@@ -84,7 +96,19 @@ class SearchSuggestionBloc
       }
       List<Map<String, String>> res = List.from(state.dbSuggestionList);
       try {
-        final e = res.firstWhere((element) => element['query'] == event.query);
+        final e = res.firstWhere((element) {
+          final q = element['query'] ?? '';
+          if (q == event.query) return true;
+          if (q.startsWith('{') && q.endsWith('}')) {
+            try {
+              final map = json.decode(q) as Map<String, dynamic>;
+              if (map['q'] == event.query || map['title'] == event.query) {
+                return true;
+              }
+            } catch (_) {}
+          }
+          return false;
+        });
         if (e['id'] != null) {
           await _searchHistoryDao.removeSearchHistory(e['id']!);
           res.remove(e);
@@ -170,8 +194,19 @@ class SearchSuggestionBloc
   ) {
     final seen = <String>{};
     for (final row in historyRows) {
-      if (row.values.isNotEmpty) {
-        seen.add(_suggestionKey(row.values.first));
+      final raw = row['query'] ?? (row.values.isNotEmpty ? row.values.first : '');
+      if (raw.isNotEmpty) {
+        if (raw.startsWith('{') && raw.endsWith('}')) {
+          try {
+            final map = json.decode(raw) as Map<String, dynamic>;
+            final q = map['q'] as String? ?? map['title'] as String?;
+            if (q != null) seen.add(_suggestionKey(q));
+          } catch (_) {
+            seen.add(_suggestionKey(raw));
+          }
+        } else {
+          seen.add(_suggestionKey(raw));
+        }
       }
     }
     final result = <String>[];

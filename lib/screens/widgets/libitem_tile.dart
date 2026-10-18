@@ -51,7 +51,7 @@ class LibItemCard extends StatelessWidget {
         onSecondaryTap: onSecondaryTap ?? () {},
         onLongPress: onLongPress ?? () {},
         child: SizedBox(
-          height: 80,
+          height: 68,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -81,21 +81,29 @@ class LibItemCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 10, right: 10),
                 child: SizedBox.square(
-                  dimension: 70,
+                  dimension: 58,
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                     child: switch (type) {
                       LibItemTypes.artist => ClipOval(
                           child: ThumbnailGrid(
                             imageUrls: imageUrls,
-                            size: 70,
+                            size: 58,
                             fallbackIcon: MingCute.user_3_fill,
                           ),
                         ),
                       _ => ThumbnailGrid(
                           imageUrls: imageUrls,
-                          size: 70,
-                          fallbackIcon: MingCute.music_2_fill,
+                          size: 58,
+                          fallbackIcon: title.toLowerCase().contains('liked')
+                              ? MingCute.heart_fill
+                              : MingCute.music_2_fill,
+                          fallbackColor: title.toLowerCase().contains('liked')
+                              ? const Color(0xFF8B5CF6)
+                              : null,
+                          fallbackIconColor: title.toLowerCase().contains('liked')
+                              ? Colors.white
+                              : null,
                         ),
                     },
                   ),

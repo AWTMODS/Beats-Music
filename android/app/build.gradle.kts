@@ -90,8 +90,8 @@ android {
             // Enable R8 minification and supply rules that preserve GSON generic
             // signatures – required by flutter_local_notifications to deserialise
             // scheduled notifications without crashing on TypeToken.
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

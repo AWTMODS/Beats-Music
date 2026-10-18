@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:beats_music/services/db/sync_adapter.dart';
 import 'package:beats_music/services/listening_statistics_service.dart';
@@ -7,8 +8,20 @@ import 'package:flutter/foundation.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 class CloudSyncService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore? get _firestore {
+    try {
+      if (Firebase.apps.isNotEmpty) return FirebaseFirestore.instance;
+    } catch (_) {}
+    return null;
+  }
+
+  FirebaseAuth? get _auth {
+    try {
+      if (Firebase.apps.isNotEmpty) return FirebaseAuth.instance;
+    } catch (_) {}
+    return null;
+  }
+
   final ListeningStatisticsService _statsService = ListeningStatisticsService();
 
   // Singleton pattern
@@ -19,9 +32,10 @@ class CloudSyncService {
   /// Uploads local statistics to Firestore (Backup)
   /// Overwrites cloud data with current local data.
   Future<void> uploadStats() async {
-    final user = _auth.currentUser;
-    if (user == null) {
-      debugPrint("CloudSync: No user logged in. Skipping upload.");
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) {
+      debugPrint("CloudSync: No user logged in or Firebase unavailable. Skipping upload.");
       return;
     }
 
@@ -74,7 +88,7 @@ class CloudSyncService {
       };
 
       // 3. Write to Firestore
-      await _firestore
+      await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -91,12 +105,13 @@ class CloudSyncService {
 
   /// Downloads statistics from Firestore and updates local DB (Restore)
   Future<void> downloadStats() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return;
 
     try {
       debugPrint("CloudSync: Starting download...");
-      final doc = await _firestore
+      final doc = await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -125,9 +140,10 @@ class CloudSyncService {
 
   /// Uploads user playlists to Firestore (Backup)
   Future<void> uploadPlaylists() async {
-    final user = _auth.currentUser;
-    if (user == null) {
-      debugPrint("CloudSync: No user logged in. Skipping playlist upload.");
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) {
+      debugPrint("CloudSync: No user logged in or Firebase unavailable. Skipping playlist upload.");
       return;
     }
 
@@ -143,7 +159,7 @@ class CloudSyncService {
       }
 
       // Write to Firestore
-      await _firestore
+      await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -163,13 +179,14 @@ class CloudSyncService {
 
   /// Downloads playlists from Firestore and updates local DB (Restore)
   Future<void> downloadPlaylists() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return;
 
     try {
       debugPrint("CloudSync: Starting playlist download for user ${user.uid}...");
 
-      final doc = await _firestore
+      final doc = await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -200,14 +217,15 @@ class CloudSyncService {
 
   /// Upload Liked Songs to Firestore
   Future<void> uploadLikedSongs() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return;
 
     try {
       debugPrint("CloudSync: Uploading liked songs...");
       final likedSongs = await SyncAdapter.exportLikedSongs();
       
-      await _firestore
+      await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -225,12 +243,13 @@ class CloudSyncService {
 
   /// Download Liked Songs from Firestore
   Future<void> downloadLikedSongs() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return;
 
     try {
       debugPrint("CloudSync: Downloading liked songs...");
-      final doc = await _firestore
+      final doc = await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -249,14 +268,15 @@ class CloudSyncService {
 
   /// Upload Recently Played to Firestore
   Future<void> uploadRecentlyPlayed() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return;
 
     try {
       debugPrint("CloudSync: Uploading recently played...");
       final recentlyPlayed = await SyncAdapter.exportRecentlyPlayed();
       
-      await _firestore
+      await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -274,12 +294,13 @@ class CloudSyncService {
 
   /// Download Recently Played from Firestore
   Future<void> downloadRecentlyPlayed() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return;
 
     try {
       debugPrint("CloudSync: Downloading recently played...");
-      final doc = await _firestore
+      final doc = await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -298,14 +319,15 @@ class CloudSyncService {
 
   /// Upload Downloads list to Firestore (metadata only)
   Future<void> uploadDownloadsList() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return;
 
     try {
       debugPrint("CloudSync: Uploading downloads list...");
       final downloads = await SyncAdapter.exportDownloadsList();
       
-      await _firestore
+      await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -323,12 +345,13 @@ class CloudSyncService {
 
   /// Download Downloads list from Firestore (metadata only)
   Future<void> downloadDownloadsList() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return;
 
     try {
       debugPrint("CloudSync: Downloading downloads list...");
-      final doc = await _firestore
+      final doc = await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -350,11 +373,12 @@ class CloudSyncService {
     required List<String> languages,
     required List<String> artists,
   }) async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return;
 
     try {
-      await _firestore
+      await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -372,11 +396,12 @@ class CloudSyncService {
 
   /// Get users preference languages and artists
   Future<Map<String, List<String>>> getUserPreferences() async {
-    final user = _auth.currentUser;
-    if (user == null) return {'languages': [], 'artists': []};
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return {'languages': [], 'artists': []};
 
     try {
-      final doc = await _firestore
+      final doc = await firestore
           .collection('users')
           .doc(user.uid)
           .collection('data')
@@ -401,11 +426,12 @@ class CloudSyncService {
     required String monthId,
     required Map<String, dynamic> stats,
   }) async {
-    final user = _auth.currentUser;
-    if (user == null) return;
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return;
 
     try {
-      await _firestore
+      await firestore
           .collection('users')
           .doc(user.uid)
           .collection('wrapped_history')
@@ -423,11 +449,12 @@ class CloudSyncService {
 
   /// Retrieves all historical Wrapped snapshots
   Future<List<Map<String, dynamic>>> getWrappedHistory() async {
-    final user = _auth.currentUser;
-    if (user == null) return [];
+    final user = _auth?.currentUser;
+    final firestore = _firestore;
+    if (user == null || firestore == null) return [];
 
     try {
-      final query = await _firestore
+      final query = await firestore
           .collection('users')
           .doc(user.uid)
           .collection('wrapped_history')

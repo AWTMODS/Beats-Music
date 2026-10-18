@@ -7,6 +7,16 @@ import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:icons_plus/icons_plus.dart';
+import 'package:beats_music/services/beats_player.dart';
+import 'package:beats_music/services/player/player_engine.dart';
+import 'package:beats_music/blocs/timer/timer_bloc.dart';
+import 'package:beats_music/screens/screen/home_views/timer_view.dart';
+import 'package:beats_music/screens/widgets/snackbar.dart';
+import 'package:beats_music/screens/widgets/player_components.dart';
+import 'package:beats_music/blocs/recommendation/cubit/recommendation_cubit.dart';
+import 'package:beats_music/blocs/recommendation/cubit/recommendation_state.dart';
+import 'package:beats_music/core/models/exported.dart' hide MediaItem;
 
 import 'song_tile.dart';
 import 'more_bottom_sheet.dart';
@@ -271,7 +281,15 @@ class _PanelContent extends StatelessWidget {
 
                         return IgnorePointer(
                           ignoring: opacity == 0.0,
-                          child: Opacity(opacity: opacity, child: child),
+                          child: Opacity(
+                            opacity: opacity,
+                            child: Column(
+                              children: [
+                                Expanded(child: child!),
+                                _QueueBottomActionBar(playerCubit: playerCubit),
+                              ],
+                            ),
+                          ),
                         );
                       },
                       child: CustomScrollView(
@@ -283,11 +301,8 @@ class _PanelContent extends StatelessWidget {
                           _SongListSliver(
                               playerCubit: playerCubit,
                               scrollController: scrollController),
-                          SliverToBoxAdapter(
-                              child: SizedBox(
-                                  height:
-                                      MediaQuery.of(context).padding.bottom +
-                                          20)),
+                          const SliverToBoxAdapter(
+                              child: SizedBox(height: 20)),
                         ],
                       ),
                     ),
@@ -681,5 +696,262 @@ class _QueueItem extends StatelessWidget {
         : ReorderableDelayedDragStartListener(index: index, child: content);
   }
 }
+
+class _QueueBottomActionBar extends StatelessWidget {
+  final BeatsPlayerCubit playerCubit;
+  const _QueueBottomActionBar({required this.playerCubit});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF161616).withValues(alpha: 0.95),
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withValues(alpha: 0.08),
+            width: 0.5,
+          ),
+        ),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        10,
+        16,
+        math.max(MediaQuery.of(context).padding.bottom, 24) + 8,
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _QueueShuffleAction(playerCubit: playerCubit)),
+          const SizedBox(width: 10),
+          Expanded(child: _QueueRepeatAction(playerCubit: playerCubit)),
+          const SizedBox(width: 10),
+          const Expanded(child: _QueueTimerAction()),
+        ],
+      ),
+    );
+  }
+}
+
+class _QueueShuffleAction extends StatelessWidget {
+  final BeatsPlayerCubit playerCubit;
+  const _QueueShuffleAction({required this.playerCubit});
+
+  @override
+  Widget build(BuildContext context) {
+    final player = playerCubit.BeatsPlayer;
+    return StreamBuilder<ShuffleModeState>(
+      stream: player.shuffleState,
+      builder: (context, snapshot) {
+        final mode = snapshot.data ?? ShuffleModeState.off;
+        final isActive = mode != ShuffleModeState.off;
+        final color = isActive ? AppTheme.successAccent : Colors.white;
+
+        Widget iconWidget;
+        String label = 'Shuffle';
+        if (mode == ShuffleModeState.smartShuffle) {
+          label = 'Smart';
+          iconWidget = Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(MingCute.shuffle_2_line, color: color, size: 24),
+              Positioned(
+                top: -3,
+                right: -4,
+                child: Icon(MingCute.sparkles_fill, color: color, size: 12),
+              ),
+            ],
+          );
+        } else {
+          iconWidget = Icon(MingCute.shuffle_2_line, color: color, size: 24);
+        }
+
+        return InkWell(
+          onTap: () {
+            if (mode == ShuffleModeState.off) {
+              player.setShuffleModeState(ShuffleModeState.shuffle);
+              SnackbarService.showMessage('Shuffle is on');
+            } else if (mode == ShuffleModeState.shuffle) {
+              final recState = context.read<RecommendationCubit>().state;
+              List<Track>? recTracks;
+              if (recState is RecommendationLoaded &&
+                  recState.tracks.isNotEmpty) {
+                recTracks = recState.tracks.take(5).toList();
+              }
+              player.setShuffleModeState(
+                ShuffleModeState.smartShuffle,
+                recommendations: recTracks,
+              );
+              SnackbarService.showMessage(
+                  'Smart Shuffle is on. Recommendations added to Queue.');
+            } else {
+              player.setShuffleModeState(ShuffleModeState.off);
+              SnackbarService.showMessage('Shuffle is off');
+            }
+          },
+          onLongPress: () {
+            showListeningModesBottomSheet(context, player);
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            height: 68,
+            decoration: BoxDecoration(
+              color: const Color(0xFF282828),
+              borderRadius: BorderRadius.circular(16),
+              border: isActive
+                  ? Border.all(
+                      color: AppTheme.successAccent.withValues(alpha: 0.3),
+                      width: 1,
+                    )
+                  : null,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                iconWidget,
+                const SizedBox(height: 5),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _QueueRepeatAction extends StatelessWidget {
+  final BeatsPlayerCubit playerCubit;
+  const _QueueRepeatAction({required this.playerCubit});
+
+  @override
+  Widget build(BuildContext context) {
+    final player = playerCubit.BeatsPlayer;
+    return StreamBuilder<LoopMode>(
+      stream: player.loopMode,
+      builder: (context, snapshot) {
+        final loop = snapshot.data ?? LoopMode.off;
+        final isActive = loop != LoopMode.off;
+        final color = isActive ? AppTheme.successAccent : Colors.white;
+
+        IconData icon = MingCute.repeat_line;
+        String label = 'Repeat';
+        if (loop == LoopMode.one) {
+          icon = MingCute.repeat_one_line;
+          label = 'Repeat 1';
+        }
+
+        return InkWell(
+          onTap: () {
+            if (loop == LoopMode.off) {
+              player.setLoopMode(LoopMode.all);
+              SnackbarService.showMessage('Repeat All');
+            } else if (loop == LoopMode.all) {
+              player.setLoopMode(LoopMode.one);
+              SnackbarService.showMessage('Repeat Current');
+            } else {
+              player.setLoopMode(LoopMode.off);
+              SnackbarService.showMessage('Repeat Off');
+            }
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            height: 68,
+            decoration: BoxDecoration(
+              color: const Color(0xFF282828),
+              borderRadius: BorderRadius.circular(16),
+              border: isActive
+                  ? Border.all(
+                      color: AppTheme.successAccent.withValues(alpha: 0.3),
+                      width: 1,
+                    )
+                  : null,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: color, size: 24),
+                const SizedBox(height: 5),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _QueueTimerAction extends StatelessWidget {
+  const _QueueTimerAction();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TimerBloc, TimerState>(
+      builder: (context, state) {
+        final isRunning = state is TimerRunInProgress;
+        final color = isRunning ? AppTheme.successAccent : Colors.white;
+
+        String label = 'Timer';
+        if (isRunning) {
+          final minutes = (state.duration / 60).ceil();
+          label = '${minutes}m left';
+        }
+
+        return InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TimerView()),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            height: 68,
+            decoration: BoxDecoration(
+              color: const Color(0xFF282828),
+              borderRadius: BorderRadius.circular(16),
+              border: isRunning
+                  ? Border.all(
+                      color: AppTheme.successAccent.withValues(alpha: 0.3),
+                      width: 1,
+                    )
+                  : null,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(MingCute.stopwatch_line, color: color, size: 24),
+                const SizedBox(height: 5),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 
 

@@ -109,15 +109,36 @@ class ApkUpdateService {
         return const ApkUpdateResult(state: ApkUpdateState.idle);
       }
       log('ApkUpdateService: DioException – ${e.message}', name: 'ApkUpdate');
+      final statusCode = e.response?.statusCode;
+      String friendlyMessage;
+      if (statusCode == 404) {
+        friendlyMessage =
+            'Update file not found on server (404). The release package has not been uploaded to GitHub yet.';
+      } else if (statusCode != null && statusCode >= 500) {
+        friendlyMessage =
+            'Server error ($statusCode). Please try again in a few minutes.';
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout) {
+        friendlyMessage =
+            'Connection timed out. Please check your internet connection.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        friendlyMessage =
+            'Unable to connect to the update server. Please check your network connection.';
+      } else {
+        friendlyMessage =
+            'Download failed (${statusCode != null ? "HTTP $statusCode" : "network error"}). Please try again later.';
+      }
       return ApkUpdateResult(
         state: ApkUpdateState.error,
-        errorMessage: 'Download failed: ${e.message}',
+        errorMessage: friendlyMessage,
       );
     } catch (e, st) {
       log('ApkUpdateService: unexpected error – $e\n$st', name: 'ApkUpdate');
-      return ApkUpdateResult(
+      return const ApkUpdateResult(
         state: ApkUpdateState.error,
-        errorMessage: e.toString(),
+        errorMessage:
+            'An unexpected error occurred during download. Please try again.',
       );
     }
   }

@@ -4015,7 +4015,7 @@ class _$PluginResponse_PlaylistDetailsCopyWithImpl<$Res>
 /// @nodoc
 
 class PluginResponse_Streams extends PluginResponse {
-  const PluginResponse_Streams(final List<StreamSource> field0)
+  const PluginResponse_Streams(List<StreamSource> field0)
       : _field0 = field0,
         super._();
 
@@ -4283,7 +4283,7 @@ class _$PluginResponse_MoreAlbumsCopyWithImpl<$Res>
 /// @nodoc
 
 class PluginResponse_HomeSections extends PluginResponse {
-  const PluginResponse_HomeSections(final List<Section> field0)
+  const PluginResponse_HomeSections(List<Section> field0)
       : _field0 = field0,
         super._();
 
@@ -4357,7 +4357,7 @@ class _$PluginResponse_HomeSectionsCopyWithImpl<$Res>
 /// @nodoc
 
 class PluginResponse_LoadMoreItems extends PluginResponse {
-  const PluginResponse_LoadMoreItems(final List<MediaItem> field0)
+  const PluginResponse_LoadMoreItems(List<MediaItem> field0)
       : _field0 = field0,
         super._();
 
@@ -4431,7 +4431,7 @@ class _$PluginResponse_LoadMoreItemsCopyWithImpl<$Res>
 /// @nodoc
 
 class PluginResponse_Charts extends PluginResponse {
-  const PluginResponse_Charts(final List<ChartSummary> field0)
+  const PluginResponse_Charts(List<ChartSummary> field0)
       : _field0 = field0,
         super._();
 
@@ -4504,7 +4504,7 @@ class _$PluginResponse_ChartsCopyWithImpl<$Res>
 /// @nodoc
 
 class PluginResponse_ChartDetails extends PluginResponse {
-  const PluginResponse_ChartDetails(final List<ChartItem> field0)
+  const PluginResponse_ChartDetails(List<ChartItem> field0)
       : _field0 = field0,
         super._();
 
@@ -4578,7 +4578,7 @@ class _$PluginResponse_ChartDetailsCopyWithImpl<$Res>
 /// @nodoc
 
 class PluginResponse_Segments extends PluginResponse {
-  const PluginResponse_Segments(final List<TrackSegment> field0)
+  const PluginResponse_Segments(List<TrackSegment> field0)
       : _field0 = field0,
         super._();
 
@@ -4717,7 +4717,7 @@ class _$PluginResponse_LyricsResultCopyWithImpl<$Res>
 /// @nodoc
 
 class PluginResponse_LyricsSearchResults extends PluginResponse {
-  const PluginResponse_LyricsSearchResults(final List<LyricsMatch> field0)
+  const PluginResponse_LyricsSearchResults(List<LyricsMatch> field0)
       : _field0 = field0,
         super._();
 
@@ -4864,7 +4864,7 @@ class _$PluginResponse_LyricsByIdCopyWithImpl<$Res>
 /// @nodoc
 
 class PluginResponse_Suggestions extends PluginResponse {
-  const PluginResponse_Suggestions(final List<Suggestion> field0)
+  const PluginResponse_Suggestions(List<Suggestion> field0)
       : _field0 = field0,
         super._();
 
@@ -5069,7 +5069,7 @@ class _$PluginResponse_CollectionInfoCopyWithImpl<$Res>
 /// @nodoc
 
 class PluginResponse_ImportTracks extends PluginResponse {
-  const PluginResponse_ImportTracks(final List<ImportTrackItem> field0)
+  const PluginResponse_ImportTracks(List<ImportTrackItem> field0)
       : _field0 = field0,
         super._();
 

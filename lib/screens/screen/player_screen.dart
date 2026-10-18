@@ -133,6 +133,7 @@ class _AudioPlayerViewState extends State<AudioPlayerView>
                         child: _PlayerUI(
                           musicPlayer: musicPlayer,
                           tabController: _tabController,
+                          upNextController: _upNextPanelController,
                         ),
                       ),
                       UpNextPanel(
@@ -157,6 +158,7 @@ class _AudioPlayerViewState extends State<AudioPlayerView>
                       child: _PlayerUI(
                         musicPlayer: musicPlayer,
                         tabController: _tabController,
+                        upNextController: _upNextPanelController,
                       ),
                     ),
                   ),
@@ -185,10 +187,12 @@ class _AudioPlayerViewState extends State<AudioPlayerView>
 class _PlayerUI extends StatelessWidget {
   final BeatsMusicPlayer musicPlayer;
   final TabController tabController;
+  final UpNextPanelController? upNextController;
 
   const _PlayerUI({
     required this.musicPlayer,
     required this.tabController,
+    this.upNextController,
   });
 
   @override
@@ -227,7 +231,10 @@ class _PlayerUI extends StatelessWidget {
 
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: PlayerCtrlWidgets(musicPlayer: musicPlayer),
+                child: PlayerCtrlWidgets(
+                  musicPlayer: musicPlayer,
+                  upNextController: upNextController,
+                ),
               ),
 
               // Reserve exact space for the grounded UpNextPanel so buttons are never hidden

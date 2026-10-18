@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:http/http.dart' as http;
 
 // Helpers
@@ -189,6 +190,61 @@ class _LoadImageCachedState extends State<LoadImageCached> {
   }
 
   Widget _buildImageContent() {
+    if (widget.imageUrl.startsWith('smart_icon:')) {
+      final type = widget.imageUrl.substring('smart_icon:'.length);
+      final (icon, Color startColor, Color endColor) = switch (type) {
+        'create_playlist' => (
+            MingCute.add_circle_fill,
+            const Color(0xFF8B5CF6),
+            const Color(0xFF6D28D9),
+          ),
+        'downloads' => (
+            MingCute.download_2_fill,
+            const Color(0xFF2563EB),
+            const Color(0xFF1D4ED8),
+          ),
+        'history' => (
+            MingCute.time_fill,
+            const Color(0xFF0284C7),
+            const Color(0xFF0369A1),
+          ),
+        'top_mix' => (
+            MingCute.star_fill,
+            const Color(0xFFF59E0B),
+            const Color(0xFFD97706),
+          ),
+        'radio' => (
+            MingCute.radio_line,
+            const Color(0xFFEF4444),
+            const Color(0xFFDC2626),
+          ),
+        _ => (
+            MingCute.music_2_fill,
+            const Color(0xFF7C3AED),
+            const Color(0xFF5B21B6),
+          ),
+      };
+
+      return Container(
+        width: widget.width,
+        height: widget.height,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [startColor, endColor],
+          ),
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            size: 36,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
     // ── 1. Try local file (primary) ──
     final primaryFile = _resolveLocalImageFile(widget.imageUrl);
     if (primaryFile != null) {

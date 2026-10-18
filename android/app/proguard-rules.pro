@@ -44,3 +44,26 @@
 -keep class com.beats.app.rust.** { *; }
 -dontwarn com.beats.app.rust.**
 
+# ============================================================
+# Flutter Engine & Plugins (Pigeon & Platform Channels)
+# ============================================================
+-keep class io.flutter.plugins.sharedpreferences.** { *; }
+-dontwarn io.flutter.plugins.sharedpreferences.**
+-keep class io.flutter.plugins.** { *; }
+-dontwarn io.flutter.plugins.**
+-keep class io.flutter.app.** { *; }
+-keep class io.flutter.plugin.** { *; }
+-keep class io.flutter.util.** { *; }
+-keep class io.flutter.view.** { *; }
+-keep class io.flutter.embedding.** { *; }
+
+# ============================================================
+# Kotlin Coroutines
+# ============================================================
+-keepnames class kotlinx.coroutines.** { *; }
+-dontwarn kotlinx.coroutines.**
+
+# ============================================================
+# Google Play Core (optional deferred components referenced by Flutter embedding)
+# ============================================================
+-dontwarn com.google.android.play.core.**

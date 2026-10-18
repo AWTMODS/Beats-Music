@@ -75,29 +75,47 @@ class DBProvider {
 
   /// Open (or return existing) Isar instance.
   static Future<Isar> openDB() async {
-    if (Isar.instanceNames.isEmpty) {
-      final File dbFile = File(p.join(appSuppDir, 'dbv3.isar'));
-      if (!await dbFile.exists()) {
-        await checkAndRestoreDB(dbFile.path, [
-          p.join(appDocDir, 'dbv3.isar'),
-          p.join(appDocDir, 'Beats_backup_dbv3.isar'),
-          p.join(appSuppDir, 'Beats_backup_dbv3.isar'),
-        ]);
-      }
-
-      // Migrate DB from documents dir to support dir if needed
-      if (!await dbFile.exists() &&
-          await File(p.join(appDocDir, 'dbv3.isar')).exists()) {
-        final tempDb = Isar.openSync(_schemas, directory: appDocDir);
-        tempDb.copyToFile(dbFile.path);
-        log("DB Copied to $appSuppDir", name: "DBProvider");
-        tempDb.close();
-      }
-
-      log(appSuppDir, name: "DB");
-      return Isar.openSync(_schemas, directory: appSuppDir, name: 'dbv3');
+    final existing = Isar.getInstance('dbv3') ?? Isar.getInstance();
+    if (existing != null && existing.isOpen) {
+      return existing;
     }
-    return Future.value(Isar.getInstance());
+
+    final File dbFile = File(p.join(appSuppDir, 'dbv3.isar'));
+    if (!await dbFile.exists()) {
+      await checkAndRestoreDB(dbFile.path, [
+        p.join(appDocDir, 'dbv3.isar'),
+        p.join(appDocDir, 'Beats_backup_dbv3.isar'),
+        p.join(appSuppDir, 'Beats_backup_dbv3.isar'),
+      ]);
+    }
+
+    // Migrate DB from documents dir to support dir if needed
+    if (!await dbFile.exists() &&
+        await File(p.join(appDocDir, 'dbv3.isar')).exists()) {
+      try {
+        final tempDb = await Isar.open(_schemas, directory: appDocDir, name: 'temp_migrate_db');
+        await tempDb.copyToFile(dbFile.path);
+        log("DB Copied to $appSuppDir", name: "DBProvider");
+        await tempDb.close();
+      } catch (e) {
+        log("DB Migration skipped or failed: $e", name: "DBProvider");
+      }
+    }
+
+    log(appSuppDir, name: "DB");
+    try {
+      return await Isar.open(_schemas, directory: appSuppDir, name: 'dbv3');
+    } catch (e) {
+      log("Error opening Isar dbv3: $e. Attempting lock recovery...", name: "DBProvider");
+      final lockFile = File(p.join(appSuppDir, 'dbv3.isar.lock'));
+      if (await lockFile.exists()) {
+        try {
+          await lockFile.delete();
+          log("Stale dbv3.isar.lock removed", name: "DBProvider");
+        } catch (_) {}
+      }
+      return await Isar.open(_schemas, directory: appSuppDir, name: 'dbv3');
+    }
   }
 
   /// Schedule periodic maintenance tasks (called once during bootstrap).

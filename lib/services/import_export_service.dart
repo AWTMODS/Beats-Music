@@ -29,6 +29,13 @@ class ImportExportService {
   }
 
   /// Serialize a [TrackDB] into a portable JSON map.
+  static String _formatAppVersion(PackageInfo info) {
+    final b = int.tryParse(info.buildNumber);
+    final build =
+        (b != null && b > 1000 && b < 10000) ? (b % 1000).toString() : info.buildNumber;
+    return 'v${info.version}+$build';
+  }
+
   static Map<String, dynamic> _trackDBToMap(TrackDB t) {
     return {
       'mediaId': t.mediaId,
@@ -161,8 +168,7 @@ class ImportExportService {
       final Map<String, dynamic> playlistMap = {
         '_meta': {
           'generated_by': 'Beats - Open Source Music Streaming Application',
-          'version':
-              'v${packageInfo.version}+${int.parse(packageInfo.buildNumber) % 1000}',
+          'version': _formatAppVersion(packageInfo),
           'exportedAt': DateTime.now().toIso8601String(),
           'format': 'v2',
           'note':
@@ -190,8 +196,7 @@ class ImportExportService {
       final packageInfo = await PackageInfo.fromPlatform();
       trackMap['_meta'] = {
         'generated_by': 'Beats - Open Source Music Streaming Application',
-        'version':
-            'v${packageInfo.version}+${int.parse(packageInfo.buildNumber) % 1000}',
+        'version': _formatAppVersion(packageInfo),
         'exportedAt': DateTime.now().toIso8601String(),
         'format': 'v2',
       };
@@ -312,8 +317,7 @@ class ImportExportService {
       final Map<String, dynamic> playlistMap = {
         '_meta': {
           'generated_by': 'Beats - Open Source Music Streaming Application',
-          'version':
-              'v${packageInfo.version}+${int.parse(packageInfo.buildNumber) % 1000}',
+          'version': _formatAppVersion(packageInfo),
           'exportedAt': DateTime.now().toIso8601String(),
         },
         'playlistName': playlistDB.name,
