@@ -324,6 +324,26 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   }
 
   Future<void> _startDownload() async {
+    final hasDownloadedApk = await ApkUpdateService.isApkDownloaded();
+    if (hasDownloadedApk) {
+      setState(() {
+        _state = ApkUpdateState.installing;
+      });
+      final installResult = await ApkUpdateService.installDownloadedApk();
+      if (!mounted) return;
+      if (installResult.state == ApkUpdateState.installing) {
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted) Navigator.of(context).pop();
+        return;
+      } else {
+        setState(() {
+          _state = installResult.state;
+          _error = installResult.errorMessage;
+        });
+        return;
+      }
+    }
+
     final result = await ApkUpdateService.downloadAndInstall(
       widget.url,
       cancelToken: _cancelToken,
@@ -340,7 +360,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
 
     // Auto-dismiss once the installer is handed off
     if (_state == ApkUpdateState.installing) {
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 2));
       if (mounted) Navigator.of(context).pop();
     }
   }
@@ -456,20 +476,52 @@ class _DownloadSheetState extends State<_DownloadSheet> {
               ),
             )
           else if (_state == ApkUpdateState.error)
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Default_Theme.accentColor2,
-                  foregroundColor: Default_Theme.themeColor,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                          color: Default_Theme.primaryColor2
+                              .withValues(alpha: 0.2)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      'Close',
+                      style: Default_Theme.secondoryTextStyleMedium.copyWith(
+                        color:
+                            Default_Theme.primaryColor2.withValues(alpha: 0.6),
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
                 ),
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Close',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Default_Theme.accentColor2,
+                      foregroundColor: Default_Theme.themeColor,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _state = ApkUpdateState.downloading;
+                        _error = null;
+                      });
+                      _startDownload();
+                    },
+                    child: const Text('Retry',
+                        style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
             ),
         ],
       ),

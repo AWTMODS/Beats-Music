@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// Tracks the current state of an in-app APK download / install flow.
 enum ApkUpdateState {
@@ -28,6 +29,103 @@ class ApkUpdateResult {
 class ApkUpdateService {
   static final _dio = Dio();
 
+  /// Resolves the file location where update APKs should be stored.
+  /// On Android, this MUST be in getExternalStorageDirectory()
+  /// (context.getExternalFilesDir(null)) so that OpenFilex does NOT trigger
+  /// pathRequiresPermission() which erroneously demands MANAGE_EXTERNAL_STORAGE
+  /// on Android 11+ (API 30+).
+  static Future<File> getApkFile() async {
+    final Directory dir = Platform.isAndroid
+        ? (await getExternalStorageDirectory()) ??
+            await getApplicationSupportDirectory()
+        : await getTemporaryDirectory();
+
+    return File('${dir.path}/beats_update.apk');
+  }
+
+  /// Checks whether an update APK is already downloaded on disk and non-empty.
+  static Future<bool> isApkDownloaded() async {
+    try {
+      final file = await getApkFile();
+      return await file.exists() && (await file.length()) > 1024 * 1024;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Request package installer permission on Android if needed.
+  /// Returns true if granted or not on Android.
+  static Future<bool> ensureInstallPermission() async {
+    if (!Platform.isAndroid) return true;
+    try {
+      final status = await Permission.requestInstallPackages.status;
+      if (status.isGranted) return true;
+      final requestStatus = await Permission.requestInstallPackages.request();
+      return requestStatus.isGranted;
+    } catch (e) {
+      log('ApkUpdateService: Failed to check install permission: $e',
+          name: 'ApkUpdate');
+      return true;
+    }
+  }
+
+  /// Installs an already-downloaded APK file.
+  static Future<ApkUpdateResult> installDownloadedApk([File? apkFile]) async {
+    try {
+      final file = apkFile ?? await getApkFile();
+      if (!await file.exists()) {
+        return const ApkUpdateResult(
+          state: ApkUpdateState.error,
+          errorMessage: 'Update package not found. Please download again.',
+        );
+      }
+
+      // Check install permission first on Android
+      final hasPermission = await ensureInstallPermission();
+      if (!hasPermission) {
+        return const ApkUpdateResult(
+          state: ApkUpdateState.error,
+          errorMessage:
+              'Install permission required. Please enable "Allow from this source" for Beats in Settings.',
+        );
+      }
+
+      log('ApkUpdateService: Opening installer for ${file.path}',
+          name: 'ApkUpdate');
+
+      final result = await OpenFilex.open(
+        file.path,
+        type: 'application/vnd.android.package-archive',
+      );
+
+      log('ApkUpdateService: OpenFilex result → ${result.type} ${result.message}',
+          name: 'ApkUpdate');
+
+      if (result.type != ResultType.done) {
+        String msg = result.message;
+        if (result.type == ResultType.permissionDenied) {
+          msg =
+              'Permission denied to install APK. Please enable "Allow from this source" in Settings.';
+        } else if (result.type == ResultType.noAppToOpen) {
+          msg = 'No package installer app found on this device to open APK.';
+        }
+        return ApkUpdateResult(
+          state: ApkUpdateState.error,
+          errorMessage: msg,
+        );
+      }
+
+      return const ApkUpdateResult(state: ApkUpdateState.installing);
+    } catch (e, st) {
+      log('ApkUpdateService: Error opening installer: $e\n$st',
+          name: 'ApkUpdate');
+      return ApkUpdateResult(
+        state: ApkUpdateState.error,
+        errorMessage: 'Failed to open package installer: $e',
+      );
+    }
+  }
+
   /// Download the APK from [url] and immediately hand it to the system
   /// package installer.  Returns an [ApkUpdateResult] describing the outcome.
   ///
@@ -41,17 +139,22 @@ class ApkUpdateService {
     CancelToken? cancelToken,
   }) async {
     try {
-      // ── 1. Resolve save path ──────────────────────────────────────────────
-      final Directory cacheDir = Platform.isAndroid
-          ? (await getExternalCacheDirectories() ?? []).firstOrNull ??
-              await getTemporaryDirectory()
-          : await getTemporaryDirectory();
+      // ── 0. Pre-check install permission on Android ─────────────────────────
+      final hasPermission = await ensureInstallPermission();
+      if (!hasPermission) {
+        return const ApkUpdateResult(
+          state: ApkUpdateState.error,
+          errorMessage:
+              'Permission to install unknown apps is required. Please enable "Allow from this source" for Beats in Settings to update.',
+        );
+      }
 
-      final savePath = '${cacheDir.path}/beats_update.apk';
+      // ── 1. Resolve save path ──────────────────────────────────────────────
+      final file = await getApkFile();
+      final savePath = file.path;
       final tempPath = '$savePath.part';
 
       // Delete stale downloads if present
-      final file = File(savePath);
       if (await file.exists()) await file.delete();
       final tempFile = File(tempPath);
       if (await tempFile.exists()) await tempFile.delete();
@@ -97,12 +200,7 @@ class ApkUpdateService {
           name: 'ApkUpdate');
 
       // ── 3. Open with system installer ─────────────────────────────────────
-      final result = await OpenFilex.open(savePath);
-
-      log('ApkUpdateService: OpenFilex result → ${result.type} ${result.message}',
-          name: 'ApkUpdate');
-
-      return const ApkUpdateResult(state: ApkUpdateState.installing);
+      return await installDownloadedApk(file);
     } on DioException catch (e) {
       if (e.type == DioExceptionType.cancel) {
         log('ApkUpdateService: Download cancelled', name: 'ApkUpdate');

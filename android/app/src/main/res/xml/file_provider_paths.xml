@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <!-- Exposes getExternalCacheDir() for the downloaded APK -->
+    <!-- Exposes getExternalFilesDir() for downloaded APKs -->
+    <external-files-path name="external_files" path="." />
+    <!-- Exposes getExternalCacheDir() -->
     <external-cache-path name="external_cache" path="." />
+    <!-- Internal files directory -->
+    <files-path name="files" path="." />
     <!-- Fallback: internal cache dir -->
     <cache-path name="cache" path="." />
 </paths>
+

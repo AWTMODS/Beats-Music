@@ -55,8 +55,26 @@ class _UpdateSheetState extends State<UpdateSheet> {
   String? _errorMessage;
   CancelToken? _cancelToken;
   bool _isInstalling = false;
+  bool _hasLocalApk = false;
 
-  void _startUpdate() async {
+  @override
+  void initState() {
+    super.initState();
+    _checkLocalApk();
+  }
+
+  Future<void> _checkLocalApk() async {
+    if (Platform.isAndroid) {
+      final exists = await ApkUpdateService.isApkDownloaded();
+      if (mounted) {
+        setState(() {
+          _hasLocalApk = exists;
+        });
+      }
+    }
+  }
+
+  Future<void> _startUpdate({bool forceDownload = false}) async {
     if (!Platform.isAndroid) {
       if (widget.onUpdate != null) {
         widget.onUpdate!();
@@ -67,8 +85,30 @@ class _UpdateSheetState extends State<UpdateSheet> {
       return;
     }
 
+    // If APK is already downloaded and not forcing fresh download, trigger installation directly
+    if (_hasLocalApk && !forceDownload) {
+      setState(() {
+        _isInstalling = true;
+        _errorMessage = null;
+      });
+      final installResult = await ApkUpdateService.installDownloadedApk();
+      if (!mounted) return;
+      if (installResult.state == ApkUpdateState.installing) {
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted) Navigator.pop(context);
+        return;
+      } else {
+        setState(() {
+          _isInstalling = false;
+          _errorMessage = installResult.errorMessage;
+        });
+        return;
+      }
+    }
+
     setState(() {
       _isDownloading = true;
+      _isInstalling = false;
       _progress = 0.0;
       _receivedBytes = 0;
       _totalBytes = 0;
@@ -96,13 +136,17 @@ class _UpdateSheetState extends State<UpdateSheet> {
 
     if (result.state == ApkUpdateState.installing) {
       setState(() {
+        _isDownloading = false;
         _isInstalling = true;
       });
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 2));
       if (mounted) Navigator.pop(context);
     } else if (result.state == ApkUpdateState.error) {
+      final hasApk = await ApkUpdateService.isApkDownloaded();
       setState(() {
         _isDownloading = false;
+        _isInstalling = false;
+        _hasLocalApk = hasApk;
         _errorMessage =
             result.errorMessage ?? 'Download failed. Please try again.';
       });
@@ -110,6 +154,7 @@ class _UpdateSheetState extends State<UpdateSheet> {
       // User cancelled
       setState(() {
         _isDownloading = false;
+        _isInstalling = false;
       });
     }
   }
@@ -424,7 +469,13 @@ class _UpdateSheetState extends State<UpdateSheet> {
                                 ),
                               ),
                               child: Text(
-                                _errorMessage != null ? 'Retry' : 'Update Now',
+                                _errorMessage != null
+                                    ? (_hasLocalApk
+                                        ? 'Retry Install'
+                                        : 'Retry Download')
+                                    : (_hasLocalApk
+                                        ? 'Install Update'
+                                        : 'Update Now'),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -436,6 +487,21 @@ class _UpdateSheetState extends State<UpdateSheet> {
                         ),
                       ],
                     ),
+                    if (_hasLocalApk && _errorMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: () => _startUpdate(forceDownload: true),
+                          icon: const Icon(Icons.refresh_rounded,
+                              size: 16, color: Colors.white70),
+                          label: const Text(
+                            'Re-download APK package',
+                            style: TextStyle(
+                                color: Colors.white70, fontSize: 13),
+                          ),
+                        ),
+                      ),
+                    ],
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 12),
                       Center(
