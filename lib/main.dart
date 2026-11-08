@@ -51,6 +51,7 @@ import 'package:beats_music/l10n/app_localizations.dart';
 import 'package:beats_music/blocs/add_to_playlist/cubit/add_to_playlist_cubit.dart';
 import 'package:beats_music/blocs/jam_session/jam_session_cubit.dart';
 import 'package:beats_music/blocs/library/cubit/library_items_cubit.dart';
+import 'package:beats_music/blocs/backup/backup_cubit.dart';
 import 'package:beats_music/plugins/blocs/import/content_import_cubit.dart';
 import 'package:beats_music/routes/app_router.dart';
 import 'package:beats_music/screens/screen/library_views/cubit/current_playlist_cubit.dart';
@@ -77,6 +78,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beats_music/services/notification_manager.dart';
+import 'package:beats_music/services/auto_sync_service.dart';
 import 'package:app_links/app_links.dart';
 import 'dart:ui';
 
@@ -187,6 +189,17 @@ Future<void> main() async {
         details.exception is NetworkImageLoadException) {
       return;
     }
+
+    // Layout overflow warnings and silent errors should NOT be treated as fatal crashes
+    final exceptionStr = details.exceptionAsString();
+    if (exceptionStr.contains('overflowed by') ||
+        exceptionStr.contains('RenderFlex overflowed') ||
+        details.silent) {
+      try {
+        FirebaseCrashlytics.instance.recordFlutterError(details);
+      } catch (_) {}
+      return;
+    }
     
     if (details.exception is io.SocketException ||
         details.exception is io.HandshakeException ||
@@ -228,98 +241,92 @@ Future<void> main() async {
   _log('[MAIN] Initializing MediaKit...');
   MediaKit.ensureInitialized();
 
-  _log('[MAIN] Calling bootstrapApp()...');
-  try {
-    await bootstrapApp();
-    _log('[MAIN] bootstrapApp() succeeded');
-  } catch (e, stack) {
-    _log('[MAIN] FATAL ERROR in bootstrapApp(): $e\n$stack');
-  }
-
-  _log('[MAIN] Initializing Firebase...');
-  try {
-    if (io.Platform.isWindows) {
-      await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: 'AIzaSyA1UKd5tU516s9GyvFqS-STevWi1iGebGk',
-          appId: '1:99120782266:android:1a68bcaa91612d9a299b83',
-          messagingSenderId: '99120782266',
-          projectId: 'beats-music-7d78b',
-          storageBucket: 'beats-music-7d78b.firebasestorage.app',
-        ),
-      );
-    } else {
-      await Firebase.initializeApp();
-    }
-    _log('[MAIN] Firebase initialized successfully');
-
-    PlatformDispatcher.instance.onError = (error, stack) {
-      if (error is NetworkImageLoadException) {
-        return true; 
-      }
-      
-      bool isNetworkError = error is io.SocketException || 
-                            error is io.HandshakeException || 
-                            error is io.HttpException;
-      
-      try {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: !isNetworkError);
-      } catch (_) {}
-      return true;
-    };
-    
-    // Small delay to allow Firebase Auth to restore the user session
-    await Future.delayed(const Duration(milliseconds: 100));
-  } catch (e) {
-    _log('[MAIN] Firebase init failed: $e');
-    debugPrint("Firebase init failed: $e");
-  }
-
-  _log('[MAIN] Checking preferences...');
-  SharedPreferences? prefs;
-  try {
-    prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 2));
-    _log('[MAIN] SharedPreferences loaded successfully');
-  } catch (e) {
-    _log('[MAIN] SharedPreferences failed or timed out: $e');
-  }
-  final bool seenPermission = prefs?.getBool('seen_permission') ?? false;
-  final bool loginSkipped = prefs?.getBool('login_skipped') ?? false;
-
-  bool isLoggedIn = false;
-  String? userEmail;
-  try {
-    if (Firebase.apps.isNotEmpty) {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      isLoggedIn = currentUser != null;
-      userEmail = currentUser?.email;
-    }
-  } catch (e) {
-    _log('[MAIN] Firebase Auth check failed: $e');
-    debugPrint("Firebase Auth check failed: $e");
-  }
-
-  _log('[MAIN] isLoggedIn=$isLoggedIn, userEmail=$userEmail, loginSkipped=$loginSkipped');
-
-  if (!seenPermission) {
-    AppRouter.initialRoute = '/Permission';
-  } else if (!isLoggedIn && !loginSkipped) {
-    AppRouter.initialRoute = '/Login';
-  } else {
-    AppRouter.initialRoute = '/Explore';
-  }
-  
-  _log('[MAIN] Initial Route set to: ${AppRouter.initialRoute}');
-
   DiscordService.initialize();
 
-  _log('[MAIN] Setting up audio session...');
-  try {
-    await setupAudioSession().timeout(const Duration(seconds: 3));
-    _log('[MAIN] Audio session configured');
-  } catch (e) {
-    _log('[MAIN] Audio session setup error: $e');
-  }
+  // Kick off independent startup tasks concurrently to eliminate splash screen delay
+  final Future<SharedPreferences?> prefsFuture = () async {
+    try {
+      return await SharedPreferences.getInstance()
+          .timeout(const Duration(seconds: 2));
+    } catch (e) {
+      _log('[MAIN] SharedPreferences failed or timed out: $e');
+      return null;
+    }
+  }();
+
+  final firebaseFuture = () async {
+    _log('[MAIN] Initializing Firebase...');
+    try {
+      if (io.Platform.isWindows) {
+        await Firebase.initializeApp(
+          options: const FirebaseOptions(
+            apiKey: 'AIzaSyA1UKd5tU516s9GyvFqS-STevWi1iGebGk',
+            appId: '1:99120782266:android:1a68bcaa91612d9a299b83',
+            messagingSenderId: '99120782266',
+            projectId: 'beats-music-7d78b',
+            storageBucket: 'beats-music-7d78b.firebasestorage.app',
+          ),
+        );
+      } else {
+        await Firebase.initializeApp();
+      }
+      _log('[MAIN] Firebase initialized successfully');
+
+      PlatformDispatcher.instance.onError = (error, stack) {
+        if (error is NetworkImageLoadException) {
+          return true; 
+        }
+        
+        bool isNetworkError = error is io.SocketException || 
+                              error is io.HandshakeException || 
+                              error is io.HttpException;
+        
+        try {
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: !isNetworkError);
+        } catch (_) {}
+        return true;
+      };
+      
+      // Small delay to allow Firebase Auth to restore the user session
+      await Future.delayed(const Duration(milliseconds: 100));
+    } catch (e) {
+      _log('[MAIN] Firebase init failed: $e');
+      debugPrint("Firebase init failed: $e");
+    }
+  }();
+
+  final audioSessionFuture = () async {
+    _log('[MAIN] Setting up audio session...');
+    try {
+      await setupAudioSession().timeout(const Duration(seconds: 3));
+      _log('[MAIN] Audio session configured');
+    } catch (e) {
+      _log('[MAIN] Audio session setup error: $e');
+    }
+  }();
+
+  final notificationFuture = () async {
+    _log('[MAIN] Initializing NotificationManager...');
+    try {
+      await NotificationManager().init().timeout(const Duration(seconds: 3));
+      _log('[MAIN] NotificationManager initialized');
+    } catch (e) {
+      _log('[MAIN] NotificationManager error: $e');
+    }
+  }();
+
+  final bootstrapFuture = () async {
+    _log('[MAIN] Calling bootstrapApp()...');
+    try {
+      await bootstrapApp();
+      _log('[MAIN] bootstrapApp() succeeded');
+    } catch (e, stack) {
+      _log('[MAIN] FATAL ERROR in bootstrapApp(): $e\n$stack');
+    }
+  }();
+
+  // Wait for bootstrap (DB & ServiceLocator) and audio session to be ready before creating player
+  await Future.wait([bootstrapFuture, audioSessionFuture]);
 
   _log('[MAIN] Initializing player...');
   BeatsMusicPlayer? player;
@@ -331,13 +338,46 @@ Future<void> main() async {
     _log('[MAIN] PlayerInitializer error: $e\n$stack');
   }
 
-  _log('[MAIN] Initializing NotificationManager...');
+  // Ensure remaining parallel initialization tasks have completed
+  await Future.wait([
+    firebaseFuture,
+    notificationFuture,
+  ]);
+  final prefs = await prefsFuture;
+
+  _log('[MAIN] Checking preferences...');
+  final bool seenPermission = prefs?.getBool('seen_permission') ?? false;
+  final bool loginSkipped = prefs?.getBool('login_skipped') ?? false;
+
+  bool isLoggedIn = false;
+  String? userEmail;
   try {
-    await NotificationManager().init().timeout(const Duration(seconds: 3));
-    _log('[MAIN] NotificationManager initialized');
+    if (Firebase.apps.isNotEmpty) {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      isLoggedIn = currentUser != null && !currentUser.isAnonymous;
+      userEmail = currentUser?.email;
+    }
   } catch (e) {
-    _log('[MAIN] NotificationManager error: $e');
+    _log('[MAIN] Firebase Auth check failed: $e');
+    debugPrint("Firebase Auth check failed: $e");
   }
+
+  _log('[MAIN] isLoggedIn=$isLoggedIn, userEmail=$userEmail, loginSkipped=$loginSkipped');
+
+  if (isLoggedIn) {
+    _log('[MAIN] User is logged in ($userEmail). Starting AutoSync in background...');
+    AutoSyncService().startAutoSync();
+  }
+
+  if (!seenPermission) {
+    AppRouter.initialRoute = '/Permission';
+  } else if (!isLoggedIn && !loginSkipped) {
+    AppRouter.initialRoute = '/Login';
+  } else {
+    AppRouter.initialRoute = '/Explore';
+  }
+  
+  _log('[MAIN] Initial Route set to: ${AppRouter.initialRoute}');
 
   _log('[MAIN] Calling runApp()...');
   if (player != null) {
@@ -653,6 +693,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             playlistDao: playlistDao,
             libraryDao: LibraryDAO(DBProvider.db),
           ),
+        ),
+        BlocProvider(
+          create: (_) => BackupCubit(
+            ServiceLocator.backupRepository,
+            ServiceLocator.backupFiles,
+          ),
+          lazy: true,
         ),
         BlocProvider(
           create: (_) => ContentImportCubit(),

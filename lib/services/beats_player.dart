@@ -512,6 +512,8 @@ class BeatsMusicPlayer extends BaseAudioHandler
         DiscordService.updatePresence(
           track: currentTrackInfo,
           isPlaying: playing,
+          position: position,
+          duration: engine.duration,
         );
       },
     );
@@ -777,6 +779,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
             result.$2.uri,
             httpHeaders: result.$2.headers,
             autoPlay: doPlay,
+            initialPosition: initialPosition,
           );
         }
       } else {
@@ -806,6 +809,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
             result.$2.uri,
             httpHeaders: result.$2.headers,
             autoPlay: doPlay,
+            initialPosition: initialPosition,
           );
         }
       }

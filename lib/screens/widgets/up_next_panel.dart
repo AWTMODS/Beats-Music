@@ -511,26 +511,21 @@ class _DesktopSongListState extends State<_DesktopSongList> {
               });
             }
 
-            // Defensive deduplication: identical IDs would assign the same
-            // GlobalKey to two ReorderableListView items, causing Flutter's
-            // semantics traversal to recurse infinitely.
-            final seenIds = <String>{};
-            final uniqueQueue =
-                queue.where((m) => seenIds.add(m.id)).toList(growable: false);
-
             return ReorderableListView.builder(
               scrollController: _scrollController,
               physics: const BouncingScrollPhysics(),
-              itemCount: uniqueQueue.length,
+              itemCount: queue.length,
+              itemExtent: _itemHeight,
               onReorder: widget.playerCubit.BeatsPlayer.moveQueueItem,
               buildDefaultDragHandles: false,
               itemBuilder: (context, index) {
                 return _QueueItem(
-                  key: ValueKey('desktop_${uniqueQueue[index].id}'),
-                  mediaItem: uniqueQueue[index],
+                  key: ValueKey('desktop_${queue[index].id}_$index'),
+                  mediaItem: queue[index],
                   index: index,
                   playerCubit: widget.playerCubit,
                   isDesktop: true,
+                  isPlaying: queue[index].id == currentId,
                 );
               },
             );
@@ -553,6 +548,7 @@ class _SongListSliver extends StatefulWidget {
 
 class _SongListSliverState extends State<_SongListSliver> {
   String? _lastPlayingId;
+  bool _hasPositionedCurrentSong = false;
   static const double _itemHeight = 70.0;
   static const double _headerOffset = 60.0;
 
@@ -565,22 +561,28 @@ class _SongListSliverState extends State<_SongListSliver> {
       return;
     }
 
-    // FIX: Subtract 1.5 item heights so the current song sits cleanly
-    // in view with the previous song above it, instead of jamming into the top header.
     final targetOffset = math.max(
         0.0, _headerOffset + (index * _itemHeight) - (_itemHeight * 1.5));
     final clampedOffset = targetOffset.clamp(
         0.0, widget.scrollController.position.maxScrollExtent);
 
-    widget.scrollController.animateTo(clampedOffset,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic);
+    if (!_hasPositionedCurrentSong) {
+      // Opening a deep queue must not animate through (and decode) every
+      // intervening thumbnail while the sheet is also moving.
+      _hasPositionedCurrentSong = true;
+      widget.scrollController.jumpTo(clampedOffset);
+    } else {
+      widget.scrollController.animateTo(clampedOffset,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<MediaItem>>(
       stream: widget.playerCubit.BeatsPlayer.queue,
+      initialData: widget.playerCubit.BeatsPlayer.queue.valueOrNull,
       builder: (context, queueSnapshot) {
         if (!queueSnapshot.hasData) {
           return const SliverToBoxAdapter(child: SizedBox.shrink());
@@ -589,30 +591,28 @@ class _SongListSliverState extends State<_SongListSliver> {
 
         return StreamBuilder<MediaItem?>(
           stream: widget.playerCubit.BeatsPlayer.mediaItem,
+          initialData: widget.playerCubit.BeatsPlayer.mediaItem.valueOrNull,
           builder: (context, mediaSnapshot) {
             final currentId = mediaSnapshot.data?.id;
             if (currentId != null && currentId != _lastPlayingId) {
               _lastPlayingId = currentId;
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                _scrollToCurrentSong(queue, currentId);
+                if (mounted) _scrollToCurrentSong(queue, currentId);
               });
             }
 
-            // Defensive deduplication — same reason as the desktop list above.
-            final seenIds = <String>{};
-            final uniqueQueue =
-                queue.where((m) => seenIds.add(m.id)).toList(growable: false);
-
             return SliverReorderableList(
-              itemCount: uniqueQueue.length,
+              itemCount: queue.length,
+              itemExtent: _itemHeight,
               onReorder: widget.playerCubit.BeatsPlayer.moveQueueItem,
               itemBuilder: (context, index) {
                 return _QueueItem(
-                  key: ValueKey('mobile_${uniqueQueue[index].id}'),
-                  mediaItem: uniqueQueue[index],
+                  key: ValueKey('mobile_${queue[index].id}_$index'),
+                  mediaItem: queue[index],
                   index: index,
                   playerCubit: widget.playerCubit,
                   isDesktop: false,
+                  isPlaying: queue[index].id == currentId,
                 );
               },
             );
@@ -628,6 +628,7 @@ class _QueueItem extends StatelessWidget {
   final int index;
   final BeatsPlayerCubit playerCubit;
   final bool isDesktop;
+  final bool isPlaying;
 
   const _QueueItem({
     super.key,
@@ -635,6 +636,7 @@ class _QueueItem extends StatelessWidget {
     required this.index,
     required this.playerCubit,
     required this.isDesktop,
+    required this.isPlaying,
   });
 
   @override
@@ -642,7 +644,7 @@ class _QueueItem extends StatelessWidget {
     final songModel = mediaItemToTrack(mediaItem);
 
     Widget content = Dismissible(
-      key: ValueKey('dismiss_${mediaItem.id}'),
+      key: ValueKey('dismiss_${mediaItem.id}_$index'),
       direction: DismissDirection.startToEnd,
       background: Container(
         alignment: Alignment.centerLeft,
@@ -670,6 +672,7 @@ class _QueueItem extends StatelessWidget {
                     showSinglePlay: true,
                   ),
                   song: songModel,
+                  isCurrentTrack: isPlaying,
                 ),
               ),
               if (isDesktop)

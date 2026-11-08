@@ -130,99 +130,119 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              const Icon(MingCute.shield_line, color: Default_Theme.accentColor2, size: 48),
-              const SizedBox(height: 16),
-              const Text(
-                "Permissions",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "To provide the best music experience, we need a few permissions.",
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 40),
-              
-              _buildPermissionTile(
-                icon: MingCute.notification_fill,
-                title: "Notifications",
-                subtitle: "To show playback controls in the notification bar.",
-                isGranted: _notificationGranted,
-                onTap: _requestNotificationPermission,
-              ),
-              
-              const SizedBox(height: 16),
-              
-              _buildPermissionTile(
-                icon: MingCute.music_fill,
-                title: "Music & Audio",
-                subtitle: "To access and play your local music files.",
-                isGranted: _storageGranted,
-                onTap: _requestAudioPermission,
-              ),
-              
-              const SizedBox(height: 16),
-              
-              _buildPermissionTile(
-                icon: MingCute.battery_fill,
-                title: "Battery",
-                subtitle: "Disable optimization for uninterrupted background play.",
-                isGranted: _batteryGranted,
-                onTap: _requestBatteryPermission,
-              ),
-
-              const Spacer(),
-              
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () => _continue(isSkipping: false),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Default_Theme.accentColor2,
-                    foregroundColor: Default_Theme.themeColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    _storageGranted ? "Continue" : "Continue with Local & Online",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              if (!_storageGranted) ...[
-                const SizedBox(height: 12),
-                Center(
-                  child: TextButton(
-                    onPressed: () => _continue(isSkipping: true),
-                    child: const Text(
-                      "Skip for now (Stream Online Only)",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 20),
+                          const Icon(MingCute.shield_line,
+                              color: Default_Theme.accentColor2, size: 48),
+                          const SizedBox(height: 16),
+                          const Text(
+                            "Permissions",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "To provide the best music experience, we need a few permissions.",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+                          _buildPermissionTile(
+                            icon: MingCute.notification_fill,
+                            title: "Notifications",
+                            subtitle:
+                                "To show playback controls in the notification bar.",
+                            isGranted: _notificationGranted,
+                            onTap: _requestNotificationPermission,
+                          ),
+                          const SizedBox(height: 14),
+                          _buildPermissionTile(
+                            icon: MingCute.music_fill,
+                            title: "Music & Audio",
+                            subtitle:
+                                "To access and play your local music files.",
+                            isGranted: _storageGranted,
+                            onTap: _requestAudioPermission,
+                          ),
+                          const SizedBox(height: 14),
+                          _buildPermissionTile(
+                            icon: MingCute.battery_fill,
+                            title: "Battery",
+                            subtitle:
+                                "Disable optimization for uninterrupted background play.",
+                            isGranted: _batteryGranted,
+                            onTap: _requestBatteryPermission,
+                          ),
+                        ],
                       ),
-                    ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 20.0, bottom: 8.0),
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              height: 54,
+                              child: ElevatedButton(
+                                onPressed: () => _continue(isSkipping: false),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Default_Theme.accentColor2,
+                                  foregroundColor: Default_Theme.themeColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: Text(
+                                  _storageGranted
+                                      ? "Continue"
+                                      : "Continue with Local & Online",
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            if (!_storageGranted) ...[
+                              const SizedBox(height: 10),
+                              Center(
+                                child: TextButton(
+                                  onPressed: () => _continue(isSkipping: true),
+                                  child: const Text(
+                                    "Skip for now (Stream Online Only)",
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-              const SizedBox(height: 12),
-            ],
+              );
+            },
           ),
         ),
       ),

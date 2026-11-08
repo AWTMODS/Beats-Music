@@ -9,7 +9,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get onboardingTitle => '欢迎使用 Beats';
+  String get onboardingTitle => '欢迎使用 Bloomee';
 
   @override
   String get onboardingSubtitle => '让我们开始设置您的语言和地区。';
@@ -36,9 +36,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerEnjoyingFrom => '播放自';
 
   @override
-  String get playerQueue => '播放队列';
-
-  @override
   String get playerPlayWithMix => '智能混音播放';
 
   @override
@@ -55,9 +52,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playerLyricsNoPlugin => '未配置歌词来源。请前往 设置 → 插件 安装一个。';
-
-  @override
-  String get playerFullscreenLyrics => '全屏歌词';
 
   @override
   String get localMusicTitle => '本地音乐';
@@ -86,12 +80,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localMusicScanning => '正在扫描设备中的音频文件...';
 
   @override
-  String get localMusicEmpty => '未发现本地音乐';
-
-  @override
-  String get localMusicSearchEmpty => '未找到匹配的音轨。';
-
-  @override
   String get localMusicShuffle => '随机播放';
 
   @override
@@ -102,17 +90,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get localMusicRescanDevice => '重新扫描设备';
-
-  @override
-  String get localMusicRemoveFolder => '移除文件夹';
-
-  @override
-  String get localMusicMusicFolders => '音乐文件夹';
-
-  @override
-  String localMusicTrackCount(int count) {
-    return '$count 首歌曲';
-  }
 
   @override
   String get buttonCancel => '取消';
@@ -128,9 +105,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get buttonDownload => '下载';
-
-  @override
-  String get buttonShare => '分享';
 
   @override
   String get buttonLater => '稍后';
@@ -154,14 +128,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get dialogDontAskAgain => '不再询问';
-
-  @override
-  String get dialogDeletePlugin => '删除插件？';
-
-  @override
-  String dialogDeletePluginMessage(String name) {
-    return '确定要删除 \"$name\" 吗？这将永久移除其相关文件。';
-  }
 
   @override
   String get dialogUpdateAvailable => '发现新版本';
@@ -211,13 +177,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playlistShuffle => '随机播放';
 
   @override
-  String get playlistMoreOptions => '更多选项';
-
-  @override
   String get playlistNoMatchSearch => '没有匹配搜索的歌单';
 
   @override
-  String get playlistCreateNew => '创建新歌单';
+  String get playlistCreateNew => '创建新歌单 😍';
 
   @override
   String get playlistCreateFirstOne => '暂无歌单。创建一个来开始吧！';
@@ -350,55 +313,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsChartVisibility => '排行榜可见性';
 
   @override
-  String get settingsLocation => '位置';
-
-  @override
-  String get pluginRepositoryTitle => '插件仓库';
-
-  @override
-  String get pluginRepositorySubtitle => '添加 JSON 源以浏览远程插件。';
-
-  @override
-  String get pluginRepositoryAddAction => '添加仓库';
-
-  @override
-  String get pluginRepositoryAddTitle => '添加仓库';
-
-  @override
-  String get pluginRepositoryAddSubtitle => '输入有效的插件仓库 JSON 文件 URL。';
-
-  @override
-  String get pluginRepositoryEmpty => '尚未添加任何仓库。';
-
-  @override
-  String get pluginRepositoryUrlCopied => '仓库 URL 已复制到剪贴板';
-
-  @override
-  String get pluginRepositoryNoDescription => '未提供描述。';
-
-  @override
-  String get pluginRepositoryUnknownUpdate => '未知更新';
-
-  @override
-  String pluginRepositoryPluginsCount(int count) {
-    return '$count 个插件';
-  }
-
-  @override
-  String get pluginRepositoryErrorLoad => '加载仓库失败。';
-
-  @override
-  String get pluginRepositoryErrorInvalid => '无效的仓库 URL 或仓库文件。';
-
-  @override
-  String get pluginRepositoryErrorRemove => '移除仓库失败。';
-
-  @override
-  String pluginRepositoryError(String message) {
-    return '错误: $message';
-  }
-
-  @override
   String get dialogAddingToDownloadQueue => '正在添加到下载队列';
 
   @override
@@ -448,62 +362,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get snackbarPlaylistQueued => '歌单已添加到下载队列';
-
-  @override
   String get snackbarPlaylistUpdated => '歌单已更新！';
-
-  @override
-  String get snackbarNoInternet => '无网络连接。';
-
-  @override
-  String get snackbarImportFailed => '导入失败！';
-
-  @override
-  String get snackbarImportCompleted => '导入完成';
-
-  @override
-  String get snackbarBackupFailed => '备份失败！';
-
-  @override
-  String snackbarExportedTo(String path) {
-    return '已导出至: $path';
-  }
-
-  @override
-  String get snackbarMediaIdCopied => '媒体 ID 已复制';
 
   @override
   String get snackbarLinkCopied => '链接已复制';
 
   @override
-  String get snackbarNoLinkAvailable => '无可用链接';
-
-  @override
   String get snackbarCouldNotOpenLink => '无法打开链接';
-
-  @override
-  String snackbarPreparingDownload(String title) {
-    return '正在为 $title 准备下载...';
-  }
-
-  @override
-  String snackbarAlreadyDownloaded(String title) {
-    return '$title 已下载。';
-  }
-
-  @override
-  String snackbarAlreadyInQueue(String title) {
-    return '$title 已在队列中。';
-  }
-
-  @override
-  String snackbarDownloaded(String title) {
-    return '已下载 $title';
-  }
-
-  @override
-  String get snackbarDownloadServiceUnavailable => '错误：下载服务不可用。';
 
   @override
   String snackbarSongsAddedToQueue(int count) {
@@ -511,16 +376,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get snackbarDeleteTrackFailDevice => '无法从设备存储中删除音轨。';
-
-  @override
   String get searchHintExplore => '想听点什么？';
 
   @override
   String get searchHintLibrary => '搜索库...';
-
-  @override
-  String get searchHintOfflineMusic => '搜索您的歌曲...';
 
   @override
   String get searchHintPlaylists => '搜索歌单...';
@@ -603,27 +462,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get menuDeleteTrack => '删除';
 
   @override
-  String get songInfoTitle => '标题';
-
-  @override
-  String get songInfoArtist => '艺人';
-
-  @override
-  String get songInfoAlbum => '专辑';
-
-  @override
-  String get songInfoMediaId => '媒体 ID';
-
-  @override
-  String get songInfoCopyId => '复制 ID';
-
-  @override
-  String get songInfoCopyLink => '复制链接';
-
-  @override
-  String get songInfoOpenBrowser => '在浏览器中打开';
-
-  @override
   String get tooltipRemoveFromLibrary => '从音乐库移除';
 
   @override
@@ -633,19 +471,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tooltipOpenOriginalLink => '打开原始链接';
 
   @override
-  String get tooltipShuffle => '随机播放';
-
-  @override
   String get tooltipAvailableOffline => '离线可用';
 
   @override
-  String get tooltipDownloadPlaylist => '下载歌单';
-
-  @override
   String get tooltipMoreOptions => '更多选项';
-
-  @override
-  String get tooltipInfo => '详情';
 
   @override
   String get appuiTitle => '界面与服务';
@@ -896,21 +725,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get storageBackupLocation => '备份位置';
-
-  @override
-  String get storageBackupLocationAndroid => '下载 / 应用数据目录';
-
-  @override
-  String get storageBackupLocationDownloads => '下载目录';
-
-  @override
-  String get storageCreateBackup => '创建备份';
-
-  @override
-  String get storageCreateBackupSubtitle => '将您的设置和数据保存到备份文件。';
-
-  @override
   String storageBackupCreatedAt(String path) {
     return '备份已创建于 $path';
   }
@@ -919,9 +733,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String storageBackupShareFailed(String error) {
     return '分享备份失败: $error';
   }
-
-  @override
-  String get storageBackupFailed => '备份失败！';
 
   @override
   String get storageRestoreBackup => '恢复备份';
@@ -933,122 +744,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String get storageAutoBackup => '自动备份';
 
   @override
-  String get storageAutoBackupSubtitle => '定期自动创建数据备份。';
-
-  @override
   String get storageAutoLyrics => '自动保存歌词';
 
   @override
   String get storageAutoLyricsSubtitle => '播放歌曲时自动保存歌词。';
 
   @override
-  String get storageResetApp => '重置 Beats 应用';
-
-  @override
-  String get storageResetAppSubtitle => '删除所有数据并将应用恢复到初始状态。';
+  String get storageResetApp => '重置 Bloomee 应用';
 
   @override
   String get storageResetConfirmTitle => '确认重置';
 
   @override
-  String get storageResetConfirmMessage => '确定要重置 Beats 吗？这将删除您的所有数据且无法撤销。';
-
-  @override
   String get storageResetButton => '重置';
-
-  @override
-  String get storageResetSuccess => '应用已恢复到默认状态。';
-
-  @override
-  String get storageLocationDialogTitle => '备份位置';
-
-  @override
-  String get storageLocationAndroid =>
-      '备份存储在：\n\n1. 下载目录\n2. Android/data/ls.Beats.musicplayer/data\n\n请从任一位置复制文件。';
-
-  @override
-  String get storageLocationOther => '备份存储在“下载”目录中。请从那里复制文件。';
 
   @override
   String get storageRestoreOptionsTitle => '恢复选项';
 
   @override
-  String get storageRestoreOptionsDesc => '选择要从备份文件恢复的数据。取消选择不需要导入的项目。默认全选。';
-
-  @override
-  String get storageRestoreSelectAll => '全选';
-
-  @override
-  String get storageRestoreMediaItems => '媒体项目 (歌曲、音轨、库条目)';
-
-  @override
-  String get storageRestoreSearchHistory => '搜索历史';
-
-  @override
   String get storageRestoreContinue => '继续';
-
-  @override
-  String get storageRestoreNoFile => '未选择文件。';
-
-  @override
-  String get storageRestoreSaveFailed => '保存选定文件失败。';
 
   @override
   String get storageRestoreConfirmTitle => '确认恢复';
 
   @override
-  String get storageRestoreConfirmPrefix => '这将用备份文件中的数据覆盖并合并应用中选定的部分：';
-
-  @override
-  String get storageRestoreConfirmSuffix => '您当前的数据将被修改/合并。确定要继续吗？';
-
-  @override
   String get storageRestoreYes => '是的，恢复';
-
-  @override
-  String get storageRestoreNo => '不';
 
   @override
   String get storageRestoring => '正在恢复选定的数据...\n请等待操作完成。';
 
   @override
-  String get storageRestoreMediaBullet => '• 媒体项目';
-
-  @override
-  String get storageRestoreHistoryBullet => '• 搜索历史';
-
-  @override
-  String get storageUnexpectedError => '恢复过程中发生意外错误。';
-
-  @override
-  String get storageRestoreCompleted => '恢复完成';
-
-  @override
   String get storageRestoreFailedTitle => '恢复失败';
-
-  @override
-  String get storageRestoreSuccessMessage => '选定的数据已成功恢复。为了获得最佳效果，请现在重启应用。';
-
-  @override
-  String get storageRestoreFailedMessage => '恢复过程失败，错误如下：';
-
-  @override
-  String get storageRestoreUnknownError => '恢复期间发生未知错误。';
-
-  @override
-  String get storageRestoreRestartHint => '请重启应用以确保一致性。';
 
   @override
   String get updateSettingTitle => '更新';
 
   @override
-  String get updateAppUpdatesHeader => '应用更新';
-
-  @override
   String get updateCheckForUpdates => '检查更新';
 
   @override
-  String get updateCheckSubtitle => '查看是否有新版本的 Beats 可用。';
+  String get updateCheckSubtitle => '查看是否有新版本的 Bloomee 可用。';
 
   @override
   String get updateAutoNotify => '自动更新通知';
@@ -1060,7 +795,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateCheckTitle => '检查更新';
 
   @override
-  String get updateUpToDate => 'Beats 已经是最新版本！';
+  String get updateUpToDate => 'Bloomee🌸 已经是最新版本！';
 
   @override
   String get updateViewPreRelease => '查看最新预发布版';
@@ -1071,7 +806,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get updateNewVersionAvailable => 'Beats 新版本现已可用！';
+  String get updateNewVersionAvailable => 'Bloomee🌸 新版本现已可用！';
 
   @override
   String updateVersion(String ver, String build) {
@@ -1127,12 +862,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String playlistByCreator(String creator) {
     return '创建者：$creator';
   }
-
-  @override
-  String get playlistTypeAlbum => '专辑';
-
-  @override
-  String get playlistTypePlaylist => '歌单';
 
   @override
   String get playlistYou => '您';
@@ -1244,17 +973,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pluginManagerDetailHomepage => '主页';
 
   @override
-  String get pluginManagerDowngradeTitle => '降级插件？';
-
-  @override
-  String pluginManagerDowngradeMessage(String name) {
-    return '您正在安装 \"$name\" 的旧版本或相同版本。确定继续吗？';
-  }
-
-  @override
-  String get pluginManagerDowngradeAction => '仍然安装';
-
-  @override
   String get pluginManagerDeleteStorageTitle => '删除插件数据？';
 
   @override
@@ -1308,11 +1026,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String smartReplaceApplied(String queue) {
     return '已应用替代源$queue。';
-  }
-
-  @override
-  String smartReplaceAppliedPlaylists(int count, String plural, String queue) {
-    return '已在 $count 个歌单中替换$queue。';
   }
 
   @override
@@ -1376,13 +1089,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aboutCreativeHighlights => '更新与创作亮点';
 
   @override
-  String get aboutTipQuote => '喜欢 Beats 吗？小小的打赏能让它持续绽放。';
+  String get aboutTipQuote => '喜欢 Bloomee 吗？小小的打赏能让它持续绽放。🌸';
 
   @override
   String get aboutTipButton => '我要赞赏';
 
   @override
-  String get aboutTipDesc => '我希望 Beats 越来越好。';
+  String get aboutTipDesc => '我希望 Bloomee 越来越好。';
 
   @override
   String get aboutGitHub => 'GitHub';
@@ -1418,6 +1131,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get songInfoLabelPluginId => '插件 ID';
 
   @override
+  String get songInfoCopyId => '复制 ID';
+
+  @override
+  String get songInfoCopyLink => '复制链接';
+
+  @override
+  String get songInfoOpenBrowser => '在浏览器中打开';
+
+  @override
   String get songInfoIdCopied => '媒体 ID 已复制';
 
   @override
@@ -1442,19 +1164,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get songInfoMetadataUnavailable => '此来源不支持刷新元数据';
 
   @override
-  String get songInfoSearchTitle => '在 Beats 中搜索此歌曲';
+  String get songInfoSearchTitle => '在 Bloomee 中搜索此歌曲';
 
   @override
-  String get songInfoSearchArtist => '在 Beats 中搜索此艺人';
+  String get songInfoSearchArtist => '在 Bloomee 中搜索此艺人';
 
   @override
-  String get songInfoSearchAlbum => '在 Beats 中搜索此专辑';
+  String get songInfoSearchAlbum => '在 Bloomee 中搜索此专辑';
 
   @override
   String get eqTitle => '均衡器';
-
-  @override
-  String get eqResetTooltip => '重置为平直';
 
   @override
   String get chartNoItems => '此榜单中没有项目';
@@ -1507,6 +1226,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localMusicFolders => '音乐文件夹';
 
   @override
+  String get localMusicRemoveFolder => '移除文件夹';
+
+  @override
   String get localMusicCloseSearch => '关闭搜索';
 
   @override
@@ -1519,13 +1241,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localMusicNoSearchResults => '未找到匹配搜索的音轨。';
 
   @override
+  String localMusicTrackCount(int count) {
+    return '$count 首歌曲';
+  }
+
+  @override
   String get importSongsTitle => '导入歌曲';
 
   @override
   String get importNoPluginsLoaded => '未加载内容导入插件。\n请安装导入插件以从外部服务导入歌单。';
 
   @override
-  String get importBeatsFiles => '导入 Beats 文件';
+  String get importBloomeeFiles => '导入 Bloomee 文件';
 
   @override
   String get importM3UFiles => '导入 M3U 歌单';
@@ -1544,7 +1271,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get importNoteMessage =>
-      '您只能导入由 Beats 创建的文件。\n如果文件来自其他来源，将无法工作。是否仍要继续？';
+      '您只能导入由 Bloomee 创建的文件。\n如果文件来自其他来源，将无法工作。是否仍要继续？';
 
   @override
   String get importTitle => '导入';
@@ -1570,19 +1297,8 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get importResolving => '正在解析...';
-
-  @override
   String importResolvingProgress(int done, int total) {
     return '正在解析音轨：$done / $total';
-  }
-
-  @override
-  String get importReviewTitle => '导入预览';
-
-  @override
-  String importReviewSummary(int resolved, int failed, int total) {
-    return '$total 首歌曲中，$resolved 首已解析，$failed 首失败';
   }
 
   @override
@@ -1614,16 +1330,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importMatchOptions => '匹配选项';
 
   @override
-  String get importAutoMatched => '自动匹配';
-
-  @override
-  String get importUserSelected => '已选定';
-
-  @override
   String get importSkipped => '已跳过';
-
-  @override
-  String get importNoMatch => '未找到匹配';
 
   @override
   String get importReorderTip => '长按歌单以开始重新排序';
@@ -1661,35 +1368,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playlistUnpin => '取消置顶';
 
   @override
-  String get snackbarImportingMedia => '正在导入媒体项目...';
-
-  @override
-  String get snackbarPlaylistSaved => '歌单已保存到音乐库！';
-
-  @override
   String get snackbarInvalidFileFormat => '无效的文件格式';
 
   @override
-  String get snackbarMediaItemImported => '媒体项目已导入';
-
-  @override
-  String get snackbarPlaylistImported => '歌单已导入';
-
-  @override
-  String get snackbarOpenImportForUrl => '请在音乐库中打开“导入”屏幕以从该 URL 导入。';
-
-  @override
   String get snackbarProcessingFile => '正在处理文件...';
-
-  @override
-  String snackbarPreparingShare(String title) {
-    return '正在准备分享 \"$title\"';
-  }
-
-  @override
-  String snackbarPreparingExport(String title) {
-    return '正在准备导出 \"$title\"。';
-  }
 
   @override
   String get pluginManagerTabInstalled => '已安装';
@@ -1708,6 +1390,38 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pluginManagerStatusInactive => '未启用';
+
+  @override
+  String get pluginRepositoryAddTitle => '添加仓库';
+
+  @override
+  String get pluginRepositoryAddSubtitle => '输入有效的插件仓库 JSON 文件 URL。';
+
+  @override
+  String get pluginRepositoryAddAction => '添加仓库';
+
+  @override
+  String get pluginRepositoryTitle => '插件仓库';
+
+  @override
+  String get pluginRepositorySubtitle => '添加 JSON 源以浏览远程插件。';
+
+  @override
+  String get pluginRepositoryEmpty => '尚未添加任何仓库。';
+
+  @override
+  String get pluginRepositoryUnknownUpdate => '未知更新';
+
+  @override
+  String get pluginRepositoryNoDescription => '未提供描述。';
+
+  @override
+  String get pluginRepositoryUrlCopied => '仓库 URL 已复制到剪贴板';
+
+  @override
+  String pluginRepositoryPluginsCount(int count) {
+    return '$count 个插件';
+  }
 
   @override
   String pluginRepositoryUpdatedOn(String date) {
@@ -1747,6 +1461,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String pluginRepositoryDownloadFailed(String name) {
     return '下载 $name 失败。';
   }
+
+  @override
+  String get pluginRepositoryErrorLoad => '加载仓库失败。';
+
+  @override
+  String get pluginRepositoryErrorInvalid => '无效的仓库 URL 或仓库文件。';
+
+  @override
+  String get pluginRepositoryErrorRemove => '移除仓库失败。';
 
   @override
   String smartReplaceAppliedPlaylistsSummary(int count, String queue) {
@@ -1821,9 +1544,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get upNextAutoPlay => '自动播放';
-
-  @override
   String get tooltipCopyToClipboard => '复制到剪贴板';
 
   @override
@@ -1849,7 +1569,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String updateAvailableBody(String ver, String build) {
-    return 'Beats 新版本现已可用！\n\n版本：$ver+$build';
+    return 'Bloomee🌸 新版本现已可用！\n\n版本：$ver+$build';
   }
 
   @override
@@ -1858,17 +1578,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String pluginSnackbarLoaded(String id) {
-    return '插件 \"$id\" 已加载';
-  }
-
-  @override
   String pluginSnackbarDeleted(String id) {
     return '插件 \"$id\" 已删除';
   }
 
   @override
-  String get pluginBootstrapTitle => '正在设置 Beats';
+  String get pluginBootstrapTitle => '正在设置 Bloomee';
 
   @override
   String pluginBootstrapProgress(int percent) {
@@ -1879,11 +1594,681 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pluginBootstrapHint => '此操作仅执行一次。';
 
   @override
-  String get pluginBootstrapErrorTitle => '连接过慢';
+  String get backupSave => '将备份保存为 JSON';
 
   @override
-  String get pluginBootstrapErrorBody => '部分插件无法安装。您仍可使用 Beats —— 插件将在下次启动时重试。';
+  String get backupShare => '分享 JSON 备份';
 
   @override
-  String get pluginBootstrapContinue => '仍然继续';
+  String get backupPortableDetails =>
+      '包含播放列表、收藏的歌曲、已保存的合集、历史记录和可迁移的偏好设置。不包含音频文件、账号和设备文件夹。';
+
+  @override
+  String get backupHistories => '播放和搜索历史记录';
+
+  @override
+  String get backupPreferences => '可迁移的偏好设置';
+
+  @override
+  String get backupNewCopy => '导入为新播放列表';
+
+  @override
+  String get backupMerge => '与现有数据合并';
+
+  @override
+  String get backupReplace => '替换所选部分';
+
+  @override
+  String get backupMergeDetails =>
+      '保留现有歌曲、元数据和偏好设置。缺少的歌曲将按文件中的顺序追加到末尾，收藏的歌曲将合并。';
+
+  @override
+  String get backupReplaceWarning =>
+      '这将替换所选部分。选中音乐库时，也会替换现有播放列表和收藏的歌曲。未选中的部分及设备文件会保留。操作前会创建一份私有恢复副本。';
+
+  @override
+  String get backupAutoDetails =>
+      '保留七份私有恢复副本。打开应用时检查，每 24 小时最多创建一次。卸载应用时会删除这些副本。';
+
+  @override
+  String get backupLocationDetails => '通过“保存备份”选择保存位置。私有恢复副本保存在应用内部。';
+
+  @override
+  String get backupResetDetails =>
+      '下次启动应用时重置数据库中的所有数据。已下载的音频文件和已安装的插件文件仍会保留在设备上。操作前会创建一份私有恢复副本。';
+
+  @override
+  String get backupResetPending => '已安排重置。请关闭并重新打开 Bloomee 以完成重置。';
+
+  @override
+  String backupPreviewCounts(int playlists, int tracks) {
+    return '播放列表：$playlists 个 · 歌曲：$tracks 首';
+  }
+
+  @override
+  String backupImportResult(
+      int playlists, int tracks, int history, int settings) {
+    return '导入完成。已创建 $playlists 个播放列表，添加 $tracks 条歌曲记录和 $history 条历史记录，并应用 $settings 项偏好设置。';
+  }
+
+  @override
+  String get backupRefreshFailed => '数据已导入。请关闭并重新打开 Bloomee 以刷新所有偏好设置。';
+
+  @override
+  String get backupRecoveryCopies => '恢复副本';
+
+  @override
+  String get backupNoRecoveryCopies => '暂无恢复副本。';
+
+  @override
+  String get backupRecoveryAutomatic => '自动备份';
+
+  @override
+  String get backupRecoveryBeforeImport => '导入前';
+
+  @override
+  String get backupRecoveryBeforeReset => '重置前';
+
+  @override
+  String get backupCancelReset => '取消重置';
+
+  @override
+  String get libraryRecoveryTitle => '恢复丢失的音乐库';
+
+  @override
+  String get libraryRecoverySubtitle => '查找从旧版本保留下来的播放列表和下载记录。';
+
+  @override
+  String get libraryRecoveryChooseSource => '选择要扫描的保留数据库。当前音乐库和原始文件会保留。';
+
+  @override
+  String get libraryRecoveryNoSources => '未找到保留的数据库。仅凭音频文件无法恢复歌曲原先所属的播放列表。';
+
+  @override
+  String libraryRecoverySummary(
+      int tracks, int playlists, int downloads, int unavailable) {
+    return '找到 $tracks 首歌曲、$playlists 个播放列表和 $downloads 条下载记录。目前有 $unavailable 个文件不可用，其记录会保留。';
+  }
+
+  @override
+  String libraryRecoveryWarnings(int broken) {
+    return '此副本中有 $broken 条损坏的播放列表引用无法重建。';
+  }
+
+  @override
+  String get libraryRecoveryMergeDetails =>
+      '恢复操作会添加缺少的歌曲、播放列表条目和下载记录。现有播放列表、文件关联和设置会保留。操作前会创建一份恢复副本。如果其他保留副本中包含更多音乐库数据，可再次使用该副本执行恢复。';
+
+  @override
+  String get libraryRecoveryMerge => '合并恢复的音乐库';
+
+  @override
+  String libraryRecoveryComplete(int entries, int downloads) {
+    return '恢复完成。已添加 $entries 个播放列表条目和 $downloads 条下载记录。';
+  }
+
+  @override
+  String get backupStartupFailed => 'Bloomee 无法启动';
+
+  @override
+  String get backupStartupFailedDetails =>
+      '启动已停止，未自动修复或替换数据库。请关闭应用后重试。报告此错误时，请保留应用数据。';
+
+  @override
+  String get lyricsTitle => '歌词';
+
+  @override
+  String get lyricsEnterFullscreen => '全屏歌词';
+
+  @override
+  String get lyricsExitFullscreen => '退出全屏';
+
+  @override
+  String get lyricsFollowPlayback => '跟随播放滚动';
+
+  @override
+  String get lyricsTimingEarlier => '提前显示';
+
+  @override
+  String get lyricsTimingLater => '延后显示';
+
+  @override
+  String get lyricsTimingSave => '保存时间调整';
+
+  @override
+  String get lyricsSaved => '歌词已保存。';
+
+  @override
+  String get lyricsSaveFailed => '无法保存歌词，请重试。';
+
+  @override
+  String get lyricsDeleteFailed => '无法删除已保存的歌词，请重试。';
+
+  @override
+  String get artistTopSongs => '热门歌曲';
+
+  @override
+  String get artistLoadFailed => '无法加载艺人';
+
+  @override
+  String get artistNoTopSongs => '暂无热门歌曲';
+
+  @override
+  String get artistNoAlbums => '暂无专辑';
+
+  @override
+  String get snackbarOpeningArtistPage => '正在打开艺人原始页面。';
+
+  @override
+  String get snackbarOpeningPlaylistPage => '正在打开播放列表原始页面。';
+
+  @override
+  String get playlistSaveOrderFailed => '无法保存播放列表顺序，请重试。';
+
+  @override
+  String get playlistReorderTracksHint => '长按拖动手柄以调整歌曲顺序';
+
+  @override
+  String get playlistTrackCountLabel => '歌曲数量';
+
+  @override
+  String get playlistDescription => '描述';
+
+  @override
+  String get playlistOriginalUrl => '原始链接';
+
+  @override
+  String get searchSearching => '正在搜索…';
+
+  @override
+  String get searchSuggestions => '搜索建议';
+
+  @override
+  String get searchTopResults => '最佳结果';
+
+  @override
+  String get changelogEmpty => '暂无更新日志。';
+
+  @override
+  String get changelogTitle => '更新内容';
+
+  @override
+  String get changelogLatest => '最新';
+
+  @override
+  String get changelogNext => '下一版本';
+
+  @override
+  String changelogVersion(String version) {
+    return '版本 $version';
+  }
+
+  @override
+  String get pluginBootstrapIncomplete => '设置未完成';
+
+  @override
+  String get pluginBootstrapRetryBody => '部分插件暂时无法安装，请重试以完成设置。';
+
+  @override
+  String get pluginBootstrapInternetTitle => '需要网络连接';
+
+  @override
+  String get pluginBootstrapInternetBody =>
+      'Bloomee 首次设置时需要联网以检测所在国家或地区并配置插件引擎。';
+
+  @override
+  String get buttonExit => '退出';
+
+  @override
+  String get eqSource => '均衡器来源';
+
+  @override
+  String get eqBuiltin => '应用内均衡器';
+
+  @override
+  String get eqBuiltinSubtitle => '10 段均衡器';
+
+  @override
+  String get eqDevice => '设备均衡器';
+
+  @override
+  String get eqDeviceSubtitle => '系统 / Dolby Atmos';
+
+  @override
+  String get eqDeviceHint => '应用内均衡器已停用，请在设备的声音设置中配置设备均衡器。';
+
+  @override
+  String get eqPresets => '预设';
+
+  @override
+  String get eqCustomCurve => '自定义曲线';
+
+  @override
+  String get shortcutMuted => '已静音';
+
+  @override
+  String get shortcutUnmuted => '已取消静音';
+
+  @override
+  String get shortcutShuffleOn => '随机播放已开启';
+
+  @override
+  String get shortcutShuffleOff => '随机播放已关闭';
+
+  @override
+  String get shortcutRepeatOff => '循环播放已关闭';
+
+  @override
+  String get shortcutLiked => '已添加到收藏';
+
+  @override
+  String get shortcutUnliked => '已从收藏移除';
+
+  @override
+  String downloadFolderSelectFailed(String error) {
+    return '无法选择下载文件夹：$error';
+  }
+
+  @override
+  String get aboutVersionUnavailable => '无法获取版本信息';
+
+  @override
+  String get backupNewCopyDetails =>
+      '创建独立的播放列表并合并收藏的歌曲。现有播放列表会保留。所选历史记录和偏好设置也会导入。';
+
+  @override
+  String get changelogCurrent => '当前';
+
+  @override
+  String get backupLibrary => '音乐库（播放列表、收藏的歌曲和已保存的合集）';
+
+  @override
+  String get eqPresetFlat => '平直';
+
+  @override
+  String get eqPresetAcoustic => '原声';
+
+  @override
+  String get eqPresetBassBoost => '增强低音';
+
+  @override
+  String get eqPresetBassReducer => '降低低音';
+
+  @override
+  String get eqPresetClassical => '古典';
+
+  @override
+  String get eqPresetDance => '舞曲';
+
+  @override
+  String get eqPresetDeep => '深沉';
+
+  @override
+  String get eqPresetEDM => '电子舞曲';
+
+  @override
+  String get eqPresetElectronic => '电子';
+
+  @override
+  String get eqPresetHipHop => '嘻哈';
+
+  @override
+  String get eqPresetJazz => '爵士';
+
+  @override
+  String get eqPresetLatin => '拉丁';
+
+  @override
+  String get eqPresetLive => '现场';
+
+  @override
+  String get eqPresetLounge => '沙发音乐';
+
+  @override
+  String get eqPresetMetal => '金属';
+
+  @override
+  String get eqPresetPiano => '钢琴';
+
+  @override
+  String get eqPresetPop => '流行';
+
+  @override
+  String get eqPresetRB => '节奏布鲁斯';
+
+  @override
+  String get eqPresetRock => '摇滚';
+
+  @override
+  String get eqPresetSmallSpeakers => '小型扬声器';
+
+  @override
+  String get eqPresetSpokenWord => '人声朗读';
+
+  @override
+  String get eqPresetTrebleBoost => '增强高音';
+
+  @override
+  String get eqPresetTrebleReducer => '降低高音';
+
+  @override
+  String get eqPresetVocalBooster => '增强人声';
+
+  @override
+  String get eqPresetCustom => '自定义';
+
+  @override
+  String get playerQueue => 'Queue';
+
+  @override
+  String get playerFullscreenLyrics => 'Fullscreen Lyrics';
+
+  @override
+  String get localMusicEmpty => 'No local music found';
+
+  @override
+  String get localMusicSearchEmpty => 'No tracks found matching your search.';
+
+  @override
+  String get localMusicMusicFolders => 'Music Folders';
+
+  @override
+  String get buttonShare => 'Share';
+
+  @override
+  String get dialogDeletePlugin => 'Delete Plugin?';
+
+  @override
+  String dialogDeletePluginMessage(String name) {
+    return 'Are you sure you want to delete \"$name\"? This will permanently remove its files.';
+  }
+
+  @override
+  String get playlistMoreOptions => 'More Options';
+
+  @override
+  String get settingsLocation => 'Location';
+
+  @override
+  String pluginRepositoryError(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String get snackbarPlaylistQueued => 'Playlist added to download queue';
+
+  @override
+  String get snackbarNoInternet => 'No internet connection.';
+
+  @override
+  String get snackbarImportFailed => 'Import Failed!';
+
+  @override
+  String get snackbarImportCompleted => 'Import Completed';
+
+  @override
+  String get snackbarBackupFailed => 'Backup Failed!';
+
+  @override
+  String snackbarExportedTo(String path) {
+    return 'Exported to: $path';
+  }
+
+  @override
+  String get snackbarMediaIdCopied => 'Media ID copied';
+
+  @override
+  String get snackbarNoLinkAvailable => 'No link available';
+
+  @override
+  String snackbarPreparingDownload(String title) {
+    return 'Preparing download for $title...';
+  }
+
+  @override
+  String snackbarAlreadyDownloaded(String title) {
+    return '$title is already downloaded.';
+  }
+
+  @override
+  String snackbarAlreadyInQueue(String title) {
+    return '$title is already in the queue.';
+  }
+
+  @override
+  String snackbarDownloaded(String title) {
+    return 'Downloaded $title';
+  }
+
+  @override
+  String get snackbarDownloadServiceUnavailable =>
+      'Error: Download service is unavailable.';
+
+  @override
+  String get snackbarDeleteTrackFailDevice =>
+      'Failed to delete track from device storage.';
+
+  @override
+  String get searchHintOfflineMusic => 'Search your songs...';
+
+  @override
+  String get songInfoTitle => 'Title';
+
+  @override
+  String get songInfoArtist => 'Artist';
+
+  @override
+  String get songInfoAlbum => 'Album';
+
+  @override
+  String get songInfoMediaId => 'Media ID';
+
+  @override
+  String get tooltipShuffle => 'Shuffle';
+
+  @override
+  String get tooltipDownloadPlaylist => 'Download playlist';
+
+  @override
+  String get tooltipInfo => 'Info';
+
+  @override
+  String get storageBackupLocation => 'Backup Location';
+
+  @override
+  String get storageBackupLocationAndroid => 'Downloads / app-data directory';
+
+  @override
+  String get storageBackupLocationDownloads => 'Downloads directory';
+
+  @override
+  String get storageCreateBackup => 'Create Backup';
+
+  @override
+  String get storageCreateBackupSubtitle =>
+      'Save your settings and data to a backup file.';
+
+  @override
+  String get storageBackupFailed => 'Backup Failed!';
+
+  @override
+  String get storageAutoBackupSubtitle =>
+      'Periodically create a backup of your data automatically.';
+
+  @override
+  String get storageResetAppSubtitle =>
+      'Delete all data and restore the app to its default state.';
+
+  @override
+  String get storageResetConfirmMessage =>
+      'Are you sure you want to reset Beats? This will delete all your data and cannot be undone.';
+
+  @override
+  String get storageResetSuccess => 'App has been reset to its default state.';
+
+  @override
+  String get storageLocationDialogTitle => 'Backup Location';
+
+  @override
+  String get storageLocationAndroid =>
+      'Backups are stored in:\n\n1. Downloads directory\n2. Android/data/ls.Beats.musicplayer/data\n\nCopy the file from either location.';
+
+  @override
+  String get storageLocationOther =>
+      'Backups are stored in the Downloads directory. Copy the file from there.';
+
+  @override
+  String get storageRestoreOptionsDesc =>
+      'Choose which data you want to restore from the selected backup file. Unselect any items you do NOT want to be imported. By default all are selected.';
+
+  @override
+  String get storageRestoreSelectAll => 'Select All';
+
+  @override
+  String get storageRestoreMediaItems =>
+      'Media items (songs, tracks, library entries)';
+
+  @override
+  String get storageRestoreSearchHistory => 'Search history';
+
+  @override
+  String get storageRestoreNoFile => 'No file selected.';
+
+  @override
+  String get storageRestoreSaveFailed => 'Failed to save the selected file.';
+
+  @override
+  String get storageRestoreConfirmPrefix =>
+      'This will overwrite and merge the parts you selected in the app with data from the backup file:';
+
+  @override
+  String get storageRestoreConfirmSuffix =>
+      'Your current data will be modified/merged. Are you sure you want to proceed?';
+
+  @override
+  String get storageRestoreNo => 'No';
+
+  @override
+  String get storageRestoreMediaBullet => '• Media items';
+
+  @override
+  String get storageRestoreHistoryBullet => '• Search history';
+
+  @override
+  String get storageUnexpectedError =>
+      'An unexpected error occurred while restoring.';
+
+  @override
+  String get storageRestoreCompleted => 'Restore Completed';
+
+  @override
+  String get storageRestoreSuccessMessage =>
+      'The selected data was restored successfully. For best results, please restart the app now.';
+
+  @override
+  String get storageRestoreFailedMessage =>
+      'The restore process failed with the following errors:';
+
+  @override
+  String get storageRestoreUnknownError =>
+      'Unknown error occurred during restore.';
+
+  @override
+  String get storageRestoreRestartHint =>
+      'Please restart the app for better consistency.';
+
+  @override
+  String get updateAppUpdatesHeader => 'App Updates';
+
+  @override
+  String get playlistTypeAlbum => 'Album';
+
+  @override
+  String get playlistTypePlaylist => 'Playlist';
+
+  @override
+  String get pluginManagerDowngradeTitle => 'Downgrade Plugin?';
+
+  @override
+  String pluginManagerDowngradeMessage(String name) {
+    return 'You are installing an older or equal version of \"$name\". Continue?';
+  }
+
+  @override
+  String get pluginManagerDowngradeAction => 'Install Anyway';
+
+  @override
+  String smartReplaceAppliedPlaylists(int count, String plural, String queue) {
+    return 'Replaced in $count playlist$plural$queue.';
+  }
+
+  @override
+  String get eqResetTooltip => 'Reset to Flat';
+
+  @override
+  String get importBeatsFiles => 'Import Beats Files';
+
+  @override
+  String get importResolving => 'Resolving...';
+
+  @override
+  String get importReviewTitle => 'Import Review';
+
+  @override
+  String importReviewSummary(int resolved, int failed, int total) {
+    return '$resolved resolved, $failed failed out of $total';
+  }
+
+  @override
+  String get importAutoMatched => 'Auto-matched';
+
+  @override
+  String get importUserSelected => 'Selected';
+
+  @override
+  String get importNoMatch => 'No match found';
+
+  @override
+  String get snackbarImportingMedia => 'Importing MediaItems..';
+
+  @override
+  String get snackbarPlaylistSaved => 'Playlist saved to library!';
+
+  @override
+  String get snackbarMediaItemImported => 'Media Item Imported';
+
+  @override
+  String get snackbarPlaylistImported => 'Playlist Imported';
+
+  @override
+  String get snackbarOpenImportForUrl =>
+      'Open the Import screen in Library to import from this URL.';
+
+  @override
+  String snackbarPreparingShare(String title) {
+    return 'Preparing $title for share';
+  }
+
+  @override
+  String snackbarPreparingExport(String title) {
+    return 'Preparing $title for export.';
+  }
+
+  @override
+  String get upNextAutoPlay => 'Auto Play';
+
+  @override
+  String pluginSnackbarLoaded(String id) {
+    return 'Plugin \"$id\" loaded';
+  }
+
+  @override
+  String get pluginBootstrapErrorTitle => 'Connection too slow';
+
+  @override
+  String get pluginBootstrapErrorBody =>
+      'Some plugins could not be installed. You can still use Beats — plugins will be retried on next launch.';
+
+  @override
+  String get pluginBootstrapContinue => 'Continue Anyway';
 }

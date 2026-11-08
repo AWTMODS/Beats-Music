@@ -1,70 +1,73 @@
 {
   "@@locale": "pt",
-
-  "onboardingTitle": "Bem-vindo ao Beats",
-  "onboardingSubtitle": "Vamos configurar o seu idioma e região.",
+  "onboardingTitle": "Boas-vindas ao Bloomee",
+  "onboardingSubtitle": "Escolha seu idioma e sua região.",
   "continueButton": "Continuar",
   "navHome": "Início",
   "navLibrary": "Biblioteca",
-  "navSearch": "Pesquisar",
-  "navLocal": "Local",
+  "navSearch": "Buscar",
+  "navLocal": "No dispositivo",
   "navOffline": "Offline",
-
-  "playerEnjoyingFrom": "Ouvindo de",
-  "playerQueue": "Fila",
-  "playerPlayWithMix": "Reprodução Automática de Mix",
+  "playerEnjoyingFrom": "Reproduzindo de",
+  "playerPlayWithMix": "Reproduzir com mix automático",
   "playerPlayNext": "Reproduzir a seguir",
   "playerAddToQueue": "Adicionar à fila",
   "playerAddToFavorites": "Adicionar aos favoritos",
   "playerNoLyricsFound": "Nenhuma letra encontrada",
-  "playerLyricsNoPlugin": "Nenhum provedor de letras configurado. Vá para Configurações → Plugins para instalar um.",
-  "playerFullscreenLyrics": "Letras em tela cheia",
-
-  "localMusicTitle": "Local",
-  "localMusicGrantPermission": "Conceder permissão",
+  "playerLyricsNoPlugin": "Nenhum provedor de letras configurado. Acesse Configurações → Plugins para instalar um.",
+  "localMusicTitle": "No dispositivo",
+  "localMusicGrantPermission": "Permitir acesso",
   "localMusicStorageAccessRequired": "Acesso ao armazenamento necessário",
-  "localMusicStorageAccessDesc": "Por favor, conceda permissão para escanear e reproduzir arquivos de áudio armazenados no seu dispositivo.",
-  "localMusicAddFolder": "Adicionar pasta de música",
-  "localMusicScanNow": "Escanear agora",
-  "localMusicScanFailed": "Falha no escaneamento: {message}",
-  "@localMusicScanFailed": { "placeholders": { "message": { "type": "String" } } },
-  "localMusicScanning": "Escaneando dispositivo por arquivos de áudio...",
-  "localMusicEmpty": "Nenhuma música local encontrada",
-  "localMusicSearchEmpty": "Nenhuma música corresponde à sua pesquisa.",
+  "localMusicStorageAccessDesc": "Permita o acesso para buscar e reproduzir os arquivos de áudio do seu dispositivo.",
+  "localMusicAddFolder": "Adicionar pasta de músicas",
+  "localMusicScanNow": "Buscar agora",
+  "localMusicScanFailed": "Falha na busca: {message}",
+  "@localMusicScanFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "localMusicScanning": "Buscando arquivos de áudio no dispositivo…",
   "localMusicShuffle": "Aleatório",
   "localMusicPlayAll": "Reproduzir tudo",
-  "localMusicSearchHint": "Pesquisar música local...",
-  "localMusicRescanDevice": "Re-escanear dispositivo",
-  "localMusicRemoveFolder": "Remover pasta",
-  "localMusicMusicFolders": "Pastas de música",
-  "localMusicTrackCount": "{count, plural, =0{Sem faixas} =1{1 faixa} other{{count} faixas}}",
-  "@localMusicTrackCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "localMusicSearchHint": "Buscar músicas no dispositivo…",
+  "localMusicRescanDevice": "Buscar novamente no dispositivo",
   "buttonCancel": "Cancelar",
   "buttonDelete": "Excluir",
   "buttonOk": "OK",
   "buttonUpdate": "Atualizar",
   "buttonDownload": "Baixar",
-  "buttonShare": "Compartilhar",
   "buttonLater": "Mais tarde",
   "buttonInfo": "Informações",
   "buttonMore": "Mais",
-
   "dialogDeleteTrack": "Excluir faixa",
-  "dialogDeleteTrackMessage": "Tem certeza que deseja excluir \"{title}\" do seu dispositivo? Esta ação não pode ser desfeita.",
-  "@dialogDeleteTrackMessage": { "placeholders": { "title": { "type": "String" } } },
-  "dialogDeleteTrackLinkedPlaylists": "Esta faixa também será removida de:",
+  "dialogDeleteTrackMessage": "Excluir “{title}” do dispositivo? Essa ação não pode ser desfeita.",
+  "@dialogDeleteTrackMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "dialogDeleteTrackLinkedPlaylists": "Essa faixa também será removida de:",
   "dialogDontAskAgain": "Não perguntar novamente",
-  "dialogDeletePlugin": "Excluir plugin?",
-  "dialogDeletePluginMessage": "Tem certeza que deseja excluir \"{name}\"? Isso removerá permanentemente seus arquivos.",
-  "@dialogDeletePluginMessage": { "placeholders": { "name": { "type": "String" } } },
   "dialogUpdateAvailable": "Atualização disponível",
   "dialogUpdateNow": "Atualizar agora",
   "dialogDownloadPlaylist": "Baixar playlist",
-  "dialogDownloadPlaylistMessage": "Deseja baixar {count} músicas de \"{title}\"? Elas serão adicionadas à fila de download.",
-  "@dialogDownloadPlaylistMessage": { "placeholders": { "count": { "type": "int" }, "title": { "type": "String" } } },
+  "dialogDownloadPlaylistMessage": "Baixar as músicas de “{title}”? Total: {count}. Elas serão adicionadas à fila de downloads.",
+  "@dialogDownloadPlaylistMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "dialogDownloadAll": "Baixar tudo",
-
   "playlistEdit": "Editar playlist",
   "playlistShareFile": "Compartilhar arquivo",
   "playlistExportFile": "Exportar arquivo",
@@ -72,627 +75,980 @@
   "playlistAddToQueue": "Adicionar playlist à fila",
   "playlistShare": "Compartilhar playlist",
   "playlistDelete": "Excluir playlist",
-  "playlistEmptyState": "Nenhuma música ainda!",
+  "playlistEmptyState": "Nenhuma música ainda",
   "playlistAvailableOffline": "Disponível offline",
   "playlistShuffle": "Aleatório",
-  "playlistMoreOptions": "Mais opções",
-  "playlistNoMatchSearch": "Nenhuma playlist corresponde à sua pesquisa",
-  "playlistCreateNew": "Criar nova playlist",
-  "playlistCreateFirstOne": "Nenhuma playlist ainda. Crie uma para começar!",
-  "playlistSongCount": "{count, plural, =1{1 música} other{{count} músicas}}",
-  "@playlistSongCount": { "placeholders": { "count": { "type": "int" } } },
-  "playlistRemovedTrack": "{title} removido de {playlist}",
-  "@playlistRemovedTrack": { "placeholders": { "title": { "type": "String" }, "playlist": { "type": "String" } } },
-  "playlistFailedToLoad": "Falha ao carregar playlist",
-
+  "playlistNoMatchSearch": "Nenhuma playlist corresponde à busca",
+  "playlistCreateNew": "Criar playlist",
+  "playlistCreateFirstOne": "Você ainda não tem playlists. Crie uma para começar.",
+  "addToPlaylistNoSongSelected": "Nenhuma música selecionada",
+  "createPlaylistDialogBarrierLabel": "Janela de criação de playlist",
+  "createPlaylistDialogNameHint": "Músicas de verão",
+  "createPlaylistDialogCreate": "Criar",
+  "playlistSongCount": "{count, plural, one{{count} música} other{{count} músicas}}",
+  "@playlistSongCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistRemovedTrack": "{title} removida de {playlist}",
+  "@playlistRemovedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "playlist": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistFailedToLoad": "Não foi possível carregar a playlist",
   "settingsTitle": "Configurações",
   "settingsPlugins": "Plugins",
-  "settingsPluginsSubtitle": "Instalar, carregar e gerenciar plugins.",
+  "settingsPluginsSubtitle": "Instale, ative e gerencie plugins.",
   "settingsUpdates": "Atualizações",
-  "settingsUpdatesSubtitle": "Verificar novas atualizações",
+  "settingsUpdatesSubtitle": "Verifique se há atualizações",
   "settingsDownloads": "Downloads",
-  "settingsDownloadsSubtitle": "Caminho, qualidade de download e mais...",
-  "settingsLocalTracks": "Faixas locais",
-  "settingsLocalTracksSubtitle": "Escaneamento, gerenciamento de pastas e auto-escaneamento.",
-  "settingsPlayer": "Ajustes do Player",
-  "settingsPlayerSubtitle": "Qualidade, reprodução automática, etc.",
-  "settingsPluginDefaults": "Padrões de Plugin",
-  "settingsPluginDefaultsSubtitle": "Fonte de descoberta, prioridade de resolvedor.",
-  "settingsUIElements": "Interface e Serviços",
-  "settingsUIElementsSubtitle": "Auto-deslize, ajustes de UI, etc.",
-  "settingsLastFM": "Configurações Last.FM",
-  "settingsLastFMSubtitle": "Chave API, Segredo e scrobbling.",
+  "settingsDownloadsSubtitle": "Pasta de downloads, qualidade de áudio e outras opções",
+  "settingsLocalTracks": "Faixas do dispositivo",
+  "settingsLocalTracksSubtitle": "Busca de músicas, pastas e busca automática",
+  "settingsPlayer": "Configurações de reprodução",
+  "settingsPlayerSubtitle": "Qualidade de áudio, reprodução automática e outras opções",
+  "settingsPluginDefaults": "Plugins padrão",
+  "settingsPluginDefaultsSubtitle": "Fonte de Descobrir e prioridade dos resolvedores",
+  "settingsUIElements": "Interface e serviços",
+  "settingsUIElementsSubtitle": "Rolagem automática e ajustes da interface",
+  "settingsLastFM": "Configurações do Last.fm",
+  "settingsLastFMSubtitle": "Chaves de API e envio do histórico de reprodução",
   "settingsStorage": "Armazenamento",
-  "settingsStorageSubtitle": "Backup, Cache, Histórico, Restauração e mais...",
-  "settingsLanguageCountry": "Idioma e País",
-  "settingsLanguageCountrySubtitle": "Selecione seu idioma e país.",
+  "settingsStorageSubtitle": "Backup, cache, histórico e restauração",
+  "settingsLanguageCountry": "Idioma e país",
+  "settingsLanguageCountrySubtitle": "Escolha seu idioma e seu país.",
   "settingsAbout": "Sobre",
-  "settingsAboutSubtitle": "Sobre o app, versão, desenvolvedor, etc.",
-  "settingsScanning": "Escaneando",
-  "settingsMusicFolders": "Pastas de música",
+  "settingsAboutSubtitle": "Informações sobre o aplicativo, a versão e o desenvolvedor",
+  "settingsScanning": "Busca de arquivos",
+  "settingsMusicFolders": "Pastas de músicas",
   "settingsQuality": "Qualidade",
   "settingsHistory": "Histórico",
-  "settingsBackupRestore": "Backup e Restauração",
+  "settingsBackupRestore": "Backup e restauração",
   "settingsAutomatic": "Automático",
-  "settingsDangerZone": "Zona de Perigo",
-  "settingsScrobbling": "Scrobbling",
+  "settingsDangerZone": "Redefinição de dados",
+  "settingsScrobbling": "Envio do histórico de reprodução",
   "settingsAuthentication": "Autenticação",
-  "settingsHomeScreen": "Tela Inicial",
-  "settingsChartVisibility": "Visibilidade de Gráficos",
-  "settingsLocation": "Localização",
-
-  "pluginRepositoryTitle": "Repositórios de Plugins",
-  "pluginRepositorySubtitle": "Descobrir plugins de fontes remotas",
-  "pluginRepositoryAddAction": "Adicionar repositório",
-  "pluginRepositoryAddTitle": "Adicionar Repositório de Plugins",
-  "pluginRepositoryAddSubtitle": "Cole o URL JSON do repositório para descobrir plugins.",
-  "pluginRepositoryEmpty": "Nenhum repositório adicionado ainda",
-  "pluginRepositoryUrlCopied": "URL do repositório copiado",
-  "pluginRepositoryNoDescription": "Nenhuma descrição disponível",
-  "pluginRepositoryUnknownUpdate": "Desconhecido",
-  "pluginRepositoryPluginsCount": "{count, plural, =1{1 plugin} other{{count} plugins}}",
-  "@pluginRepositoryPluginsCount": { "placeholders": { "count": { "type": "int" } } },
-  "pluginRepositoryErrorLoad": "Falha ao carregar repositórios. Verifique sua conexão.",
-  "pluginRepositoryErrorInvalid": "URL ou formato de repositório inválido.",
-  "pluginRepositoryErrorRemove": "Falha ao remover repositório.",
-  "pluginRepositoryError": "Erro: {message}",
-  "@pluginRepositoryError": { "placeholders": { "message": { "type": "String" } } },
-  "dialogAddingToDownloadQueue": "Adicionando à fila de download",
-
-  "emptyNoInternet": "Sem conexão com a Internet!",
-  "emptyNoContentPlugin": "Nenhum plugin de conteúdo carregado. Carregue um no gerenciador.",
-  "emptyRefreshingSource": "Atualizando fonte de Descoberta...",
+  "settingsHomeScreen": "Tela inicial",
+  "settingsChartVisibility": "Visibilidade das paradas",
+  "dialogAddingToDownloadQueue": "Adicionando à fila de downloads",
+  "emptyNoInternet": "Sem conexão com a internet",
+  "emptyNoContentPlugin": "Nenhum resolvedor de conteúdo ativo. Ative um no gerenciador de plugins.",
+  "emptyRefreshingSource": "Atualizando a fonte de Descobrir… A fonte anterior não está mais disponível.",
   "emptyNoTracks": "Nenhuma faixa disponível",
-  "emptyNoResults": "Nenhum resultado encontrado",
-
-  "snackbarDeletedTrack": "Excluído \"{title}\"",
-  "@snackbarDeletedTrack": { "placeholders": { "title": { "type": "String" } } },
-  "snackbarDeleteFailed": "Falha ao excluir \"{title}\"",
-  "@snackbarDeleteFailed": { "placeholders": { "title": { "type": "String" } } },
-  "snackbarAddedToNextQueue": "Adicionado como próximo na fila",
-  "snackbarAddedToQueue": "Adicionado à fila",
-  "snackbarAddedToLiked": "{title} adicionado às curtidas!!",
-  "@snackbarAddedToLiked": { "placeholders": { "title": { "type": "String" } } },
+  "emptyNoResults": "Nenhuma correspondência encontrada",
+  "snackbarDeletedTrack": "“{title}” excluída",
+  "@snackbarDeletedTrack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarDeleteFailed": "Não foi possível excluir “{title}”",
+  "@snackbarDeleteFailed": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarAddedToNextQueue": "Adicionada para reproduzir a seguir",
+  "snackbarAddedToQueue": "Adicionada à fila",
+  "snackbarAddedToLiked": "{title} adicionada aos favoritos",
+  "@snackbarAddedToLiked": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "snackbarNowPlaying": "Reproduzindo {name}",
-  "@snackbarNowPlaying": { "placeholders": { "name": { "type": "String" } } },
-  "snackbarPlaylistAddedToQueue": "Playlist {name} adicionada à fila",
-  "@snackbarPlaylistAddedToQueue": { "placeholders": { "name": { "type": "String" } } },
-  "snackbarPlaylistQueued": "Playlist adicionada à fila de download",
-  "snackbarPlaylistUpdated": "Playlist atualizada!",
-  "snackbarNoInternet": "Sem conexão com a Internet.",
-  "snackbarImportFailed": "Falha na importação!",
-  "snackbarImportCompleted": "Importação concluída",
-  "snackbarBackupFailed": "Falha no backup!",
-  "snackbarExportedTo": "Exportado para: {path}",
-  "@snackbarExportedTo": { "placeholders": { "path": { "type": "String" } } },
-  "snackbarMediaIdCopied": "ID de mídia copiado",
+  "@snackbarNowPlaying": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarPlaylistAddedToQueue": "{name} adicionada à fila",
+  "@snackbarPlaylistAddedToQueue": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarPlaylistUpdated": "Playlist atualizada",
   "snackbarLinkCopied": "Link copiado",
-  "snackbarNoLinkAvailable": "Nenhum link disponível",
   "snackbarCouldNotOpenLink": "Não foi possível abrir o link",
-  "snackbarPreparingDownload": "Preparando download de {title}...",
-  "@snackbarPreparingDownload": { "placeholders": { "title": { "type": "String" } } },
-  "snackbarAlreadyDownloaded": "{title} já foi baixado.",
-  "@snackbarAlreadyDownloaded": { "placeholders": { "title": { "type": "String" } } },
-  "snackbarAlreadyInQueue": "{title} já está na fila.",
-  "@snackbarAlreadyInQueue": { "placeholders": { "title": { "type": "String" } } },
-  "snackbarDownloaded": "Baixado {title}",
-  "@snackbarDownloaded": { "placeholders": { "title": { "type": "String" } } },
-  "snackbarDownloadServiceUnavailable": "Erro: Serviço de download indisponível.",
-  "snackbarSongsAddedToQueue": "{count} músicas adicionadas à fila de download",
-  "@snackbarSongsAddedToQueue": { "placeholders": { "count": { "type": "int" } } },
-  "snackbarDeleteTrackFailDevice": "Falha ao excluir faixa do armazenamento.",
-
+  "snackbarSongsAddedToQueue": "Músicas adicionadas à fila de downloads: {count}",
+  "@snackbarSongsAddedToQueue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "searchHintExplore": "O que você quer ouvir?",
-  "searchHintLibrary": "Pesquisar na biblioteca...",
-  "searchHintOfflineMusic": "Pesquisar em suas músicas...",
-  "searchHintPlaylists": "Pesquisar playlists...",
-  "searchStartTyping": "Comece a digitar para pesquisar...",
-  "searchNoSuggestions": "Nenhuma sugestão encontrada!",
-  "searchNoResults": "Nenhum resultado encontrado!\nTente outra palavra-chave ou fonte.",
-  "searchFailed": "A pesquisa falhou!",
-  "searchDiscover": "Descubra músicas incríveis...",
-  "searchSources": "FONTES",
+  "searchHintLibrary": "Buscar na biblioteca…",
+  "searchHintPlaylists": "Buscar playlists…",
+  "searchStartTyping": "Digite para buscar",
+  "searchNoSuggestions": "Nenhuma sugestão encontrada",
+  "searchNoResults": "Nenhum resultado encontrado.\nTente outro termo ou outra fonte.",
+  "searchFailed": "Falha na busca",
+  "searchDiscover": "Descubra novas músicas",
+  "searchSources": "Fontes",
   "searchNoPlugins": "Nenhum plugin instalado",
   "searchTracks": "Faixas",
   "searchAlbums": "Álbuns",
   "searchArtists": "Artistas",
   "searchPlaylists": "Playlists",
-
   "exploreDiscover": "Descobrir",
-  "exploreRecently": "Recentes",
-  "exploreLastFmPicks": "Escolhas Last.Fm",
-  "exploreFailedToLoad": "Falha ao carregar seções da Home.",
-
+  "exploreRecently": "Ouvidas recentemente",
+  "exploreLastFmPicks": "Sugestões do Last.fm",
+  "exploreFailedToLoad": "Não foi possível carregar as seções da tela inicial.",
   "libraryTitle": "Biblioteca",
-  "libraryEmptyState": "Sua biblioteca se sente solitária. Adicione músicas!",
+  "libraryEmptyState": "Sua biblioteca está vazia. Adicione músicas e playlists para começar.",
   "libraryIn": "em {playlistName}",
-  "@libraryIn": { "placeholders": { "playlistName": { "type": "String" } } },
-
+  "@libraryIn": {
+    "placeholders": {
+      "playlistName": {
+        "type": "String"
+      }
+    }
+  },
   "menuAddToPlaylist": "Adicionar à playlist",
-  "menuSmartReplace": "Substituição Inteligente",
+  "menuSmartReplace": "Substituir por uma faixa equivalente",
   "menuShare": "Compartilhar",
   "menuAvailableOffline": "Disponível offline",
   "menuDownload": "Baixar",
   "menuOpenOriginalLink": "Abrir link original",
   "menuDeleteTrack": "Excluir",
-
-  "songInfoTitle": "Título",
-  "songInfoArtist": "Artista",
-  "songInfoAlbum": "Álbum",
-  "songInfoMediaId": "ID de mídia",
-  "songInfoCopyId": "Copiar ID",
-  "songInfoCopyLink": "Copiar link",
-  "songInfoOpenBrowser": "Abrir no navegador",
-
   "tooltipRemoveFromLibrary": "Remover da biblioteca",
   "tooltipSaveToLibrary": "Salvar na biblioteca",
   "tooltipOpenOriginalLink": "Abrir link original",
-  "tooltipShuffle": "Aleatório",
   "tooltipAvailableOffline": "Disponível offline",
-  "tooltipDownloadPlaylist": "Baixar playlist",
   "tooltipMoreOptions": "Mais opções",
-  "tooltipInfo": "Informações",
-
-  "appuiTitle": "Interface e Serviços",
-  "appuiAutoSlideCharts": "Auto-deslize de Gráficos",
-  "appuiAutoSlideChartsSubtitle": "Deslizar gráficos automaticamente na Home.",
-  "appuiLastFmPicksSubtitle": "Mostrar sugestões do Last.FM. Requer login.",
-  "appuiNoChartsAvailable": "Nenhum gráfico disponível. Carregue um plugin.",
-  "appuiLoginToLastFm": "Por favor, faça login no Last.FM primeiro.",
-  "appuiShowInCarousel": "Mostrar no carrossel da Home.",
-
-  "countrySettingTitle": "Idioma e País",
-  "countrySettingAutoDetect": "Auto-detectar País",
-  "countrySettingAutoDetectSubtitle": "Detectar automaticamente seu país ao iniciar.",
+  "appuiTitle": "Interface e serviços",
+  "appuiAutoSlideCharts": "Avançar paradas automaticamente",
+  "appuiAutoSlideChartsSubtitle": "Avance automaticamente as paradas da tela inicial.",
+  "appuiLastFmPicksSubtitle": "Mostre sugestões do Last.fm. É necessário entrar na conta e reiniciar o aplicativo.",
+  "appuiNoChartsAvailable": "Nenhuma parada disponível. Ative um plugin provedor de paradas.",
+  "appuiLoginToLastFm": "Entre na sua conta do Last.fm primeiro.",
+  "appuiShowInCarousel": "Mostrar no carrossel da tela inicial.",
+  "countrySettingTitle": "País e idioma",
+  "countrySettingAutoDetect": "Detectar país automaticamente",
+  "countrySettingAutoDetectSubtitle": "Detecte seu país automaticamente ao abrir o aplicativo.",
   "countrySettingCountryLabel": "País",
   "countrySettingLanguageLabel": "Idioma",
-  "countrySettingSystemDefault": "Padrão do Sistema",
-
+  "countrySettingSystemDefault": "Padrão do sistema",
   "downloadSettingTitle": "Downloads",
-  "downloadSettingQuality": "Qualidade de Download",
-  "downloadSettingQualitySubtitle": "Preferência de bitrate para faixas baixadas.",
-  "downloadSettingFolder": "Pasta de Download",
-  "downloadSettingResetFolder": "Resetar pasta de download",
-  "downloadSettingResetFolderSubtitle": "Restaurar o caminho de download padrão.",
-
-  "lastfmTitle": "Last.FM",
-  "lastfmScrobbleTracks": "Scrobble de faixas",
-  "lastfmScrobbleTracksSubtitle": "Enviar faixas reproduzidas para seu perfil.",
-  "lastfmAuthFirst": "Autentique primeiro a API do Last.FM.",
-  "lastfmAuthenticatedAs": "Autenticado como",
+  "downloadSettingQuality": "Qualidade dos downloads",
+  "downloadSettingQualitySubtitle": "Qualidade de áudio preferida para todas as faixas baixadas.",
+  "downloadSettingFolder": "Pasta de downloads",
+  "downloadSettingResetFolder": "Restaurar pasta de downloads padrão",
+  "downloadSettingResetFolderSubtitle": "Restaure o local padrão dos downloads.",
+  "lastfmTitle": "Last.fm",
+  "lastfmScrobbleTracks": "Enviar histórico de reprodução",
+  "lastfmScrobbleTracksSubtitle": "Envie as faixas reproduzidas para seu perfil do Last.fm.",
+  "lastfmAuthFirst": "Autorize o acesso à API do Last.fm primeiro.",
+  "lastfmAuthenticatedAs": "Conectado como",
   "lastfmAuthFailed": "Falha na autenticação:",
   "lastfmNotAuthenticated": "Não autenticado",
-  "lastfmSteps": "Passos:\n1. Crie/abra uma conta no last.fm\n2. Gere a API Key em last.fm/api/account/create\n3. Insira sua API Key e Secret abaixo\n4. Toque em 'Start Auth' e aprove no navegador\n5. Toque em 'Get & Save Session Key' para finalizar",
-  "lastfmApiKey": "API Key",
-  "lastfmApiSecret": "API Secret",
-  "lastfmStartAuth": "1. Iniciar Autenticação",
-  "lastfmGetSession": "2. Salvar Session Key",
-  "lastfmRemoveKeys": "Remover Chaves",
-  "lastfmStartAuthFirst": "Inicie a autenticação primeiro, depois aprove no navegador.",
-
-  "localSettingTitle": "Faixas locais",
-  "localSettingAutoScan": "Auto-escanear no início",
-  "localSettingAutoScanSubtitle": "Pesquisar novas músicas locais ao iniciar.",
-  "localSettingLastScan": "Último escaneamento",
+  "lastfmSteps": "Como autenticar:\n1. Crie uma conta ou entre em last.fm.\n2. Gere uma chave de API em last.fm/api/account/create.\n3. Insira a chave de API e a chave secreta abaixo.\n4. Toque em “1. Iniciar autorização” e autorize no navegador.\n5. Toque em “2. Obter e salvar chave de sessão”.",
+  "lastfmApiKey": "Chave de API",
+  "lastfmApiSecret": "Chave secreta da API",
+  "lastfmStartAuth": "1. Iniciar autorização",
+  "lastfmGetSession": "2. Obter e salvar chave de sessão",
+  "lastfmRemoveKeys": "Remover chaves",
+  "lastfmStartAuthFirst": "Inicie a autorização primeiro e confirme no navegador.",
+  "localSettingTitle": "Faixas do dispositivo",
+  "localSettingAutoScan": "Buscar arquivos ao iniciar",
+  "localSettingAutoScanSubtitle": "Busque novas faixas no dispositivo ao iniciar o aplicativo.",
+  "localSettingLastScan": "Última busca",
   "localSettingNeverScanned": "Nunca",
-  "localSettingScanInProgress": "Escaneando...",
-  "localSettingScanNowSubtitle": "Lançar escaneamento completo manualmente.",
-  "localSettingNoFolders": "Sem pastas adicionadas. Adicione uma para começar.",
+  "localSettingScanInProgress": "Busca em andamento…",
+  "localSettingScanNowSubtitle": "Inicie uma busca completa na biblioteca.",
+  "localSettingNoFolders": "Nenhuma pasta adicionada. Adicione uma para buscar músicas.",
   "localSettingAddFolder": "Adicionar pasta",
-
-  "playerSettingTitle": "Ajustes do Player",
-  "playerSettingStreamingHeader": "Streaming",
-  "playerSettingStreamQuality": "Qualidade de Streaming",
-  "playerSettingStreamQualitySubtitle": "Bitrate global para reprodução online.",
+  "playerSettingTitle": "Configurações de reprodução",
+  "playerSettingStreamingHeader": "Áudio online",
+  "playerSettingStreamQuality": "Qualidade do áudio online",
+  "playerSettingStreamQualitySubtitle": "Taxa de bits do áudio para reprodução online.",
   "playerSettingQualityLow": "Baixa",
   "playerSettingQualityMedium": "Média",
   "playerSettingQualityHigh": "Alta",
   "playerSettingPlaybackHeader": "Reprodução",
-  "playerSettingAutoPlay": "Reprodução Automática",
-  "playerSettingAutoPlaySubtitle": "Adicionar músicas similares ao fim da fila.",
-  "playerSettingAutoFallback": "Alternativa automática",
-  "playerSettingAutoFallbackSubtitle": "Se o plugin falhar, tenta uma alternativa.",
-  "playerSettingCrossfade": "Crossfade",
-  "playerSettingCrossfadeOff": "Desligado",
-  "playerSettingCrossfadeInstant": "Troca instantânea de faixas",
-  "playerSettingCrossfadeBlend": "Mistura de {seconds} segundos",
-  "@playerSettingCrossfadeBlend": { "placeholders": { "seconds": { "type": "int" } } },
+  "playerSettingAutoPlay": "Reprodução automática",
+  "playerSettingAutoPlaySubtitle": "Adicione músicas semelhantes quando a fila terminar.",
+  "playerSettingAutoFallback": "Usar fonte alternativa",
+  "playerSettingAutoFallbackSubtitle": "Se um plugin estiver ausente ou não fornecer áudio, tente um resolvedor compatível apenas para reproduzir.",
+  "playerSettingCrossfade": "Transição entre faixas",
+  "playerSettingCrossfadeOff": "Desativada",
+  "playerSettingCrossfadeInstant": "As faixas mudam sem transição",
+  "playerSettingCrossfadeBlend": "Transição de {seconds} s entre faixas",
+  "@playerSettingCrossfadeBlend": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "playerSettingEqualizer": "Equalizador",
   "playerSettingEqualizerActive": "Ativo",
-  "playerSettingEqualizerActivePreset": "Habilitado — preset {preset}",
-  "@playerSettingEqualizerActivePreset": { "placeholders": { "preset": { "type": "String" } } },
-  "playerSettingEqualizerSubtitle": "Equalizador de 10 bandas via FFmpeg.",
-
-  "pluginDefaultsTitle": "Padrões de Plugin",
-  "pluginDefaultsDiscoverHeader": "Fonte de Descoberta",
-  "pluginDefaultsNoResolver": "Nenhum plugin de conteúdo carregado.",
-  "pluginDefaultsAutomaticSubtitle": "Usar o primeiro resolvedor disponível.",
-  "pluginDefaultsPriorityHeader": "Prioridade de Resolvedor",
-  "pluginDefaultsNoPriority": "Nenhum resolvedor carregado.",
-  "pluginDefaultsPriorityDesc": "Arraste para ordenar. resolvedores do topo são tentados primeiro.",
-  "pluginDefaultsLyricsHeader": "Prioridade de Letras",
-  "pluginDefaultsLyricsNone": "Nenhum provedor de letras.",
-  "pluginDefaultsLyricsDesc": "Ordem de busca de letras.",
-  "pluginDefaultsSuggestionsHeader": "Sugestões de Pesquisa",
-  "pluginDefaultsSuggestionsNone": "Nenhum provedor de sugestões.",
+  "playerSettingEqualizerActivePreset": "Ativo — {preset}",
+  "@playerSettingEqualizerActivePreset": {
+    "placeholders": {
+      "preset": {
+        "type": "String"
+      }
+    }
+  },
+  "playerSettingEqualizerSubtitle": "Equalizador paramétrico de 10 bandas via FFmpeg.",
+  "pluginDefaultsTitle": "Plugins padrão",
+  "pluginDefaultsDiscoverHeader": "Fonte de Descobrir",
+  "pluginDefaultsNoResolver": "Nenhum resolvedor de conteúdo ativo. Ative um plugin para escolher a fonte de Descobrir.",
+  "pluginDefaultsAutomaticSubtitle": "Use o primeiro resolvedor de conteúdo disponível.",
+  "pluginDefaultsPriorityHeader": "Prioridade dos resolvedores",
+  "pluginDefaultsNoPriority": "Nenhum resolvedor de conteúdo ativo. A ordem de prioridade aparecerá aqui quando houver plugins ativos.",
+  "pluginDefaultsPriorityDesc": "Arraste para reordenar. Os resolvedores com maior prioridade são usados primeiro para encontrar versões reproduzíveis das faixas das paradas ou importadas.",
+  "pluginDefaultsLyricsHeader": "Prioridade das letras",
+  "pluginDefaultsLyricsNone": "Nenhum provedor de letras ativo.",
+  "pluginDefaultsLyricsDesc": "Arraste para reordenar os provedores de letras. O primeiro da lista é consultado primeiro.",
+  "pluginDefaultsSuggestionsHeader": "Sugestões de busca",
+  "pluginDefaultsSuggestionsNone": "Nenhum provedor de sugestões ativo.",
   "pluginDefaultsSuggestionsHistoryOnlyTitle": "Nenhum",
-  "pluginDefaultsSuggestionsHistoryOnlySubtitle": "Apenas histórico de pesquisa.",
-
+  "pluginDefaultsSuggestionsHistoryOnlySubtitle": "Use apenas o histórico de busca.",
   "storageSettingTitle": "Armazenamento",
   "storageClearHistoryEvery": "Limpar histórico a cada",
-  "storageClearHistorySubtitle": "Excluir histórico automaticamente.",
-  "storageDays": "{count, plural, =1{1 dia} other{{count} dias}}",
-  "@storageDays": { "placeholders": { "count": { "type": "int" } } },
-  "storageBackupLocation": "Local de Backup",
-  "storageBackupLocationAndroid": "Downloads / Diretório do App",
-  "storageBackupLocationDownloads": "Diretório de Downloads",
-  "storageCreateBackup": "Criar Backup",
-  "storageCreateBackupSubtitle": "Salvar dados e ajustes em um arquivo.",
-  "storageBackupCreatedAt": "Backup criado em {path}",
-  "@storageBackupCreatedAt": { "placeholders": { "path": { "type": "String" } } },
-  "storageBackupShareFailed": "Falha ao compartilhar backup: {error}",
-  "@storageBackupShareFailed": { "placeholders": { "error": { "type": "String" } } },
-  "storageBackupFailed": "Falha no backup!",
-  "storageRestoreBackup": "Restaurar Backup",
-  "storageRestoreBackupSubtitle": "Restaurar dados de um arquivo.",
-  "storageAutoBackup": "Backup Automático",
-  "storageAutoBackupSubtitle": "Criar backups periódicos automaticamente.",
+  "storageClearHistorySubtitle": "Limpe o histórico de reprodução após o período escolhido.",
+  "storageDays": "{count, plural, one{{count} dia} other{{count} dias}}",
+  "@storageDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storageBackupCreatedAt": "Backup salvo em {path}",
+  "@storageBackupCreatedAt": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "storageBackupShareFailed": "Não foi possível compartilhar o backup: {error}",
+  "@storageBackupShareFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "storageRestoreBackup": "Restaurar backup",
+  "storageRestoreBackupSubtitle": "Restaure suas configurações e seus dados de um arquivo de backup.",
+  "storageAutoBackup": "Backup automático",
   "storageAutoLyrics": "Salvar letras automaticamente",
-  "storageAutoLyricsSubtitle": "Salvar letras ao reproduzir música.",
-  "storageResetApp": "Resetar Beats",
-  "storageResetAppSubtitle": "Excluir tudo e restaurar ao padrão.",
-  "storageResetConfirmTitle": "Confirmar Reset",
-  "storageResetConfirmMessage": "Tem certeza? Tudo será excluído permanentemente.",
-  "storageResetButton": "Resetar",
-  "storageResetSuccess": "Aplicativo resetado ao estado original.",
-  "storageLocationDialogTitle": "Local de Backup",
-  "storageLocationAndroid": "Backups salvos em:\n1. Downloads\n2. Android/data/ls.Beats.musicplayer/data",
-  "storageLocationOther": "Backups salvos na pasta Downloads.",
-  "storageRestoreOptionsTitle": "Opções de Restauração",
-  "storageRestoreOptionsDesc": "Escolha o que restaurar. Tudo selecionado por padrão.",
-  "storageRestoreSelectAll": "Selecionar tudo",
-  "storageRestoreMediaItems": "Mídia (músicas, biblioteca)",
-  "storageRestoreSearchHistory": "Histórico de pesquisa",
+  "storageAutoLyricsSubtitle": "Salve as letras automaticamente durante a reprodução.",
+  "storageResetApp": "Redefinir Bloomee",
+  "storageResetConfirmTitle": "Confirmar redefinição",
+  "storageResetButton": "Redefinir",
+  "storageRestoreOptionsTitle": "Opções de restauração",
   "storageRestoreContinue": "Continuar",
-  "storageRestoreNoFile": "Nenhum arquivo selecionado.",
-  "storageRestoreSaveFailed": "Falha ao salvar o arquivo.",
-  "storageRestoreConfirmTitle": "Confirmar Restauração",
-  "storageRestoreConfirmPrefix": "Isso substituirá com os dados do backup:",
-  "storageRestoreConfirmSuffix": "Deseja continuar?",
+  "storageRestoreConfirmTitle": "Confirmar restauração",
   "storageRestoreYes": "Sim, restaurar",
-  "storageRestoreNo": "Não",
-  "storageRestoring": "Restaurando... aguarde.",
-  "storageRestoreMediaBullet": "• Mídia",
-  "storageRestoreHistoryBullet": "• Histórico",
-  "storageUnexpectedError": "Erro inesperado ao restaurar.",
-
-  "storageRestoreCompleted": "Restauração concluída",
+  "storageRestoring": "Restaurando os dados selecionados…\nAguarde até a conclusão.",
   "storageRestoreFailedTitle": "Falha na restauração",
-  "storageRestoreSuccessMessage": "Dados restaurados. Reinicie o app agora.",
-  "storageRestoreFailedMessage": "Erros durante o processo:",
-  "storageRestoreUnknownError": "Erro desconhecido.",
-  "storageRestoreRestartHint": "Reinicie o app para ver as mudanças.",
-
   "updateSettingTitle": "Atualizações",
-  "updateAppUpdatesHeader": "App",
   "updateCheckForUpdates": "Verificar atualizações",
-  "updateCheckSubtitle": "Ver se há nova versão do Beats.",
-  "updateAutoNotify": "Notificação automática",
-  "updateAutoNotifySubtitle": "Avisar sobre atualização ao iniciar.",
-  "updateCheckTitle": "Buscando",
-  "updateUpToDate": "Beats está atualizado!",
-  "updateViewPreRelease": "Ver última Pre-Release",
+  "updateCheckSubtitle": "Verifique se há uma nova versão do Bloomee.",
+  "updateAutoNotify": "Notificar atualizações",
+  "updateAutoNotifySubtitle": "Receba avisos sobre novas atualizações ao iniciar o aplicativo.",
+  "updateCheckTitle": "Verificar atualizações",
+  "updateUpToDate": "O Bloomee está atualizado",
+  "updateViewPreRelease": "Ver versão de pré-lançamento mais recente",
   "updateCurrentVersion": "Versão atual: {curr} + {build}",
-  "@updateCurrentVersion": { "placeholders": { "curr": { "type": "String" }, "build": { "type": "String" } } },
-  "updateNewVersionAvailable": "Nova versão disponível!",
+  "@updateCurrentVersion": {
+    "placeholders": {
+      "curr": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+  "updateNewVersionAvailable": "Uma nova versão do Bloomee está disponível",
   "updateVersion": "Versão: {ver}+{build}",
-  "@updateVersion": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
+  "@updateVersion": {
+    "placeholders": {
+      "ver": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
   "updateDownloadNow": "Baixar agora",
-  "updateChecking": "Buscando novas versões...",
-
-  "timerTitle": "Temporizador",
-  "timerInterludeMessage": "Preparando silêncio em...",
+  "updateChecking": "Verificando atualizações…",
+  "timerTitle": "Temporizador de sono",
+  "timerInterludeMessage": "A reprodução será interrompida em:",
   "timerHours": "Horas",
   "timerMinutes": "Minutos",
   "timerSeconds": "Segundos",
-  "timerStop": "Parar",
-  "timerFinishedMessage": "Músicas pausadas. Bons sonhos! 🥰",
-  "timerGotIt": "Entendido!",
-  "timerSetTimeError": "Defina um tempo",
-  "timerStart": "Iniciar",
-
+  "timerStop": "Parar temporizador",
+  "timerFinishedMessage": "O temporizador de sono interrompeu a reprodução.",
+  "timerGotIt": "Entendi",
+  "timerSetTimeError": "Defina uma duração",
+  "timerStart": "Iniciar temporizador",
   "notificationsTitle": "Notificações",
-  "notificationsEmpty": "Sem notificações",
+  "notificationsEmpty": "Nenhuma notificação ainda",
   "recentsTitle": "Histórico",
-
   "playlistByCreator": "por {creator}",
-  "@playlistByCreator": { "placeholders": { "creator": { "type": "String" } } },
-  "playlistTypeAlbum": "Álbum",
-  "playlistTypePlaylist": "Playlist",
+  "@playlistByCreator": {
+    "placeholders": {
+      "creator": {
+        "type": "String"
+      }
+    }
+  },
   "playlistYou": "Você",
-
   "pluginManagerTitle": "Plugins",
-  "pluginManagerEmpty": "Nenhum plugin.\nToque em + para adicionar.",
+  "pluginManagerEmpty": "Nenhum plugin instalado.\nToque em + para adicionar um arquivo .bex.",
   "pluginManagerFilterAll": "Todos",
-  "pluginManagerFilterContent": "Conteúdo",
-  "pluginManagerFilterCharts": "Gráficos",
-  "pluginManagerFilterLyrics": "Letras",
-  "pluginManagerFilterSuggestions": "Sugestões",
-  "pluginManagerFilterImporters": "Importadores",
+  "pluginManagerFilterContent": "Resolvedores de conteúdo",
+  "pluginManagerFilterCharts": "Provedores de paradas",
+  "pluginManagerFilterLyrics": "Provedores de letras",
+  "pluginManagerFilterSuggestions": "Provedores de sugestões",
+  "pluginManagerFilterImporters": "Importadores de conteúdo",
   "pluginManagerTooltipRefresh": "Atualizar",
-  "pluginManagerTooltipInstall": "Instalar",
-  "pluginManagerNoMatch": "Nenhuma correspondência",
-  "pluginManagerPickFailed": "Falha ao escolher arquivo: {error}",
-  "@pluginManagerPickFailed": { "placeholders": { "error": { "type": "String" } } },
-  "pluginManagerInstalling": "Instalando...",
-  "pluginManagerTypeContentResolver": "Conteúdo",
-  "pluginManagerTypeChartProvider": "Gráfico",
-  "pluginManagerTypeLyricsProvider": "Letras",
-  "pluginManagerTypeSuggestionProvider": "Sugestões",
-  "pluginManagerTypeContentImporter": "Importador",
-  "pluginManagerDeleteTitle": "Excluir?",
-  "pluginManagerDeleteMessage": "Excluir \"{name}\"?",
-  "@pluginManagerDeleteMessage": { "placeholders": { "name": { "type": "String" } } },
+  "pluginManagerTooltipInstall": "Instalar plugin",
+  "pluginManagerNoMatch": "Nenhum plugin corresponde a este filtro",
+  "pluginManagerPickFailed": "Não foi possível selecionar o arquivo: {error}",
+  "@pluginManagerPickFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginManagerInstalling": "Instalando plugin…",
+  "pluginManagerTypeContentResolver": "Resolvedor de conteúdo",
+  "pluginManagerTypeChartProvider": "Provedor de paradas",
+  "pluginManagerTypeLyricsProvider": "Provedor de letras",
+  "pluginManagerTypeSuggestionProvider": "Sugestões de busca",
+  "pluginManagerTypeContentImporter": "Importador de conteúdo",
+  "pluginManagerDeleteTitle": "Excluir plugin?",
+  "pluginManagerDeleteMessage": "Excluir “{name}”? Os arquivos do plugin serão removidos permanentemente.",
+  "@pluginManagerDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "pluginManagerDeleteAction": "Excluir",
   "pluginManagerCancel": "Cancelar",
-  "pluginManagerEnablePlugin": "Ativar",
-  "pluginManagerUnloadPlugin": "Desativar",
-  "pluginManagerDeleting": "Excluindo...",
-  "pluginManagerApiKeysTitle": "Chaves API",
-  "pluginManagerApiKeysSaved": "Chaves salvas",
+  "pluginManagerEnablePlugin": "Ativar plugin",
+  "pluginManagerUnloadPlugin": "Desativar plugin",
+  "pluginManagerDeleting": "Excluindo…",
+  "pluginManagerApiKeysTitle": "Chaves de API",
+  "pluginManagerApiKeysSaved": "Chaves de API salvas",
   "pluginManagerSave": "Salvar",
   "pluginManagerDetailVersion": "Versão",
   "pluginManagerDetailType": "Tipo",
-  "pluginManagerDetailPublisher": "Editor",
-  "pluginManagerDetailLastUpdated": "Atualizado",
-  "pluginManagerDetailCreated": "Criado",
+  "pluginManagerDetailPublisher": "Publicador",
+  "pluginManagerDetailLastUpdated": "Última atualização",
+  "pluginManagerDetailCreated": "Criação",
   "pluginManagerDetailHomepage": "Site",
-  "pluginManagerDowngradeTitle": "Downgrade?",
-  "pluginManagerDowngradeMessage": "Instalando versão antiga ou igual.",
-  "@pluginManagerDowngradeMessage": { "placeholders": { "name": { "type": "String" } } },
-  "pluginManagerDowngradeAction": "Instalar mesmo assim",
-  "pluginManagerDeleteStorageTitle": "Excluir dados?",
-  "pluginManagerDeleteStorageMessage": "Excluir também chaves e ajustes?",
-  "@pluginManagerDeleteStorageMessage": { "placeholders": { "name": { "type": "String" } } },
-  "pluginManagerDeleteStorageKeep": "Manter",
-  "pluginManagerDeleteStorageRemove": "Excluir",
-
-  "segmentsSheetTitle": "Segmentos",
-  "segmentsSheetEmpty": "Sem segmentos",
-  "segmentsSheetUntitled": "Sem título",
-
-  "smartReplaceTitle": "Substituição Inteligente",
-  "smartReplaceSubtitle": "Escolha substituto para \"{title}\".",
-  "@smartReplaceSubtitle": { "placeholders": { "title": { "type": "String" } } },
+  "pluginManagerDeleteStorageTitle": "Excluir dados do plugin?",
+  "pluginManagerDeleteStorageMessage": "Remover também as chaves de API e as configurações salvas de “{name}”?",
+  "@pluginManagerDeleteStorageMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginManagerDeleteStorageKeep": "Manter dados",
+  "pluginManagerDeleteStorageRemove": "Excluir dados",
+  "segmentsSheetTitle": "Trechos",
+  "segmentsSheetEmpty": "Nenhum trecho disponível",
+  "segmentsSheetUntitled": "Trecho sem título",
+  "smartReplaceTitle": "Substituir por uma faixa equivalente",
+  "smartReplaceSubtitle": "Escolha uma versão reproduzível de “{title}” para atualizar as referências nas playlists salvas.",
+  "@smartReplaceSubtitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "smartReplaceClose": "Fechar",
-  "smartReplaceNoMatch": "Sem substituto",
-  "smartReplaceNoMatchSubtitle": "Sem resultados fiáveis.",
-  "smartReplaceBestMatch": "Melhor opção",
+  "smartReplaceNoMatch": "Nenhuma substituição encontrada",
+  "smartReplaceNoMatchSubtitle": "Os plugins resolvedores ativos não encontraram uma correspondência adequada.",
+  "smartReplaceBestMatch": "Melhor correspondência",
   "smartReplaceSearchFailed": "Falha na busca",
-  "smartReplaceApplyFailed": "Falha ao aplicar: {error}",
-  "@smartReplaceApplyFailed": { "placeholders": { "error": { "type": "String" } } },
-  "smartReplaceApplied": "Substituto aplicado{queue}.",
-  "@smartReplaceApplied": { "placeholders": { "queue": { "type": "String" } } },
-  "smartReplaceAppliedPlaylists": "Substituído em {count, plural, =1{1 playlist} other{{count} playlists}}{queue}.",
-  "@smartReplaceAppliedPlaylists": { "placeholders": { "count": { "type": "int" }, "queue": { "type": "String" } } },
+  "smartReplaceApplyFailed": "Não foi possível substituir a faixa: {error}",
+  "@smartReplaceApplyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "smartReplaceApplied": "Faixa substituída{queue}.",
+  "@smartReplaceApplied": {
+    "placeholders": {
+      "queue": {
+        "type": "String"
+      }
+    }
+  },
   "smartReplaceQueueUpdated": " e fila atualizada",
-
   "playerUnknownQueue": "Desconhecido",
-  "playerLiked": "Curtiu {title}!",
-  "@playerLiked": { "placeholders": { "title": { "type": "String" } } },
-  "playerUnliked": "Descurtiu {title}!",
-  "@playerUnliked": { "placeholders": { "title": { "type": "String" } } },
-
-  "offlineNoDownloads": "Sem downloads",
+  "playerLiked": "{title} adicionada aos favoritos",
+  "@playerLiked": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playerUnliked": "{title} removida dos favoritos",
+  "@playerUnliked": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineNoDownloads": "Nenhum download",
   "offlineTitle": "Offline",
-  "offlineSearchHint": "Pesquisar músicas...",
-  "offlineRefreshTooltip": "Atualizar",
-  "offlineCloseSearch": "Fechar",
-  "offlineSearchTooltip": "Pesquisar",
-  "offlineOpenFailed": "Falha ao abrir faixa offline.",
-  "offlinePlayFailed": "Falha ao reproduzir música offline.",
-
-  "albumViewTrackCount": "{count, plural, =1{1 faixa} other{{count} faixas}}",
-  "@albumViewTrackCount": { "placeholders": { "count": { "type": "int" } } },
-  "albumViewLoadFailed": "Falha ao carregar álbum",
-
-  "aboutCraftingSubtitle": "Sinfonias em código.",
+  "offlineSearchHint": "Buscar nas suas músicas…",
+  "offlineRefreshTooltip": "Atualizar downloads",
+  "offlineCloseSearch": "Fechar busca",
+  "offlineSearchTooltip": "Buscar",
+  "offlineOpenFailed": "Não foi possível abrir esta faixa offline. Tente atualizar os downloads.",
+  "offlinePlayFailed": "Não foi possível reproduzir esta música offline. Tente novamente.",
+  "albumViewTrackCount": "{count, plural, one{{count} faixa} other{{count} faixas}}",
+  "@albumViewTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumViewLoadFailed": "Não foi possível carregar o álbum",
+  "aboutCraftingSubtitle": "Desenvolvido para a música.",
   "aboutFollowGitHub": "Seguir no GitHub",
-  "aboutSendInquiry": "Contato comercial",
-  "aboutCreativeHighlights": "Novidades e criações",
-  "aboutTipQuote": "Gosta do Beats? Um apoio ajuda o projeto. ",
-  "aboutTipButton": "Quero ajudar",
-  "aboutTipDesc": "Para o Beats continuar melhorando.",
+  "aboutSendInquiry": "Enviar contato comercial",
+  "aboutCreativeHighlights": "Atualizações e projetos",
+  "aboutTipQuote": "Gostou do Bloomee? Você pode apoiar o desenvolvimento.",
+  "aboutTipButton": "Apoiar o projeto",
+  "aboutTipDesc": "Sua contribuição ajuda a melhorar o Bloomee.",
   "aboutGitHub": "GitHub",
-
-  "songInfoSectionDetails": "Detalhes",
-  "songInfoSectionTechnical": "Técnico",
+  "songInfoSectionDetails": "Detalhes da música",
+  "songInfoSectionTechnical": "Informações técnicas",
   "songInfoSectionActions": "Ações",
   "songInfoLabelTitle": "Título",
   "songInfoLabelArtist": "Artista",
   "songInfoLabelAlbum": "Álbum",
   "songInfoLabelDuration": "Duração",
   "songInfoLabelSource": "Fonte",
-  "songInfoLabelMediaId": "ID de mídia",
+  "songInfoLabelMediaId": "ID da mídia",
   "songInfoLabelPluginId": "ID do plugin",
-  "songInfoIdCopied": "ID copiado",
+  "songInfoCopyId": "Copiar ID",
+  "songInfoCopyLink": "Copiar link",
+  "songInfoOpenBrowser": "Abrir no navegador",
+  "songInfoIdCopied": "ID da mídia copiado",
   "songInfoLinkCopied": "Link copiado",
-  "songInfoNoLink": "Sem link",
-  "songInfoOpenFailed": "Erro ao abrir link",
+  "songInfoNoLink": "Nenhum link disponível",
+  "songInfoOpenFailed": "Não foi possível abrir o link",
   "songInfoUpdateMetadata": "Atualizar metadados",
   "songInfoMetadataUpdated": "Metadados atualizados",
-  "songInfoMetadataUpdateFailed": "Falha na atualização",
-  "songInfoMetadataUnavailable": "Indisponível para esta fonte",
-  "songInfoSearchTitle": "Buscar título no Beats",
-  "songInfoSearchArtist": "Buscar artista no Beats",
-  "songInfoSearchAlbum": "Buscar álbum no Beats",
-
+  "songInfoMetadataUpdateFailed": "Não foi possível atualizar os metadados",
+  "songInfoMetadataUnavailable": "A atualização de metadados não está disponível para esta fonte",
+  "songInfoSearchTitle": "Buscar esta música no Bloomee",
+  "songInfoSearchArtist": "Buscar este artista no Bloomee",
+  "songInfoSearchAlbum": "Buscar este álbum no Bloomee",
   "eqTitle": "Equalizador",
-  "eqResetTooltip": "Resetar",
-
-  "chartNoItems": "Lista vazia",
-  "chartLoadFailed": "Falha ao carregar",
+  "chartNoItems": "Esta parada está vazia",
+  "chartLoadFailed": "Não foi possível carregar a parada",
   "chartPlay": "Reproduzir",
-  "chartResolving": "Resolvendo",
+  "chartResolving": "Buscando correspondência",
   "chartReady": "Pronto",
   "chartAddToPlaylist": "Adicionar à playlist",
-  "chartNoResolver": "Sem resolvedor.",
-  "chartResolveFailed": "Erro. Buscando...",
-  "chartNoResolverAdd": "Sem resolvedor.",
-  "chartNoMatch": "Sem correspondência. Busque manualmente.",
-  "chartStatPeak": "Pico",
+  "chartNoResolver": "Nenhum resolvedor de conteúdo ativo. Instale um plugin para reproduzir.",
+  "chartResolveFailed": "Não foi possível encontrar uma correspondência. Abrindo a busca…",
+  "chartNoResolverAdd": "Nenhum resolvedor de conteúdo ativo.",
+  "chartNoMatch": "Nenhuma correspondência encontrada. Tente buscar manualmente.",
+  "chartStatPeak": "Melhor posição",
   "chartStatWeeks": "Semanas",
-  "chartStatChange": "Mudança",
-
+  "chartStatChange": "Variação",
   "menuSharePreparing": "Preparando {title} para compartilhar.",
-  "@menuSharePreparing": { "placeholders": { "title": { "type": "String" } } },
-  "menuOpenLinkFailed": "Falha ao abrir link",
-
-  "localMusicFolders": "Pastas",
-  "localMusicCloseSearch": "Fechar",
-  "localMusicOpenSearch": "Pesquisar",
-  "localMusicNoMusicFound": "Sem música local",
-  "localMusicNoSearchResults": "Sem resultados",
-
+  "@menuSharePreparing": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "menuOpenLinkFailed": "Não foi possível abrir o link",
+  "localMusicFolders": "Pastas de músicas",
+  "localMusicRemoveFolder": "Remover pasta",
+  "localMusicCloseSearch": "Fechar busca",
+  "localMusicOpenSearch": "Buscar",
+  "localMusicNoMusicFound": "Nenhuma música encontrada no dispositivo",
+  "localMusicNoSearchResults": "Nenhuma faixa corresponde à busca.",
+  "localMusicTrackCount": "{count, plural, one{{count} faixa} other{{count} faixas}}",
+  "@localMusicTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "importSongsTitle": "Importar músicas",
-  "importNoPluginsLoaded": "Plugin de importação necessário.",
-  "importBeatsFiles": "Arquivos Beats",
-  "importM3UFiles": "Playlist M3U",
+  "importNoPluginsLoaded": "Nenhum plugin importador de conteúdo ativo.\nInstale um para importar playlists de outros serviços.",
+  "importBloomeeFiles": "Importar arquivos do Bloomee",
+  "importM3UFiles": "Importar playlist M3U",
   "importM3UNameDialogTitle": "Nome da playlist",
-  "importM3UNameHint": "Dê um nome à playlist",
-  "importM3UNoTracks": "Sem faixas válidas no M3U.",
-  "importNoteTitle": "Aviso",
-  "importNoteMessage": "Apenas arquivos do Beats funcionam bem.",
+  "importM3UNameHint": "Digite um nome para esta playlist",
+  "importM3UNoTracks": "Nenhuma faixa válida encontrada no arquivo M3U.",
+  "importNoteTitle": "Observação",
+  "importNoteMessage": "Só é possível importar arquivos criados pelo Bloomee.\nArquivos de outras fontes não funcionarão. Continuar mesmo assim?",
   "importTitle": "Importar",
-  "importCheckingUrl": "Verificando URL...",
-  "importFetchingTracks": "Buscando faixas...",
-  "importSavingToLibrary": "Salvando...",
-  "importPasteUrlHint": "URL de playlist ou álbum",
+  "importCheckingUrl": "Verificando link…",
+  "importFetchingTracks": "Buscando faixas…",
+  "importSavingToLibrary": "Salvando na biblioteca…",
+  "importPasteUrlHint": "Cole o link de uma playlist ou de um álbum para importar",
   "importAction": "Importar",
-  "importResolving": "Resolvendo...",
-  "importTrackCount": "{count} faixas",
-  "@importTrackCount": { "placeholders": { "count": { "type": "int" } } },
-  "importResolvingProgress": "Resolvendo: {done} / {total}",
-  "@importResolvingProgress": { "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } } },
-  "importReviewTitle": "Resumo",
-  "importReviewSummary": "{resolved} OK, {failed} falhas de {total}",
-  "@importReviewSummary": { "placeholders": { "resolved": { "type": "int" }, "failed": { "type": "int" }, "total": { "type": "int" } } },
-  "importSaveTracks": "Salvar {count} faixas",
-  "@importSaveTracks": { "placeholders": { "count": { "type": "int" } } },
-  "importTracksSaved": "{count} faixas salvas!",
-  "@importTracksSaved": { "placeholders": { "count": { "type": "int" } } },
-  "importDone": "Feito",
+  "importTrackCount": "{count, plural, one{{count} faixa} other{{count} faixas}}",
+  "@importTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importResolvingProgress": "Buscando correspondências: {done} / {total}",
+  "@importResolvingProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importSaveTracks": "Salvar faixas ({count})",
+  "@importSaveTracks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importTracksSaved": "Faixas salvas: {count}",
+  "@importTracksSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importDone": "Concluído",
   "importMore": "Importar mais",
   "importUnknownError": "Erro desconhecido",
-  "importTryAgain": "Reententar",
-  "importSkipTrack": "Pular",
-  "importMatchOptions": "Opções",
-  "importAutoMatched": "Auto",
-  "importUserSelected": "Manual",
-  "importSkipped": "Pulado",
-  "importNoMatch": "Sem correspondência",
-  "importReorderTip": "Long press para mover",
-  "importErrorCannotHandleUrl": "URL não suportada.",
-  "importErrorUnexpectedResponse": "Resposta inesperada.",
-  "importErrorFailedToCheck": "Falha ao verificar: {error}",
-  "@importErrorFailedToCheck": { "placeholders": { "error": { "type": "String" } } },
-  "importErrorFailedToFetchInfo": "Falha ao buscar informações da coleção: {error}",
-  "@importErrorFailedToFetchInfo": { "placeholders": { "error": { "type": "String" } } },
-  "importErrorFailedToFetchTracks": "Falha ao buscar faixas: {error}",
-  "@importErrorFailedToFetchTracks": { "placeholders": { "error": { "type": "String" } } },
-  "importErrorFailedToSave": "Falha ao salvar a playlist: {error}",
-  "@importErrorFailedToSave": { "placeholders": { "error": { "type": "String" } } },
-
+  "importTryAgain": "Tentar novamente",
+  "importSkipTrack": "Pular esta faixa",
+  "importMatchOptions": "Opções de correspondência",
+  "importSkipped": "Ignorada",
+  "importReorderTip": "Pressione uma playlist por alguns instantes para reordenar",
+  "importErrorCannotHandleUrl": "Este plugin não é compatível com o link informado.",
+  "importErrorUnexpectedResponse": "Resposta inesperada do plugin.",
+  "importErrorFailedToCheck": "Não foi possível verificar o link: {error}",
+  "@importErrorFailedToCheck": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "importErrorFailedToFetchInfo": "Não foi possível obter os dados da coleção: {error}",
+  "@importErrorFailedToFetchInfo": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "importErrorFailedToFetchTracks": "Não foi possível obter as faixas: {error}",
+  "@importErrorFailedToFetchTracks": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "importErrorFailedToSave": "Não foi possível salvar a playlist: {error}",
+  "@importErrorFailedToSave": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "playlistPinToTop": "Fixar no topo",
   "playlistUnpin": "Desafixar",
-
-  "snackbarImportingMedia": "Importando mídias...",
-  "snackbarPlaylistSaved": "Playlist salva!",
-  "snackbarInvalidFileFormat": "Formato inválido",
-  "snackbarMediaItemImported": "Mídia importada",
-  "snackbarPlaylistImported": "Playlist importada",
-  "snackbarOpenImportForUrl": "Abra Importar para continuar.",
-  "snackbarProcessingFile": "Processando...",
-  "snackbarPreparingShare": "Preparando {title}...",
-  "snackbarPreparingExport": "Preparando exportação de {title}...",
-
+  "snackbarInvalidFileFormat": "Formato de arquivo inválido",
+  "snackbarProcessingFile": "Processando arquivo…",
   "pluginManagerTabInstalled": "Instalados",
-  "pluginManagerTabStore": "Loja",
-  "pluginManagerSelectPackage": "Selecionar .bex",
-  "pluginManagerOutdatedManifest": "Manifesto antigo. Risco de bugs.",
+  "pluginManagerTabStore": "Loja de plugins",
+  "pluginManagerSelectPackage": "Selecionar pacote de plugin (.bex)",
+  "pluginManagerOutdatedManifest": "O plugin usa uma versão antiga do manifesto. Alguns recursos podem não funcionar. Considere atualizá-lo.",
   "pluginManagerStatusActive": "Ativo",
   "pluginManagerStatusInactive": "Inativo",
-
+  "pluginRepositoryAddTitle": "Adicionar repositório",
+  "pluginRepositoryAddSubtitle": "Insira o link de um arquivo JSON de repositório de plugins válido.",
   "pluginRepositoryAddAction": "Adicionar repositório",
+  "pluginRepositoryTitle": "Repositórios de plugins",
+  "pluginRepositorySubtitle": "Adicione uma fonte JSON para explorar plugins disponíveis online.",
+  "pluginRepositoryEmpty": "Nenhum repositório adicionado.",
+  "pluginRepositoryUnknownUpdate": "Atualização desconhecida",
+  "pluginRepositoryNoDescription": "Nenhuma descrição disponível.",
+  "pluginRepositoryUrlCopied": "Link do repositório copiado",
+  "pluginRepositoryPluginsCount": "{count, plural, one{{count} plugin} other{{count} plugins}}",
+  "@pluginRepositoryPluginsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pluginRepositoryUpdatedOn": "Atualizado em {date}",
-  "@pluginRepositoryUpdatedOn": { "placeholders": { "date": { "type": "String" } } },
-  "pluginRepositoryAvailableCount": "{count, plural, =1{1 disponível} other{{count} disponíveis}}",
-  "@pluginRepositoryAvailableCount": { "placeholders": { "count": { "type": "int" } } },
-  "pluginRepositoryOutdatedManifest": "Manifesto obsoleto.",
-  "pluginRepositoryUnknownPublisher": "Editor desconhecido",
-  "pluginRepositoryActionRetry": "Reententar",
-  "pluginRepositoryActionOutdated": "Obsoleto",
+  "@pluginRepositoryUpdatedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginRepositoryAvailableCount": "{count, plural, one{{count} plugin disponível} other{{count} plugins disponíveis}}",
+  "@pluginRepositoryAvailableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginRepositoryOutdatedManifest": "Manifesto desatualizado. Alguns recursos podem não funcionar.",
+  "pluginRepositoryUnknownPublisher": "Publicador desconhecido",
+  "pluginRepositoryActionRetry": "Tentar novamente",
+  "pluginRepositoryActionOutdated": "Desatualizado",
   "pluginRepositoryActionInstalled": "Instalado",
   "pluginRepositoryActionInstall": "Instalar",
   "pluginRepositoryActionUnavailable": "Indisponível",
   "pluginRepositoryInstallFailed": "Falha na instalação.",
-  "pluginRepositoryDownloadFailed": "Falha ao baixar {name}.",
-
-  "smartReplaceAppliedPlaylistsSummary": "{count, plural, =1{Aplicado em 1 playlist{queue}.} other{Aplicado em {count} playlists{queue}.}}",
-  "@smartReplaceAppliedPlaylistsSummary": { "placeholders": { "count": { "type": "int" }, "queue": { "type": "String" } } },
-
-  "lyricsSearchFieldLabel": "Buscar letras...",
-  "lyricsSearchEmptyPrompt": "Busque por música ou artista.",
-  "lyricsSearchNoResults": "Sem letras para \"{query}\"",
-  "@lyricsSearchNoResults": { "placeholders": { "query": { "type": "String" } } },
-  "lyricsSearchApplied": "Letras aplicadas",
-  "lyricsSearchFetchFailed": "Falha nas letras",
+  "pluginRepositoryDownloadFailed": "Não foi possível baixar {name}.",
+  "@pluginRepositoryDownloadFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginRepositoryErrorLoad": "Não foi possível carregar os repositórios.",
+  "pluginRepositoryErrorInvalid": "Link ou arquivo de repositório inválido.",
+  "pluginRepositoryErrorRemove": "Não foi possível remover o repositório.",
+  "smartReplaceAppliedPlaylistsSummary": "{count, plural, one{Faixa substituída em {count} playlist{queue}.} other{Faixa substituída em {count} playlists{queue}.}}",
+  "@smartReplaceAppliedPlaylistsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "queue": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSearchFieldLabel": "Buscar letras…",
+  "lyricsSearchEmptyPrompt": "Digite o nome de uma música ou de um artista para encontrar letras.",
+  "lyricsSearchNoResults": "Nenhuma letra encontrada para “{query}”",
+  "@lyricsSearchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsSearchApplied": "Letra aplicada",
+  "lyricsSearchFetchFailed": "Não foi possível obter a letra",
   "lyricsSearchPreview": "Prévia",
-  "lyricsSearchPreviewTooltip": "Ver letras",
-  "lyricsSearchSynced": "SINCRONIZADO",
-  "lyricsSearchPreviewLoadFailed": "Falha na prévia.",
-  "lyricsSearchApplyAction": "Aplicar letras",
-  "lyricsSettingsSearchTitle": "Busca personalizada",
-  "lyricsSettingsSearchSubtitle": "Encontrar alternativas",
+  "lyricsSearchPreviewTooltip": "Ver prévia da letra",
+  "lyricsSearchSynced": "Sincronizada",
+  "lyricsSearchPreviewLoadFailed": "Não foi possível carregar a letra.",
+  "lyricsSearchApplyAction": "Aplicar letra",
+  "lyricsSettingsSearchTitle": "Buscar outra letra",
+  "lyricsSettingsSearchSubtitle": "Encontre outras versões online",
   "lyricsSettingsSyncTitle": "Ajustar sincronização",
-  "lyricsSettingsSyncSubtitle": "Corrigir atrasos",
-  "lyricsSettingsSaveTitle": "Salvar",
-  "lyricsSettingsSaveSubtitle": "Salvar no dispositivo",
-  "lyricsSettingsDeleteTitle": "Excluir salvas",
-  "lyricsSettingsDeleteSubtitle": "Eliminar letras offline",
-  "lyricsSyncTapToReset": "Resetar",
-
+  "lyricsSettingsSyncSubtitle": "Ajuste letras que aparecem antes ou depois do áudio",
+  "lyricsSettingsSaveTitle": "Salvar offline",
+  "lyricsSettingsSaveSubtitle": "Armazene esta letra no dispositivo",
+  "lyricsSettingsDeleteTitle": "Excluir letra salva",
+  "lyricsSettingsDeleteSubtitle": "Remova a letra armazenada offline",
+  "lyricsSyncTapToReset": "Toque para redefinir",
   "upNextTitle": "A seguir",
-  "upNextItemsInQueue": "{count, plural, =1{1 elemento} other{{count} elementos em fila}}",
-  "@upNextItemsInQueue": { "placeholders": { "count": { "type": "int" } } },
-  "upNextAutoPlay": "Auto",
-
+  "upNextItemsInQueue": "{count, plural, one{{count} item na fila} other{{count} itens na fila}}",
+  "@upNextItemsInQueue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tooltipCopyToClipboard": "Copiar",
-  "snackbarCopiedToClipboard": "Copiado para o portapapeles",
-  "tooltipSongInfo": "Informações",
-  "snackbarCannotDeletePlayingSong": "Impossível excluir o que está tocando",
-
-  "playerLoopOff": "Desligado",
-  "playerLoopOne": "Um",
-  "playerLoopAll": "Tudo",
-
-  "snackbarOpeningAlbumPage": "Abrindo página do álbum.",
-
-  "updateAvailableBody": "Nova versão do Beats!\n\nVersão: {ver}+{build}",
-  "@updateAvailableBody": { "placeholders": { "ver": { "type": "String" }, "build": { "type": "String" } } },
-
-  "pluginSnackbarInstalled": "Plugin \"{id}\" instalado!",
-  "@pluginSnackbarInstalled": { "placeholders": { "id": { "type": "String" } } },
-  "pluginSnackbarLoaded": "Plugin \"{id}\" carregado",
-  "@pluginSnackbarLoaded": { "placeholders": { "id": { "type": "String" } } },
-  "pluginSnackbarDeleted": "Plugin \"{id}\" excluído",
-  "@pluginSnackbarDeleted": { "placeholders": { "id": { "type": "String" } } },
-
-  "pluginBootstrapTitle": "Preparando Beats",
-  "pluginBootstrapProgress": "Motor de plugins... {percent}%",
-  "@pluginBootstrapProgress": { "placeholders": { "percent": { "type": "int" } } },
-  "pluginBootstrapHint": "Apenas na primeira vez.",
-  "pluginBootstrapErrorTitle": "Conexão lenta",
-  "pluginBootstrapErrorBody": "Alguns falharam. Reintentaremos depois.",
-  "pluginBootstrapContinue": "Continuar"
+  "snackbarCopiedToClipboard": "Copiado",
+  "tooltipSongInfo": "Informações da música",
+  "snackbarCannotDeletePlayingSong": "Não é possível excluir a música em reprodução",
+  "playerLoopOff": "Desativado",
+  "playerLoopOne": "Repetir uma",
+  "playerLoopAll": "Repetir tudo",
+  "snackbarOpeningAlbumPage": "Abrindo a página original do álbum.",
+  "updateAvailableBody": "Uma nova versão do Bloomee está disponível.\n\nVersão: {ver}+{build}",
+  "@updateAvailableBody": {
+    "placeholders": {
+      "ver": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginSnackbarInstalled": "Plugin “{id}” instalado",
+  "@pluginSnackbarInstalled": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginSnackbarDeleted": "Plugin “{id}” excluído",
+  "@pluginSnackbarDeleted": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginBootstrapTitle": "Configurando o Bloomee",
+  "pluginBootstrapProgress": "Configurando o novo mecanismo de plugins… {percent}%",
+  "@pluginBootstrapProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginBootstrapHint": "Isso só precisa ser feito uma vez.",
+  "backupSave": "Salvar backup em JSON",
+  "backupShare": "Compartilhar backup JSON",
+  "backupPortableDetails": "Inclui playlists, favoritos, coleções salvas, históricos e preferências transferíveis. Não inclui arquivos de áudio, contas nem pastas do dispositivo.",
+  "backupHistories": "Históricos de reprodução e busca",
+  "backupPreferences": "Preferências transferíveis",
+  "backupNewCopy": "Importar como novas playlists",
+  "backupMerge": "Mesclar com os dados existentes",
+  "backupReplace": "Substituir seções selecionadas",
+  "backupMergeDetails": "As faixas, os metadados e as preferências existentes são preservados. As faixas ausentes são adicionadas ao final, na ordem do arquivo. Os favoritos são mesclados.",
+  "backupReplaceWarning": "As seções selecionadas serão substituídas. Se a biblioteca estiver selecionada, as playlists e os favoritos existentes também serão substituídos. As seções não selecionadas e os arquivos do dispositivo serão preservados. Uma cópia de recuperação privada será criada antes da operação.",
+  "backupAutoDetails": "Mantém sete cópias de recuperação privadas. A verificação ocorre ao abrir o aplicativo, com no máximo uma cópia a cada 24 horas. Essas cópias são removidas ao desinstalar o aplicativo.",
+  "backupLocationDetails": "Escolha um destino ao salvar o backup. As cópias de recuperação privadas ficam dentro do aplicativo.",
+  "backupResetDetails": "Redefine todos os dados do banco de dados na próxima inicialização. Os arquivos de áudio baixados e os arquivos de plugins instalados permanecem no dispositivo. Uma cópia de recuperação privada é criada antes da operação.",
+  "backupResetPending": "Redefinição agendada. Feche e abra o Bloomee novamente para concluir.",
+  "backupPreviewCounts": "Playlists: {playlists} · Faixas: {tracks}",
+  "@backupPreviewCounts": {
+    "placeholders": {
+      "playlists": {
+        "type": "int"
+      },
+      "tracks": {
+        "type": "int"
+      }
+    }
+  },
+  "backupImportResult": "Importação concluída. Playlists criadas: {playlists}; entradas de faixas adicionadas: {tracks}; registros de histórico adicionados: {history}; preferências aplicadas: {settings}.",
+  "@backupImportResult": {
+    "placeholders": {
+      "playlists": {
+        "type": "int"
+      },
+      "tracks": {
+        "type": "int"
+      },
+      "history": {
+        "type": "int"
+      },
+      "settings": {
+        "type": "int"
+      }
+    }
+  },
+  "backupRefreshFailed": "Os dados foram importados. Feche e abra o Bloomee novamente para atualizar todas as preferências.",
+  "backupRecoveryCopies": "Cópias de recuperação",
+  "backupNoRecoveryCopies": "Nenhuma cópia de recuperação ainda.",
+  "backupRecoveryAutomatic": "Backup automático",
+  "backupRecoveryBeforeImport": "Antes de uma importação",
+  "backupRecoveryBeforeReset": "Antes de uma redefinição",
+  "backupCancelReset": "Cancelar redefinição",
+  "libraryRecoveryTitle": "Recuperar biblioteca ausente",
+  "libraryRecoverySubtitle": "Busque playlists e registros de downloads preservados de versões anteriores.",
+  "libraryRecoveryChooseSource": "Escolha um banco de dados preservado para analisar. Sua biblioteca atual e os arquivos originais serão mantidos.",
+  "libraryRecoveryNoSources": "Nenhum banco de dados preservado foi encontrado. Os arquivos de áudio, por si só, não permitem recuperar as playlists às quais pertenciam.",
+  "libraryRecoverySummary": "Foram encontradas {tracks} faixas, {playlists} playlists e {downloads} registros de downloads. Arquivos indisponíveis no momento: {unavailable}; seus registros serão preservados.",
+  "@libraryRecoverySummary": {
+    "placeholders": {
+      "tracks": {
+        "type": "int"
+      },
+      "playlists": {
+        "type": "int"
+      },
+      "downloads": {
+        "type": "int"
+      },
+      "unavailable": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryRecoveryWarnings": "Referências de playlists danificadas que não puderam ser reconstruídas desta cópia: {broken}.",
+  "@libraryRecoveryWarnings": {
+    "placeholders": {
+      "broken": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryRecoveryMergeDetails": "A recuperação adiciona faixas, entradas de playlists e registros de downloads ausentes. As playlists, as associações de arquivos e as configurações existentes são preservadas. Uma cópia de recuperação é criada primeiro. Repita com outra cópia preservada se ela contiver mais dados da sua biblioteca.",
+  "libraryRecoveryMerge": "Mesclar biblioteca recuperada",
+  "libraryRecoveryComplete": "Recuperação concluída. Entradas de playlists adicionadas: {entries}; registros de downloads adicionados: {downloads}.",
+  "@libraryRecoveryComplete": {
+    "placeholders": {
+      "entries": {
+        "type": "int"
+      },
+      "downloads": {
+        "type": "int"
+      }
+    }
+  },
+  "backupStartupFailed": "Não foi possível iniciar o Bloomee",
+  "backupStartupFailedDetails": "A inicialização foi interrompida sem reparar ou substituir seu banco de dados automaticamente. Feche o aplicativo e tente novamente. Preserve os dados do aplicativo ao relatar este erro.",
+  "lyricsTitle": "Letra",
+  "lyricsEnterFullscreen": "Letra em tela cheia",
+  "lyricsExitFullscreen": "Sair da tela cheia",
+  "lyricsFollowPlayback": "Acompanhar reprodução",
+  "lyricsTimingEarlier": "Mostrar antes",
+  "lyricsTimingLater": "Mostrar depois",
+  "lyricsTimingSave": "Salvar sincronização",
+  "lyricsSaved": "Letra salva.",
+  "lyricsSaveFailed": "Não foi possível salvar a letra. Tente novamente.",
+  "lyricsDeleteFailed": "Não foi possível excluir a letra salva. Tente novamente.",
+  "artistTopSongs": "Músicas populares",
+  "artistLoadFailed": "Não foi possível carregar o artista",
+  "artistNoTopSongs": "Nenhuma música popular disponível",
+  "artistNoAlbums": "Nenhum álbum disponível",
+  "snackbarOpeningArtistPage": "Abrindo a página original do artista.",
+  "snackbarOpeningPlaylistPage": "Abrindo a página original da playlist.",
+  "playlistSaveOrderFailed": "Não foi possível salvar a ordem da playlist. Tente novamente.",
+  "playlistReorderTracksHint": "Segure e arraste a alça para reordenar as faixas",
+  "playlistTrackCountLabel": "Número de faixas",
+  "playlistDescription": "Descrição",
+  "playlistOriginalUrl": "Link original",
+  "searchSearching": "Buscando…",
+  "searchSuggestions": "Sugestões",
+  "searchTopResults": "Principais resultados",
+  "changelogEmpty": "Nenhuma informação de alterações disponível.",
+  "changelogTitle": "Novidades",
+  "changelogLatest": "Mais recente",
+  "changelogNext": "Próxima versão",
+  "changelogVersion": "Versão {version}",
+  "@changelogVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginBootstrapIncomplete": "Configuração incompleta",
+  "pluginBootstrapRetryBody": "Não foi possível instalar alguns plugins agora. Tente novamente para concluir a configuração.",
+  "pluginBootstrapInternetTitle": "Conexão com a internet necessária",
+  "pluginBootstrapInternetBody": "O Bloomee precisa de uma conexão com a internet uma vez para detectar seu país e configurar o mecanismo de plugins.",
+  "buttonExit": "Sair",
+  "eqSource": "Fonte do equalizador",
+  "eqBuiltin": "Equalizador do aplicativo",
+  "eqBuiltinSubtitle": "Equalizador de 10 bandas",
+  "eqDevice": "Equalizador do dispositivo",
+  "eqDeviceSubtitle": "Sistema / Dolby Atmos",
+  "eqDeviceHint": "O equalizador do aplicativo está desativado. Configure o equalizador do dispositivo nas configurações de som do aparelho.",
+  "eqPresets": "Predefinições",
+  "eqCustomCurve": "Curva personalizada",
+  "shortcutMuted": "Sem som",
+  "shortcutUnmuted": "Som ativado",
+  "shortcutShuffleOn": "Aleatório ativado",
+  "shortcutShuffleOff": "Aleatório desativado",
+  "shortcutRepeatOff": "Repetição desativada",
+  "shortcutLiked": "Adicionada aos favoritos",
+  "shortcutUnliked": "Removida dos favoritos",
+  "downloadFolderSelectFailed": "Não foi possível selecionar a pasta de downloads: {error}",
+  "@downloadFolderSelectFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutVersionUnavailable": "Versão indisponível",
+  "backupNewCopyDetails": "Cria playlists separadas e mescla os favoritos. As playlists existentes são preservadas. Os históricos e as preferências selecionados também são importados.",
+  "changelogCurrent": "Atual",
+  "backupLibrary": "Biblioteca (playlists, favoritos e coleções salvas)",
+  "eqPresetFlat": "Neutro",
+  "eqPresetAcoustic": "Acústico",
+  "eqPresetBassBoost": "Reforço de graves",
+  "eqPresetBassReducer": "Redução de graves",
+  "eqPresetClassical": "Clássica",
+  "eqPresetDance": "Dance",
+  "eqPresetDeep": "Profundo",
+  "eqPresetEDM": "EDM",
+  "eqPresetElectronic": "Eletrônica",
+  "eqPresetHipHop": "Hip-hop",
+  "eqPresetJazz": "Jazz",
+  "eqPresetLatin": "Latina",
+  "eqPresetLive": "Ao vivo",
+  "eqPresetLounge": "Lounge",
+  "eqPresetMetal": "Metal",
+  "eqPresetPiano": "Piano",
+  "eqPresetPop": "Pop",
+  "eqPresetRB": "R&B",
+  "eqPresetRock": "Rock",
+  "eqPresetSmallSpeakers": "Caixas de som pequenas",
+  "eqPresetSpokenWord": "Voz falada",
+  "eqPresetTrebleBoost": "Reforço de agudos",
+  "eqPresetTrebleReducer": "Redução de agudos",
+  "eqPresetVocalBooster": "Reforço de voz",
+  "eqPresetCustom": "Personalizado"
 }

@@ -113,6 +113,9 @@ class LocalMusicService {
     final albums = await PhotoManager.getAssetPathList(
       type: RequestType.audio,
       onlyAll: true,
+      // Pre-Android 10 MediaStore appends LIMIT to sortOrder. An empty
+      // order produces invalid SQL ("ORDER BY LIMIT ...") on those devices.
+      filterOption: FilterOptionGroup(orders: const [OrderOption()]),
     );
     if (albums.isEmpty) return [];
 

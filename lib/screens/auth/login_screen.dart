@@ -116,12 +116,19 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Spacer(),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const SizedBox(height: 20),
                   
                   // Logo
                    Hero(
@@ -161,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   
-                  const Spacer(),
+                  const SizedBox(height: 32),
 
                   // Terms and Conditions Checkbox
                   Padding(
@@ -326,6 +333,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
+        );
+      },
+    ),
+  ),
         ],
       ),
     );

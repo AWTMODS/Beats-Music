@@ -373,51 +373,105 @@ class ContentBloc extends Bloc<ContentEvent, ContentState> {
 
     try {
       final localId = localIdOf(event.artistId) ?? event.artistId;
-      final response = await _pluginService.execute(
-        pluginId: event.pluginId,
-        request: PluginRequest.contentResolver(
-          ContentResolverCommand.getArtistDetails(id: localId),
-        ),
-      );
+      if (localId.isNotEmpty) {
+        final response = await _pluginService.execute(
+          pluginId: event.pluginId,
+          request: PluginRequest.contentResolver(
+            ContentResolverCommand.getArtistDetails(id: localId),
+          ),
+        );
 
-      response.when(
-        artistDetails: (details) {
+        var loaded = false;
+        response.when(
+          artistDetails: (details) {
+            loaded = true;
+            emit(state.copyWith(
+              artistDetailStatus: DetailStatus.loaded,
+              artistDetails: details,
+            ));
+          },
+          trackDetails: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          search: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          albumDetails: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          playlistDetails: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          streams: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          moreTracks: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          moreAlbums: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          homeSections: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          loadMoreItems: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          charts: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          chartDetails: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          segments: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          lyricsResult: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          lyricsSearchResults: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          lyricsById: (_, __) => _unexpectedResponse(emit, 'artistDetails'),
+          suggestions: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          canHandle: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          collectionInfo: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          importTracks: (_) => _unexpectedResponse(emit, 'artistDetails'),
+          ack: () => _unexpectedResponse(emit, 'artistDetails'),
+        );
+        if (loaded) return;
+      }
+    } catch (e) {
+      log('Primary artist details failed, attempting search fallback: $e',
+          name: 'ContentBloc');
+    }
+
+    // Fallback: If direct artist lookup failed (e.g. YT browse status 400), search tracks by artist name
+    if (event.artistName != null && event.artistName!.trim().isNotEmpty) {
+      try {
+        final searchResponse = await _pluginService.execute(
+          pluginId: event.pluginId,
+          request: PluginRequest.contentResolver(
+            ContentResolverCommand.search(
+              query: event.artistName!,
+              filter: ContentSearchFilter.track,
+            ),
+          ),
+        );
+
+        final tracks = searchResponse.maybeWhen(
+          search: (result) {
+            final list = <Track>[];
+            for (final item in result.items) {
+              item.when(
+                track: (t) => list.add(t),
+                album: (_) {},
+                artist: (_) {},
+                playlist: (_) {},
+              );
+            }
+            return list;
+          },
+          orElse: () => <Track>[],
+        );
+
+        if (tracks.isNotEmpty) {
           emit(state.copyWith(
             artistDetailStatus: DetailStatus.loaded,
-            artistDetails: details,
+            artistDetails: ArtistDetails(
+              summary: ArtistSummary(
+                id: event.artistId,
+                name: event.artistName!,
+                thumbnail: tracks.first.thumbnail,
+              ),
+              topTracks: tracks,
+              albums: const PagedAlbums(items: []),
+              relatedArtists: const [],
+            ),
           ));
-        },
-        trackDetails: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        search: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        albumDetails: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        playlistDetails: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        streams: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        moreTracks: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        moreAlbums: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        homeSections: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        loadMoreItems: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        charts: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        chartDetails: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        segments: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        lyricsResult: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        lyricsSearchResults: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        lyricsById: (_, __) => _unexpectedResponse(emit, 'artistDetails'),
-        suggestions: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        canHandle: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        collectionInfo: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        importTracks: (_) => _unexpectedResponse(emit, 'artistDetails'),
-        ack: () => _unexpectedResponse(emit, 'artistDetails'),
-      );
-    } on PluginException catch (e) {
-      _handlePluginError(emit, e, null, artistDetailStatus: DetailStatus.error);
-    } catch (e, stack) {
-      log('Artist details error',
-          error: e, stackTrace: stack, name: 'ContentBloc');
-      emit(state.copyWith(
-        artistDetailStatus: DetailStatus.error,
-        error: 'Failed to load artist: $e',
-      ));
+          return;
+        }
+      } catch (fallbackError) {
+        log('Artist fallback search error: $fallbackError', name: 'ContentBloc');
+      }
     }
+
+    emit(state.copyWith(
+      artistDetailStatus: DetailStatus.error,
+      error: 'Artist details not available',
+    ));
   }
 
   Future<void> _onLoadMoreArtistAlbums(

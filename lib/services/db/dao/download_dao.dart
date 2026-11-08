@@ -7,6 +7,8 @@ import 'package:beats_music/services/db/dao/track_dao.dart';
 import 'package:beats_music/services/db/global_db.dart';
 import 'package:beats_music/src/rust/api/plugin/models.dart';
 import 'package:isar_community/isar.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 /// DAO for tracking downloaded media files — accepts domain [Track] models.
 ///
@@ -16,10 +18,13 @@ class DownloadDAO {
   final Future<Isar> _db;
   final TrackDAO _trackDAO;
   final PlaylistDAO _playlistDAO;
+  final DownloadFileResolver _files;
 
   static const downloadsPlaylistName = '_DOWNLOADS';
 
-  const DownloadDAO(this._db, this._trackDAO, this._playlistDAO);
+  DownloadDAO(this._db, this._trackDAO, this._playlistDAO,
+      {DownloadFileResolver? files})
+      : _files = files ?? DownloadFileResolver();
 
   // -- Write ------------------------------------------------------------------
 
@@ -86,7 +91,7 @@ class DownloadDAO {
 
     if (deleteFile) {
       try {
-        final file = File('${record.filePath}/${record.fileName}');
+        final file = File(p.join(record.filePath, record.fileName));
         if (file.existsSync()) {
           file.deleteSync();
           log('Deleted file: ${record.fileName}', name: 'DownloadDAO');
@@ -151,14 +156,32 @@ class DownloadDAO {
     final record =
         await isar.downloadDBs.filter().mediaIdEqualTo(mediaId).findFirst();
     if (record == null) return null;
-    final file = File('${record.filePath}/${record.fileName}');
-    if (!file.existsSync()) return null;
-    return record;
+    return _resolveRecord(isar, record);
+  }
+
+  Future<DownloadDB?> _resolveRecord(Isar isar, DownloadDB record) async {
+    final resolved = await _files.resolve(record.filePath, record.fileName);
+    if (resolved == null) return null;
+    final directory = p.dirname(resolved);
+    if (directory == record.filePath) return record;
+    return isar.writeTxnSync(() {
+      final current = isar.downloadDBs.getSync(record.id);
+      if (current == null) return null;
+      if (current.filePath != record.filePath ||
+          current.fileName != record.fileName ||
+          current.mediaId != record.mediaId ||
+          current.lastDownloaded != record.lastDownloaded) {
+        return null;
+      }
+      current.filePath = directory;
+      isar.downloadDBs.putSync(current);
+      return current;
+    });
   }
 
   /// Return all [DownloadDB] records whose files still exist on disk.
   ///
-  /// Stale records (missing files) are cleaned up asynchronously.
+  /// Missing/inaccessible files never cause record or playlist deletion.
   Future<List<DownloadDB>> getValidDownloads() async {
     final isar = await _db;
     final all = await isar.downloadDBs.where().findAll();
@@ -172,21 +195,12 @@ class DownloadDAO {
     });
 
     final valid = <DownloadDB>[];
-    final stale = <DownloadDB>[];
-
-    for (final record in all) {
-      if (File('${record.filePath}/${record.fileName}').existsSync()) {
-        valid.add(record);
-      } else {
-        stale.add(record);
-      }
-    }
-
-    // Clean up stale records in the background.
-    if (stale.isNotEmpty) {
-      for (final s in stale) {
-        removeDownload(s.mediaId, deleteFile: false);
-      }
+    for (var offset = 0; offset < all.length; offset += 32) {
+      final resolved = await Future.wait(all
+          .skip(offset)
+          .take(32)
+          .map((record) => _resolveRecord(isar, record)));
+      valid.addAll(resolved.whereType<DownloadDB>());
     }
 
     return valid;
@@ -198,28 +212,30 @@ class DownloadDAO {
   /// Excludes locally scanned tracks (they have their own playlist).
   /// Falls back to a lightweight track if track metadata is missing.
   Future<List<Track>> getValidDownloadedTracks() async {
-    final downloads = await getValidDownloads();
+    final downloads = (await getValidDownloads())
+        .where((record) => !isLocalMediaId(record.mediaId))
+        .toList();
+    if (downloads.isEmpty) return [];
     final result = <Track>[];
+    final mediaIds = downloads.map((d) => d.mediaId).toList();
+    final tracksList = await _trackDAO.getTracksByMediaIds(mediaIds);
+    final tracks = {for (final t in tracksList) t.id: t};
 
     for (final record in downloads) {
-      if (isLocalMediaId(record.mediaId)) continue;
-
-      final track = await _trackDAO.getTrackByMediaId(record.mediaId);
+      final track = tracks[record.mediaId];
       if (track != null) {
         result.add(track);
-        continue;
+      } else {
+        result.add(
+          Track(
+            id: record.mediaId,
+            title: record.fileName,
+            artists: const [],
+            thumbnail: const Artwork(url: '', layout: ImageLayout.square),
+            isExplicit: false,
+          ),
+        );
       }
-
-      // Fallback for legacy/missing rows; keep app stable.
-      result.add(
-        Track(
-          id: record.mediaId,
-          title: record.fileName,
-          artists: const [],
-          thumbnail: const Artwork(url: '', layout: ImageLayout.square),
-          isExplicit: false,
-        ),
-      );
     }
 
     return result;
@@ -237,12 +253,86 @@ class DownloadDAO {
     await isar.writeTxn(() => isar.downloadDBs.put(record));
   }
 
-  // -- Watchers --------------------------------------------------------------
+  // -- Reactive Streams -------------------------------------------------------
 
+  /// Watch for changes to the [DownloadDB] collection.
   Future<Stream<void>> watchDownloads() async {
     final isar = await _db;
     return isar.downloadDBs.watchLazy(fireImmediately: true);
   }
 }
 
+/// Resolves exact paths and known app-container relocations. Never searches by
+/// basename: different songs can have the same filename.
+class DownloadFileResolver {
+  final String? supportPath;
+  final String? documentsPath;
+  Future<List<String?>>? _roots;
+  DownloadFileResolver({this.supportPath, this.documentsPath});
 
+  Future<List<String?>> _loadRoots() async {
+    try {
+      return [
+        supportPath ?? (await getApplicationSupportDirectory()).path,
+        documentsPath ?? (await getApplicationDocumentsDirectory()).path
+      ];
+    } catch (_) {
+      return [supportPath, documentsPath];
+    }
+  }
+
+  Future<String?> resolve(String directory, String name) async {
+    if (name.isEmpty || p.basename(name) != name) return null;
+    if (directory.startsWith('file:')) {
+      try {
+        directory = Uri.parse(directory).toFilePath();
+      } catch (_) {
+        return null;
+      }
+    }
+    final candidates = <String>{
+      p.join(directory, name),
+      if (p.basename(directory) == name) directory
+    };
+    for (final path in candidates) {
+      if (await _exists(path)) return path;
+    }
+    final roots = await (_roots ??= _loadRoots());
+    final normalized =
+        (p.basename(directory) == name ? p.dirname(directory) : directory)
+            .replaceAll('\\', '/');
+    final android = RegExp(
+            r'^/data/(?:data|user(?:_de)?/\d+)/[^/]+/(files|app_flutter)(?:/|$)')
+        .firstMatch(normalized);
+    final apple = RegExp(
+            r'/Containers/Data/Application/[^/]+/(Documents|Library/Application Support)(?:/|$)')
+        .firstMatch(normalized);
+    final relocations = <(String, String?)>[
+      if (android != null)
+        (
+          normalized.substring(android.end),
+          android.group(1) == 'files' ? roots[0] : roots[1]
+        ),
+      if (apple != null)
+        (
+          normalized.substring(apple.end),
+          apple.group(1) == 'Documents' ? roots[1] : roots[0]
+        ),
+    ];
+    for (final (suffix, root) in relocations) {
+      if (root == null) continue;
+      final moved = p.normalize(p.join(root, suffix, name));
+      if (!p.isWithin(root, moved)) continue;
+      if (await _exists(moved)) return moved;
+    }
+    return null;
+  }
+
+  Future<bool> _exists(String path) async {
+    try {
+      return await File(path).exists();
+    } on FileSystemException {
+      return false;
+    }
+  }
+}

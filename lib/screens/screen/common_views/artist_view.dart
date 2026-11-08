@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 
 class ArtistView extends StatefulWidget {
   final ArtistSummary artist;
@@ -54,6 +55,7 @@ class _ArtistViewState extends State<ArtistView> {
       _contentBloc.add(LoadArtistDetails(
         pluginId: widget.pluginId,
         artistId: widget.artist.id,
+        artistName: widget.artist.name,
       ));
       _checkSavedState();
     });
@@ -320,9 +322,42 @@ class _ArtistViewState extends State<ArtistView> {
       builder: (context, state) {
         if (state.artistDetailStatus == DetailStatus.error) {
           return Center(
-            child: Text(
-              state.error ?? 'Failed to load artist',
-              style: const TextStyle(color: Default_Theme.primaryColor1),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    MingCute.user_search_line,
+                    size: 48,
+                    color: Colors.white38,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    (state.error != null && !state.error!.contains('{'))
+                        ? state.error!
+                        : 'Artist details unavailable',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Default_Theme.primaryColor1,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.push('/Search', extra: widget.artist.name);
+                    },
+                    icon: const Icon(MingCute.search_2_line, size: 18),
+                    label: Text('Search "${widget.artist.name}"'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Default_Theme.accentColor2,
+                      foregroundColor: Default_Theme.themeColor,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }

@@ -216,25 +216,25 @@ class PlaylistDAO {
     final isar = await _db;
     final trackIds = await _trackDAO.upsertTracks(tracks);
 
+    final playlist = await isar.playlistDBs.get(playlistId);
+    if (playlist == null) return;
+
+    final maxPosEntry = await isar.playlistEntryDBs
+        .filter()
+        .playlistIdEqualTo(playlistId)
+        .sortByPositionDesc()
+        .findFirst();
+    int nextPos = (maxPosEntry?.position ?? -1) + 1;
+
+    final existingEntries = await isar.playlistEntryDBs
+        .filter()
+        .playlistIdEqualTo(playlistId)
+        .findAll();
+    await Future.wait(existingEntries.map((e) => e.track.load()));
+    final existingTrackIds =
+        existingEntries.map((e) => e.track.value?.id).toSet();
+
     await isar.writeTxn(() async {
-      final playlist = await isar.playlistDBs.get(playlistId);
-      if (playlist == null) return;
-
-      final maxPosEntry = await isar.playlistEntryDBs
-          .filter()
-          .playlistIdEqualTo(playlistId)
-          .sortByPositionDesc()
-          .findFirst();
-      int nextPos = (maxPosEntry?.position ?? -1) + 1;
-
-      final existingEntries = await isar.playlistEntryDBs
-          .filter()
-          .playlistIdEqualTo(playlistId)
-          .findAll();
-      await Future.wait(existingEntries.map((e) => e.track.load()));
-      final existingTrackIds =
-          existingEntries.map((e) => e.track.value?.id).toSet();
-
       final newEntries = <PlaylistEntryDB>[];
       for (final trackId in trackIds) {
         if (existingTrackIds.contains(trackId)) continue;

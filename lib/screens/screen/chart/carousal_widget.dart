@@ -63,28 +63,8 @@ class _CaraouselWidgetState extends State<CaraouselWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ChartBloc, ChartState>(
-      bloc: _chartBloc,
-      listenWhen: (previous, current) =>
-          previous.chartsStatus != ChartStatus.loaded &&
-          current.chartsStatus == ChartStatus.loaded,
-      listener: (context, chartState) {
-        final pluginId = chartState.activePluginId;
-        if (pluginId == null || chartState.charts.isEmpty) return;
-        final settingsState = context.read<SettingsCubit>().state;
-        final visibleIds = chartState.charts
-            .where((c) => settingsState.chartMap[c.title] ?? true)
-            .map((c) => c.id)
-            .toSet();
-        if (visibleIds.isNotEmpty) {
-          _chartBloc.add(PrefetchAllChartDetails(
-            pluginId: pluginId,
-            chartIds: visibleIds,
-          ));
-        }
-      },
-      child: BlocBuilder<PluginBloc, PluginState>(
-        builder: (context, pluginState) {
+    return BlocBuilder<PluginBloc, PluginState>(
+      builder: (context, pluginState) {
           if (pluginState.loadedChartProviders.isEmpty) {
             _chartBloc.add(const ClearCharts());
           } else if (_chartBloc.state.chartsStatus == ChartStatus.initial) {
@@ -158,8 +138,7 @@ class _CaraouselWidgetState extends State<CaraouselWidget> {
             },
           );
         },
-      ),
-    );
+      );
   }
 }
 

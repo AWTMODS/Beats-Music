@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:beats_music/core/events/global_event_bus.dart';
@@ -32,6 +33,7 @@ class ResolvedMediaSource {
 /// 1. Local downloaded file (offline).
 /// 2. Plugin system — asks the owning plugin for stream URIs via [GetStreams].
 class MediaResolverService {
+  final Map<String, Future<ResolvedMediaSource>> _resolutions = {};
   final DownloadDAO _downloadDao;
   final SettingsDAO _settingsDao;
   final PluginService _pluginService;
@@ -56,7 +58,26 @@ class MediaResolverService {
   }
 
   /// Resolve [track] into a playable URI.
-  Future<ResolvedMediaSource> resolve(Track track) async {
+  Future<ResolvedMediaSource> resolve(Track track) {
+    final existing = _resolutions[track.id];
+    if (existing != null) return existing;
+    // CancelableOperation/timeout only stop the Dart waiter; the WASM call
+    // continues. Share that work with preload/retry instead of queuing a
+    // second extraction behind the same plugin's mutex.
+    final pending = _resolve(track);
+    _resolutions[track.id] = pending;
+    void clear() {
+      if (identical(_resolutions[track.id], pending)) {
+        _resolutions.remove(track.id);
+      }
+    }
+
+    unawaited(pending.then<void>((_) => clear(),
+        onError: (Object error, StackTrace stack) => clear()));
+    return pending;
+  }
+
+  Future<ResolvedMediaSource> _resolve(Track track) async {
     // 1. Check for an offline/downloaded version.
     try {
       final down = await _downloadDao.getDownloadRecord(track.id);

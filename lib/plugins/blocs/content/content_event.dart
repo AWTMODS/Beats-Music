@@ -54,7 +54,12 @@ class LoadMoreAlbumTracks extends ContentEvent {
 class LoadArtistDetails extends ContentEvent {
   final String pluginId;
   final String artistId;
-  const LoadArtistDetails({required this.pluginId, required this.artistId});
+  final String? artistName;
+  const LoadArtistDetails({
+    required this.pluginId,
+    required this.artistId,
+    this.artistName,
+  });
 }
 
 /// Load more artist albums (pagination).

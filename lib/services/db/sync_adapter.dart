@@ -47,33 +47,36 @@ class SyncAdapter {
   /// Import playlists from cloud sync data
   static Future<void> importPlaylists(List<Map<String, dynamic>> playlistsData) async {
     for (var data in playlistsData) {
-      final name = data['playlistName'] as String;
+      final name = (data['playlistName'] ?? data['name'] ?? data['title'])?.toString();
+      if (name == null || name.trim().isEmpty) continue;
       if (DBProvider.standardPlaylists.contains(name)) continue;
 
       final playlistId = await _playlistDAO.createPlaylist(
         name,
-        thumbnail: data['artURL'] != null ? (ArtworkDB()..url = data['artURL']) : null,
-        description: data['description'],
-        subtitle: data['subtitle'],
+        thumbnail: data['artURL'] != null ? (ArtworkDB()..url = data['artURL'].toString()) : null,
+        description: data['description']?.toString(),
+        subtitle: data['subtitle']?.toString(),
       );
 
       if (playlistId != null) {
-        final songs = data['songs'] as List<dynamic>? ?? [];
-        List<Track> tracks = songs.map((s) {
+        final songs = (data['songs'] ?? data['tracks']) as List<dynamic>? ?? [];
+        List<Track> tracks = songs.whereType<Map>().map((s) {
+          final sMap = Map<String, dynamic>.from(s);
+          final rawId = (sMap['mediaID'] ?? sMap['mediaId'] ?? sMap['id'] ?? sMap['songId'])?.toString() ?? '';
           return Track(
-            id: _upgradeLegacyMediaId(s['mediaID']) ?? s['mediaID'],
-            title: s['title'] ?? '',
+            id: _upgradeLegacyMediaId(rawId) ?? rawId,
+            title: (sMap['title'] ?? sMap['songTitle'] ?? '')?.toString() ?? '',
             artists: [
                ArtistSummary(
                 id: 'unknown',
-                name: s['artist'] ?? 'Unknown Artist',
+                name: (sMap['artist'] ?? sMap['artistName'] ?? 'Unknown Artist')?.toString() ?? 'Unknown Artist',
               )
             ],
-            album: s['album'] != null ? AlbumSummary(id: 'unknown', title: s['album'], artists: []) : null,
-            thumbnail: Artwork(url: s['artURL'] ?? '', layout: ImageLayout.square),
+            album: sMap['album'] != null ? AlbumSummary(id: 'unknown', title: sMap['album'].toString(), artists: []) : null,
+            thumbnail: Artwork(url: (sMap['artURL'] ?? sMap['thumbnailUrl'] ?? '')?.toString() ?? '', layout: ImageLayout.square),
             isExplicit: false,
-            url: s['streamingURL'],
-            durationMs: s['duration'] != null ? BigInt.from(s['duration']) : null,
+            url: (sMap['streamingURL'] ?? sMap['permaURL'] ?? sMap['url'])?.toString(),
+            durationMs: sMap['duration'] != null ? BigInt.tryParse(sMap['duration'].toString()) : null,
           );
         }).toList();
 
@@ -101,18 +104,20 @@ class SyncAdapter {
   /// Import Liked Songs
   static Future<void> importLikedSongs(List<Map<String, dynamic>> likedSongs) async {
     for (var s in likedSongs) {
+      final rawId = (s['mediaID'] ?? s['mediaId'] ?? s['id'] ?? s['songId'])?.toString() ?? '';
+      if (rawId.isEmpty) continue;
       final track = Track(
-        id: _upgradeLegacyMediaId(s['mediaID']) ?? s['mediaID'],
-        title: s['title'] ?? '',
+        id: _upgradeLegacyMediaId(rawId) ?? rawId,
+        title: (s['title'] ?? s['songTitle'] ?? '')?.toString() ?? '',
         artists: [
           ArtistSummary(
             id: 'unknown',
-            name: s['artist'] ?? 'Unknown Artist',
+            name: (s['artist'] ?? s['artistName'] ?? 'Unknown Artist')?.toString() ?? 'Unknown Artist',
           )
         ],
-        thumbnail: Artwork(url: s['artURL'] ?? '', layout: ImageLayout.square),
+        thumbnail: Artwork(url: (s['artURL'] ?? s['thumbnailUrl'] ?? '')?.toString() ?? '', layout: ImageLayout.square),
         isExplicit: false,
-        url: s['permaURL'],
+        url: (s['permaURL'] ?? s['streamingURL'] ?? s['url'])?.toString(),
       );
       await _playlistDAO.setTrackLiked(track, true);
     }
@@ -134,16 +139,18 @@ class SyncAdapter {
   /// Import Recently Played
   static Future<void> importRecentlyPlayed(List<Map<String, dynamic>> recentlyPlayedData) async {
     for (var data in recentlyPlayedData) {
+      final rawId = (data['mediaID'] ?? data['mediaId'] ?? data['id'] ?? data['songId'])?.toString() ?? '';
+      if (rawId.isEmpty) continue;
       final track = Track(
-        id: _upgradeLegacyMediaId(data['mediaID']) ?? data['mediaID'],
-        title: data['title'] ?? '',
+        id: _upgradeLegacyMediaId(rawId) ?? rawId,
+        title: (data['title'] ?? data['songTitle'] ?? '')?.toString() ?? '',
         artists: [
           ArtistSummary(
             id: 'unknown',
-            name: data['artist'] ?? 'Unknown Artist',
+            name: (data['artist'] ?? data['artistName'] ?? 'Unknown Artist')?.toString() ?? 'Unknown Artist',
           )
         ],
-        thumbnail: Artwork(url: data['artURL'] ?? '', layout: ImageLayout.square),
+        thumbnail: Artwork(url: (data['artURL'] ?? data['thumbnailUrl'] ?? '')?.toString() ?? '', layout: ImageLayout.square),
         isExplicit: false,
       );
       await _historyDAO.recordPlay(track);

@@ -9,6 +9,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:beats_music/l10n/app_localizations.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
+import 'dart:math';
+import 'package:beats_music/screens/widgets/spotify_lyrics_card.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../blocs/media_player/beats_player_cubit.dart';
 
@@ -139,6 +141,7 @@ class _AudioPlayerViewState extends State<AudioPlayerView>
                       UpNextPanel(
                         peekHeight: 60.0,
                         parentHeight: constraints.maxHeight,
+                        canBeHidden: true,
                         controller: _upNextPanelController,
                       ),
                     ],
@@ -197,52 +200,73 @@ class _PlayerUI extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Positioned.fill(
-          child: AnimatedBuilder(
-            animation: tabController.animation!,
-            builder: (context, child) {
-              return Opacity(
-                opacity: (1 - tabController.animation!.value),
-                child: child,
-              );
-            },
-            child: const AmbientImgShadowWidget(),
-          ),
-        ),
-        SafeArea(
-          bottom: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              const SizedBox(height: 60), // Space for AppBar
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final screenHeight = constraints.maxHeight;
+        final albumArtSize = (screenWidth - 48).clamp(
+          200.0,
+          min<double>((screenWidth - 48).toDouble(), (screenHeight * 0.40).toDouble()),
+        ).toDouble();
 
-              // EXPANDED allows artwork to claim 100% of available space securely
-              const Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: CoverImageVolSlider(),
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: tabController.animation!,
+                builder: (context, child) {
+                  return Opacity(
+                    opacity: (1 - tabController.animation!.value),
+                    child: child,
+                  );
+                },
+                child: const AmbientImgShadowWidget(),
+              ),
+            ),
+            SafeArea(
+              bottom: false,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 60), // Space for AppBar
+
+                    // Album artwork
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 6),
+                      child: SizedBox(
+                        width: albumArtSize,
+                        height: albumArtSize,
+                        child: const CoverImageVolSlider(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: PlayerCtrlWidgets(
+                        musicPlayer: musicPlayer,
+                        upNextController: upNextController,
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Spotify-style synchronized lyrics preview card
+                    const SpotifyLyricsPreviewCard(),
+
+                    const SizedBox(height: 36),
+                  ],
                 ),
               ),
-
-              const SizedBox(height: 15),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: PlayerCtrlWidgets(
-                  musicPlayer: musicPlayer,
-                  upNextController: upNextController,
-                ),
-              ),
-
-              // Reserve exact space for the grounded UpNextPanel so buttons are never hidden
-              const SizedBox(height: 80),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 }

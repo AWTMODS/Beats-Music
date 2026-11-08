@@ -74,8 +74,8 @@ class NotificationManager {
       debugPrint('NotificationManager: Error checking launch details: $e');
     }
 
-    // 2. Init Firebase Remote Config
-    await _setupRemoteConfig();
+    // 2. Init Firebase Remote Config in background so it does not block app startup
+    unawaited(_setupRemoteConfig());
 
     _isInitialized = true;
   }
@@ -93,7 +93,7 @@ class NotificationManager {
 
       // Fetch and Activate
       await remoteConfig.setConfigSettings(RemoteConfigSettings(
-        fetchTimeout: const Duration(minutes: 1),
+        fetchTimeout: const Duration(seconds: 10),
         minimumFetchInterval: const Duration(hours: 1),
       ));
       

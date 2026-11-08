@@ -7,6 +7,9 @@
 /// before [runApp] so that registered services are available at widget-tree build time.
 library service_locator;
 
+import 'package:beats_music/repository/backup/backup_repository.dart';
+import 'package:beats_music/services/backup/backup_files.dart';
+import 'package:beats_music/services/db/dao/backup_dao.dart';
 import 'package:beats_music/services/cache/plugin_cache_repository.dart';
 import 'package:beats_music/services/cache/plugin_cache_store.dart';
 import 'package:beats_music/services/cache/plugin_cache_writer.dart';
@@ -30,6 +33,8 @@ class ServiceLocator {
   ServiceLocator._();
 
   static bool _initialized = false;
+  static late final BackupRepository backupRepository;
+  static final BackupFiles backupFiles = BackupFiles();
 
   // ── Plugin System Singletons ─────────────────────────────────────────────
 
@@ -47,6 +52,11 @@ class ServiceLocator {
   static Future<void> setup() async {
     if (_initialized) return;
     _initialized = true;
+    backupRepository = BackupRepository(
+        dao: BackupDAO(DBProvider.db),
+        database: DBProvider.db,
+        supportPath: DBProvider.appSuppDir,
+        documentsPath: DBProvider.appDocDir);
 
     // ── Plugin system ──────────────────────────────────────────────────────
 

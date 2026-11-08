@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io' as io;
 
@@ -36,8 +37,12 @@ Future<void> bootstrapApp() async {
   }
 
   _log('[BOOTSTRAP] 2. Getting application paths...');
-  final String appDocPath = (await getApplicationDocumentsDirectory()).path;
-  final String appSuppPath = (await getApplicationSupportDirectory()).path;
+  final paths = await Future.wait([
+    getApplicationDocumentsDirectory(),
+    getApplicationSupportDirectory(),
+  ]);
+  final String appDocPath = paths[0].path;
+  final String appSuppPath = paths[1].path;
   _log('[BOOTSTRAP] 2b. Paths: doc=$appDocPath, supp=$appSuppPath');
 
   _log('[BOOTSTRAP] 3. Initializing DBProvider...');
@@ -52,19 +57,21 @@ Future<void> bootstrapApp() async {
   await ServiceLocator.setup();
   _log('[BOOTSTRAP] 4b. ServiceLocator.setup() completed');
 
-  // Ensure hosted repositories are persisted in settings (idempotent).
+  // Ensure hosted repositories are persisted in settings (idempotent, background).
   // Missing URLs are added, existing ones are left untouched.
-  _log('[BOOTSTRAP] 5. Ensuring hosted repositories...');
-  try {
-    await PluginBootstrapService.ensureHostedRepositoriesPresent(
+  // We run this in the background so slow network requests never delay the splash screen.
+  _log('[BOOTSTRAP] 5. Ensuring hosted repositories in background...');
+  unawaited(
+    PluginBootstrapService.ensureHostedRepositoriesPresent(
       repositoryService: ServiceLocator.pluginRepositoryService,
-    );
-    _log('[BOOTSTRAP] 5b. ensureHostedRepositoriesPresent completed');
-  } catch (e) {
-    _log('[BOOTSTRAP] 5c. ensureHostedRepositoriesPresent error: $e');
-    log('Hosted repository reconciliation skipped',
-        error: e, name: 'Bootstrap');
-  }
+    ).then((_) {
+      _log('[BOOTSTRAP] 5b. ensureHostedRepositoriesPresent completed');
+    }).catchError((e) {
+      _log('[BOOTSTRAP] 5c. ensureHostedRepositoriesPresent error: $e');
+      log('Hosted repository reconciliation skipped',
+          error: e, name: 'Bootstrap');
+    }),
+  );
 
   // Initialize plugin system:
   //   Creates Rust PluginManager → connects event bus →
@@ -90,9 +97,9 @@ Future<void> bootstrapApp() async {
         await settingsDao.getSettingBool(SettingKeys.localMusicAutoScan) ??
             true;
     if (autoScan) {
-      LocalMusicService.create().scanAndPersist();
+      unawaited(LocalMusicService.create().scanAndPersist());
     }
-    _log('[BOOTSTRAP] 7b. Local music auto-scan done');
+    _log('[BOOTSTRAP] 7b. Local music auto-scan started');
   } catch (e) {
     _log('[BOOTSTRAP] 7c. Local music auto-scan error: $e');
     log('Local music auto-scan skipped', error: e, name: 'Bootstrap');

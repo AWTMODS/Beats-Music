@@ -222,26 +222,90 @@ class HorizontalNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return GNav(
-      gap: 10.0,
-      tabBackgroundColor: Default_Theme.successAccent.withValues(alpha: 0.15),
-      color: Colors.white70,
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      activeColor: Default_Theme.successAccent,
-      textStyle: Default_Theme.secondoryTextStyleMedium.merge(
-          const TextStyle(color: Default_Theme.successAccent, fontSize: 16)),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      tabMargin: const EdgeInsets.symmetric(vertical: 8),
-      backgroundColor: Colors.transparent,
-      tabs: [
-        GButton(icon: MingCute.home_4_fill, text: l10n.navHome),
-        GButton(icon: MingCute.search_2_fill, text: l10n.navSearch),
-        GButton(icon: MingCute.book_5_fill, text: l10n.navLibrary),
-        GButton(icon: MingCute.music_2_fill, text: l10n.navLocal),
-      ],
-      selectedIndex: navigationShell.currentIndex,
-      onTabChange: navigationShell.goBranch, // Clean tear-off
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final labels = [
+        l10n.navHome,
+        l10n.navSearch,
+        l10n.navLibrary,
+        l10n.navLocal,
+      ];
+      final icons = [
+        MingCute.home_4_fill,
+        MingCute.search_2_fill,
+        MingCute.book_5_fill,
+        MingCute.music_2_fill,
+      ];
+      final textStyle = Default_Theme.secondoryTextStyleMedium.merge(
+          const TextStyle(color: Default_Theme.successAccent, fontSize: 16));
+
+      final compact = constraints.maxWidth < 360 ||
+          labels.any((label) {
+            final painter = TextPainter(
+              text: TextSpan(text: label, style: textStyle),
+              textDirection: Directionality.of(context),
+              textScaler: MediaQuery.textScalerOf(context),
+            )..layout();
+            final fits =
+                painter.width + labels.length * 52 + 16 <= constraints.maxWidth;
+            painter.dispose();
+            return !fits;
+          });
+
+      const selectedLabelEndPadding = 8.0;
+      final labelWidth = (constraints.maxWidth -
+              labels.length * 48 -
+              7 -
+              selectedLabelEndPadding)
+          .clamp(1.0, double.infinity);
+
+      return GNav(
+        gap: compact ? 6.0 : 10.0,
+        tabBackgroundColor: Default_Theme.successAccent.withValues(alpha: 0.15),
+        color: Colors.white70,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        activeColor: Default_Theme.successAccent,
+        textStyle: textStyle,
+        padding: EdgeInsets.symmetric(
+            horizontal: compact ? 12 : 20, vertical: 12),
+        tabMargin: const EdgeInsets.symmetric(vertical: 8),
+        backgroundColor: Colors.transparent,
+        tabs: List.generate(labels.length, (index) {
+          final selected = index == navigationShell.currentIndex;
+          return GButton(
+            icon: icons[index],
+            text: compact ? '' : labels[index],
+            semanticLabel: labels[index],
+            leading: compact
+                ? Tooltip(
+                    message: labels[index],
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(icons[index],
+                          size: 24,
+                          color: selected
+                              ? Default_Theme.successAccent
+                              : Colors.white70),
+                      if (selected) ...[
+                        const SizedBox(width: 6),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: labelWidth),
+                          child: Text(
+                            labels[index],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textStyle,
+                          ),
+                        ),
+                        const SizedBox(width: selectedLabelEndPadding),
+                      ],
+                    ]),
+                  )
+                : null,
+          );
+        }),
+        selectedIndex: navigationShell.currentIndex,
+        onTabChange: navigationShell.goBranch,
+      );
+    });
   }
 }
 

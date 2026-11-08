@@ -184,7 +184,7 @@ class CloudSyncService {
     if (user == null || firestore == null) return;
 
     try {
-      debugPrint("CloudSync: Starting playlist download for user ${user.uid}...");
+      debugPrint("CloudSync: Starting playlist download for user ${user.uid} (${user.email})...");
 
       final doc = await firestore
           .collection('users')
@@ -194,20 +194,50 @@ class CloudSyncService {
           .get();
 
       if (!doc.exists || doc.data() == null) {
-        debugPrint("CloudSync: No cloud playlists found.");
+        debugPrint("CloudSync: No cloud playlists document found at users/${user.uid}/data/playlists.");
+        final coll = await firestore.collection('users').doc(user.uid).collection('playlists').get();
+        if (coll.docs.isNotEmpty) {
+          debugPrint("CloudSync: Found ${coll.docs.length} playlists in fallback collection users/${user.uid}/playlists for ${user.email}");
+          for (int i = 0; i < coll.docs.length; i++) {
+            final p = coll.docs[i].data();
+            final pName = p['playlistName'] ?? p['name'] ?? p['title'];
+            final songs = (p['songs'] ?? p['tracks']) as List?;
+            debugPrint("CloudSync: Fallback Playlist [$i]: '$pName' with ${songs?.length ?? 0} tracks");
+          }
+          final playlistsData = coll.docs.map((d) => d.data()).toList();
+          await SyncAdapter.importPlaylists(playlistsData);
+          debugPrint("CloudSync: Imported ${playlistsData.length} playlists from collection.");
+        }
         return;
       }
 
       final data = doc.data()!;
-      final playlists = data['playlists'] as List<dynamic>? ?? [];
+      debugPrint("CloudSync: Firestore doc keys for playlists: ${data.keys.toList()}");
+      final rawPlaylists = (data['playlists'] ?? data['userPlaylists'] ?? data['items'] ?? data['data']) as List<dynamic>? ?? [];
       
-      if (playlists.isEmpty) return;
+      debugPrint("CloudSync: Found ${rawPlaylists.length} playlists in Firestore for ${user.email} (UID: ${user.uid})");
+      for (int i = 0; i < rawPlaylists.length; i++) {
+        final p = rawPlaylists[i];
+        if (p is Map) {
+          final pName = p['playlistName'] ?? p['name'] ?? p['title'];
+          final songs = (p['songs'] ?? p['tracks']) as List?;
+          debugPrint("CloudSync: Playlist [$i]: '$pName' with ${songs?.length ?? 0} tracks");
+        }
+      }
 
-      // Convert and import via SyncAdapter
-      final playlistsData = playlists.cast<Map<String, dynamic>>();
+      if (rawPlaylists.isEmpty) {
+        debugPrint("CloudSync: Playlists document exists but list is empty.");
+        return;
+      }
+
+      // Convert and import via SyncAdapter safely
+      final playlistsData = rawPlaylists
+          .whereType<Map>()
+          .map((m) => Map<String, dynamic>.from(m))
+          .toList();
       await SyncAdapter.importPlaylists(playlistsData);
       
-      debugPrint("CloudSync: Downloaded ${playlistsData.length} playlists successfully.");
+      debugPrint("CloudSync: Downloaded and imported ${playlistsData.length} playlists successfully.");
 
     } catch (e, stackTrace) {
       debugPrint("CloudSync: Playlist download failed - $e");
@@ -225,6 +255,11 @@ class CloudSyncService {
       debugPrint("CloudSync: Uploading liked songs...");
       final likedSongs = await SyncAdapter.exportLikedSongs();
       
+      if (likedSongs.isEmpty) {
+        debugPrint("CloudSync: No liked songs to upload.");
+        return;
+      }
+
       await firestore
           .collection('users')
           .doc(user.uid)
@@ -248,7 +283,7 @@ class CloudSyncService {
     if (user == null || firestore == null) return;
 
     try {
-      debugPrint("CloudSync: Downloading liked songs...");
+      debugPrint("CloudSync: Downloading liked songs for user ${user.uid} (${user.email})...");
       final doc = await firestore
           .collection('users')
           .doc(user.uid)
@@ -257,12 +292,17 @@ class CloudSyncService {
           .get();
 
       if (doc.exists && doc.data() != null) {
-        final songs = (doc.data()!['songs'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+        final rawSongs = (doc.data()!['songs'] ?? doc.data()!['liked_songs']) as List<dynamic>? ?? [];
+        final songs = rawSongs
+            .whereType<Map>()
+            .map((m) => Map<String, dynamic>.from(m))
+            .toList();
         await SyncAdapter.importLikedSongs(songs);
         debugPrint("CloudSync: Downloaded ${songs.length} liked songs.");
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint("CloudSync: Liked songs download failed - $e");
+      debugPrint("StackTrace: $stackTrace");
     }
   }
 
@@ -299,7 +339,7 @@ class CloudSyncService {
     if (user == null || firestore == null) return;
 
     try {
-      debugPrint("CloudSync: Downloading recently played...");
+      debugPrint("CloudSync: Downloading recently played for user ${user.uid} (${user.email})...");
       final doc = await firestore
           .collection('users')
           .doc(user.uid)
@@ -308,12 +348,17 @@ class CloudSyncService {
           .get();
 
       if (doc.exists && doc.data() != null) {
-        final tracks = (doc.data()!['tracks'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+        final rawTracks = (doc.data()!['tracks'] ?? doc.data()!['recently_played']) as List<dynamic>? ?? [];
+        final tracks = rawTracks
+            .whereType<Map>()
+            .map((m) => Map<String, dynamic>.from(m))
+            .toList();
         await SyncAdapter.importRecentlyPlayed(tracks);
         debugPrint("CloudSync: Downloaded ${tracks.length} recently played tracks.");
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint("CloudSync: Recently played download failed - $e");
+      debugPrint("StackTrace: $stackTrace");
     }
   }
 
@@ -350,7 +395,7 @@ class CloudSyncService {
     if (user == null || firestore == null) return;
 
     try {
-      debugPrint("CloudSync: Downloading downloads list...");
+      debugPrint("CloudSync: Downloading downloads list for user ${user.uid} (${user.email})...");
       final doc = await firestore
           .collection('users')
           .doc(user.uid)
@@ -359,12 +404,17 @@ class CloudSyncService {
           .get();
 
       if (doc.exists && doc.data() != null) {
-        final downloads = (doc.data()!['downloads'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+        final rawDownloads = (doc.data()!['downloads'] ?? doc.data()!['items']) as List<dynamic>? ?? [];
+        final downloads = rawDownloads
+            .whereType<Map>()
+            .map((m) => Map<String, dynamic>.from(m))
+            .toList();
         await SyncAdapter.importDownloadsList(downloads);
         debugPrint("CloudSync: Downloaded ${downloads.length} download entries.");
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint("CloudSync: Downloads download failed - $e");
+      debugPrint("StackTrace: $stackTrace");
     }
   }
 

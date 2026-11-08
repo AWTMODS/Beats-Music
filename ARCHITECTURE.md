@@ -22,7 +22,7 @@
 
 ## 1. Layer Model
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │                Screens / Widgets                │  UI
 │   lib/screens/                                  │
@@ -49,7 +49,7 @@ No layer may import from a layer above it. No layer may skip more than one step 
 ## 2. Layer Boundary Rules
 
 | # | Rule |
-|---|------|
+| --- | --- |
 | 1 | **UI must not import** `global_db.dart`, any `dao/*.dart`, Isar types, or `mappers/*.dart`. |
 | 2 | **UI must not instantiate** DAOs or services. All state comes through Cubit/Bloc. |
 | 3 | **Bloc/Cubit state classes must not contain DB types** (`*DB`). State is a view-model; use domain types. |
@@ -65,7 +65,7 @@ No layer may import from a layer above it. No layer may skip more than one step 
 
 ## 3. Directory Structure
 
-```
+```text
 lib/
 ├── blocs/             # Global and feature blocs/cubits
 ├── core/
@@ -110,7 +110,7 @@ lib/
 ### DAOs
 
 | DAO | Responsibility |
-|-----|----------------|
+| --- | --- |
 | `PlaylistDAO` | User-playlist CRUD, track add/remove/order, likes, search |
 | `LibraryDAO` | Save/remove/query remote collections (artists, albums, remote playlists) |
 | `TrackDAO` | Track upsert, lookup, search, orphan-purge |
@@ -135,7 +135,7 @@ PlaylistDAO(DBProvider.db, TrackDAO(DBProvider.db))
 - Pure functions, no side effects. Imported **only by DAOs and repositories**.
 
 | File | Converts |
-|------|---------|
+| --- | --- |
 | `media_item_mapper.dart` | `Track` ↔ `TrackDB`, `ArtistSummary` ↔ `ArtistSummaryDB` |
 | `playlist_mapper.dart` | `Playlist` ↔ `PlaylistDB`, `PlaylistType` ↔ `PlaylistTypeDB` |
 | `collection_mapper.dart` | `ArtistSummary`/`AlbumSummary`/`PlaylistSummary` ↔ `PlaylistDB` |
@@ -166,7 +166,7 @@ UI never holds `PlaylistTypeDB`. All enum mapping happens inside DAO calls withi
 ### Key global blocs
 
 | Bloc/Cubit | Location | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `BeatsPlayerCubit` | `blocs/media_player/` | Wraps `BeatsMusicPlayer`; exposes player state |
 | `MiniPlayerCubit` | `blocs/mini_player/` | Playback status for the mini-player overlay |
 | `LibraryItemsCubit` | `blocs/library/` | Library list with save/remove operations |
@@ -184,7 +184,7 @@ Plugins are WebAssembly modules conforming to WIT-defined interfaces, compiled v
 ### Plugin types
 
 | Type | WIT interface | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `ContentResolver` | `content-resolver.wit` | Search, home sections, track URL resolution |
 | `ChartProvider` | `chart-provider.wit` | Chart listings and metadata |
 | `LyricsProvider` | `lyrics-provider.wit` | Lyrics fetching |
@@ -200,10 +200,12 @@ Plugins are WebAssembly modules conforming to WIT-defined interfaces, compiled v
 ### Event buses
 
 **`PluginEventBus.instance.events`** — `Stream<PluginManagerEvent>`:
+
 - `GlobalEventListener` listens for install/load/delete success/failure → localised snackbars.
 - Individual plugin blocs listen for resolver availability changes.
 
 **`GlobalEventBus.instance.errors`** — `Stream<AppError>` for structural errors:
+
 - `PluginNotLoadedError`, `MalformedMediaIdError`, `PluginErrorEvent`, `NetworkFailureError`
 - Handled by `GlobalEventListener._onAppError()` → rate-limited snackbar.
 
@@ -217,7 +219,7 @@ Plugins are WebAssembly modules conforming to WIT-defined interfaces, compiled v
 
 Two-tier cache (L1 in-memory + L2 Isar) for expensive network calls made through WASM plugins.
 
-```
+```text
  Bloc
   │
   ▼
@@ -246,7 +248,7 @@ Two-tier cache (L1 in-memory + L2 Isar) for expensive network calls made through
 Application-lifetime singletons registered in `ServiceLocator` (`get_it`).
 
 | Service | Purpose |
-|---|---|
+| --- | --- |
 | `BeatsMusicPlayer` | Core audio engine wrapping `audio_service` |
 | `PluginService` | WASM plugin runtime (load/unload/call) |
 | `PluginCacheRepository` | Plugin response cache (L1 + L2) |
@@ -259,7 +261,7 @@ Application-lifetime singletons registered in `ServiceLocator` (`get_it`).
 
 ## 9. Update & Changelog Flow
 
-```
+```text
 App start
   └─ GlobalEventsCubit.checkForUpdates()
        └─ getAppUpdates()          (`lib/services/beats_updater_tools.dart`)
@@ -301,7 +303,7 @@ App start
 ### Key naming conventions
 
 | Prefix | Usage |
-|--------|-------|
+| --- | --- |
 | `tooltip*` | `Tooltip.message` values |
 | `snackbar*` | `SnackbarService.showMessage()` arguments |
 | `button*` | Dialog/sheet action labels |
@@ -318,7 +320,7 @@ App start
 `KeyboardShortcutsHandler` is a `StatefulWidget` wrapping the app root. Its `State` registers a `HardwareKeyboard` global handler. Desktop-only; the handler is a no-op on mobile.
 
 | Key | Action |
-|-----|--------|
+| --- | --- |
 | Space | Play / Pause |
 | → / ← | Seek ±5 s |
 | Shift+→ / Shift+← | Next / Previous track |
@@ -358,5 +360,3 @@ ServiceLocator.pluginService  // PluginService
 - **String constants**: `lib/core/constants/global_str_consts.dart`.
 - **Deep links**: handled by GoRouter redirect logic.
 - **Navigator key**: `GlobalKey<NavigatorState>` passed to `GlobalEventListener` for out-of-tree navigation (update dialogs, changelog screen pushed from within a cubit listener).
-
-

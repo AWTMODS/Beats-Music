@@ -61,7 +61,11 @@ class CurrentPlaylistCubit extends Cubit<CurrentPlaylistState> {
     _loadedCount = 0;
     _playlistId = null;
 
-    final playlistDB = await _playlistDao.getPlaylistByName(playlistName);
+    var playlistDB = await _playlistDao.getPlaylistByName(playlistName);
+    if (playlistDB == null && playlistName == PlaylistDAO.likedPlaylist) {
+      final id = await _playlistDao.ensurePlaylist(playlistName);
+      playlistDB = await _playlistDao.getPlaylistById(id);
+    }
     if (playlistDB == null) {
       emit(
         state.copyWith(
@@ -250,6 +254,11 @@ class CurrentPlaylistCubit extends Cubit<CurrentPlaylistState> {
 
   /// Returns the name of the currently loaded playlist, or null if none.
   String? get currentPlaylistName => _playlist?.title;
+
+  Future<void> refreshAfterImport() async {
+    final title = currentPlaylistName;
+    if (title != null && !isClosed) await openPlaylist(title);
+  }
 }
 
 

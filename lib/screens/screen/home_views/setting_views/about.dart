@@ -227,6 +227,18 @@ class About extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     
+                    // Web Donation Link
+                    _DonateItem(
+                      icon: Icons.favorite_rounded,
+                      label: 'Support / Donate Page',
+                      value: 'https://aadithcv.vercel.app/donate',
+                      onTap: () => launchUrl(
+                        Uri.parse('https://aadithcv.vercel.app/donate'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
                     // UPI & PayPal
                     Row(
                       children: [

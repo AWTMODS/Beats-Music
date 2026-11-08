@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.7.6] - 2026-11-08
+
+### Fixes & Improvements
+
+- **Liked Songs & Playlist Persistence**:
+  - Fixed an issue where liked songs and playlist additions were not saving or appearing in the Liked playlist and Library sections due to uncommitted asynchronous database link saves.
+  - Resolved immediate Library UI refresh so track counts, playlist items, and multi-cover mosaics update in real time without requiring an app restart.
+  - Hardened playlist retrieval with automatic fallback initialization for default system playlists.
+- **Support Development**:
+  - Added direct web donation link (`https://aadithcv.vercel.app/donate`) in Settings > About.
+- **Framework & Dependencies**:
+  - Upgraded Flutter SDK to 3.47.9 and Dart to 3.13.7.
+  - Updated project dependencies with Gradle compatibility overrides.
+
+## [1.7.5] - 2026-10-25
+
+### Highlights & New Features
+
+- **Spotify-Style Lyrics & Dynamic Output Routing**:
+  - Replaced static Up Next bar with dynamic, album-tinted lyrics card featuring live synchronized lyrics, full-screen expanded mode, and lyrics sharing.
+  - Hardware-aware dynamic output indicator showing real connected device names (e.g., Bluetooth headsets by model, Wired Headphones, Phone Speaker) with interactive Spotify-style "Listening On" bottom sheet.
+- **Portable JSON Backups & Import Previews**:
+  - Complete backup and restoration of playlists, likes, saved collections, playback/search histories, and portable preferences.
+  - Interactive backup inspection flow: preview contents with options to import as new playlists, merge with existing data, or replace selected sections safely.
+- **Library Recovery & Private Recovery Snapshots**:
+  - Recover missing playlists and download records by scanning retained databases.
+  - Automatic private recovery snapshots created before data imports and database resets.
+  - Scheduled 24-hour daily automatic backups and cancelable database reset controls in Storage settings.
+- **Android Download Folder Selection (SAF)**:
+  - System file picker integration with persistent folder access permissions for downloads.
+- **New Languages & Refined Localizations**:
+  - Added French (Français), Portuguese (Português), and Turkish (Türkçe) localizations.
+  - Completed missing translations and verified locale plural rules and formatting.
+- **Equalizer Routing & Presets**:
+  - Switch between in-app 10-band equalizer and system-level audio effects (Dolby Atmos / device OEM EQ).
+- **Stability & Bug Fixes**:
+  - Fixed 6.9px RenderFlex bottom layout overflow during authentication flows on varied screen aspect ratios.
+  - Filtered non-fatal layout warnings from erroneously triggering Crashlytics fatal alerts.
+
 ## [1.7.1] - 2026-10-19
 
 ### Highlights & Improvements

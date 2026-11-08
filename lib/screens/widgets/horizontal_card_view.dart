@@ -140,7 +140,7 @@ class _HorizontalCardViewState extends State<HorizontalCardView> {
             ),
           ),
           SizedBox(
-            height: 220,
+            height: 232,
             child: Row(
               children: [
                 if (Platform.isWindows || Platform.isLinux)
@@ -261,21 +261,20 @@ class _HorizontalCardViewState extends State<HorizontalCardView> {
                 .BeatsPlayer
                 .updateQueueTracks([matchTrack], doPlay: true);
           }
-        } else if (widget.pluginId.isEmpty ||
-            playlist.id == 'Liked' ||
-            playlist.id.startsWith('user_playlist_') ||
-            !playlist.id.contains('_')) {
-          context.pushNamed(
-            RoutePaths.playlistView,
-            extra: playlist.id,
-          );
-        } else {
+        } else if (widget.pluginId.isNotEmpty &&
+            !playlist.id.startsWith('user_playlist_') &&
+            playlist.id != 'Liked') {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) =>
                   OnlPlaylistView(playlist: playlist, pluginId: widget.pluginId),
             ),
+          );
+        } else {
+          context.pushNamed(
+            RoutePaths.playlistView,
+            extra: playlist.id,
           );
         }
       },

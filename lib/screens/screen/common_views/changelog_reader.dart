@@ -7,17 +7,30 @@ import 'package:beats_music/core/constants/setting_keys.dart';
 
 // The final changelog string for testing all features
 const String changelogText = """
-## [Unreleased]
+## [1.7.6] - 2026-11-08
 
-### Changed
-- **UI/UX Enhancements**:
-    - Updated the app logo and various icons.
-    - Improved themes and color schemes.
-    - Redesigned and updated the "About" page to include the build number.
-    - Enhanced the Android notification thumbnail to a medium quality for better visuals.
-- **Dependencies**: Upgraded Flutter, `flutter_bloc`, and the `Android Gradle Plugin`.
+### Fixes & Improvements
+- **Liked Songs & Playlist Persistence**:
+  - Fixed an issue where liked songs and playlist additions were not saving or appearing in the Liked playlist and Library sections due to uncommitted asynchronous database link saves.
+  - Resolved immediate Library UI refresh so track counts, playlist items, and multi-cover mosaics update in real time without requiring an app restart.
+  - Hardened playlist retrieval with automatic fallback initialization for default system playlists.
+- **Support Development**: Added direct web donation link (https://aadithcv.vercel.app/donate) in Settings > About.
+- **Framework & Dependencies**: Upgraded to Flutter 3.47.9 and Dart 3.13.7; updated dependencies and Gradle compatibility overrides.
 
-## [2.11.6] - 2025-05-05
+## [1.7.5] - 2026-10-25
+
+### Highlights & New Features
+- **Spotify-Style Lyrics & Dynamic Audio Routing**:
+  - Replaced static Up Next bar with dynamic lyrics card, synchronized lyrics, fullscreen view, and sharing.
+  - Real device name detection (Bluetooth headsets, Wired Headphones, Phone Speaker) with "Listening On" sheet.
+- **Portable JSON Backups**: Back up playlists, likes, playback/search history, and settings with preview & merge options.
+- **Library Recovery**: Retained database recovery, daily auto-backups, and safety snapshots before resets and imports.
+- **Download Folder Selection**: System SAF directory picker with persistent permissions.
+- **New Languages**: Added French, Portuguese, and Turkish localizations.
+- **Equalizer Routing**: Choose between built-in 10-band EQ and system Dolby Atmos/OEM equalizer.
+- **Bug Fixes**: Fixed 6.9px RenderFlex bottom layout overflow on auth screens and prevented non-fatal crashlytics errors.
+
+## [1.7.1] - 2026-10-19
 
 ### Changed
 - Refactored import/export functionality.

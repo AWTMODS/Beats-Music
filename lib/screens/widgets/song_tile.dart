@@ -31,6 +31,7 @@ class SongCardWidget extends StatelessWidget {
   final VoidCallback? onDelDownTap;
   final VoidCallback? onTap;
   final Widget? trailing;
+  final bool? isCurrentTrack;
 
   const SongCardWidget({
     super.key,
@@ -49,29 +50,41 @@ class SongCardWidget extends StatelessWidget {
     this.isWide = false,
     this.subtitleOverride,
     this.trailing,
+    this.isCurrentTrack,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (isCurrentTrack != null) {
+      return _buildTile(context, isCurrentTrack!);
+    }
+
     final playerCubit = context.read<BeatsPlayerCubit>();
 
     return StreamBuilder<MediaItem?>(
       stream: playerCubit.BeatsPlayer.mediaItem,
       builder: (context, snapshot) {
         final isPlaying = snapshot.data?.id == song.id;
-        final l10n = AppLocalizations.of(context)!;
+        return _buildTile(context, isPlaying);
+      },
+    );
+  }
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOutCubic,
-          height: 66,
-          margin: const EdgeInsets.symmetric(vertical: 2),
-          decoration: BoxDecoration(
-            color: isPlaying
-                ? Default_Theme.accentColor2.withValues(alpha: 0.08)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-          ),
+  Widget _buildTile(BuildContext context, bool isPlaying) {
+    final playerCubit = context.read<BeatsPlayerCubit>();
+    final l10n = AppLocalizations.of(context)!;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+      height: 66,
+      margin: const EdgeInsets.symmetric(vertical: 2),
+      decoration: BoxDecoration(
+        color: isPlaying
+            ? Default_Theme.accentColor2.withValues(alpha: 0.08)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+      ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
@@ -268,8 +281,6 @@ class SongCardWidget extends StatelessWidget {
             ),
           ),
         );
-      },
-    );
   }
 }
 

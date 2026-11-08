@@ -172,7 +172,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
 
     emit(state.copyWith(
-      autoUpdateNotify: (await autoUpdateNotifyFuture) ?? false,
+      autoUpdateNotify: (await autoUpdateNotifyFuture) ?? true,
       autoSlideCharts: (await autoSlideChartsFuture) ?? true,
       downPath: resolvedDownPath,
       downQuality: normalizedDownQuality,
@@ -374,6 +374,8 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> putSettingStr(String key, String value) async {
     await _settingsRepo.putSettingStr(key, value);
   }
+
+  Future<void> reload() => _initSettings();
 }
 
 

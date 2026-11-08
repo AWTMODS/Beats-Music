@@ -6,15 +6,13 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'package:beats_music/services/db/global_db.dart';
+import 'package:beats_music/services/db/database_schemas.dart';
 import 'package:beats_music/services/db/dao/cache_dao.dart';
 import 'package:beats_music/services/db/dao/history_dao.dart';
 import 'package:beats_music/services/db/dao/playlist_dao.dart';
 import 'package:beats_music/services/db/dao/search_history_dao.dart';
 import 'package:beats_music/services/db/dao/settings_dao.dart';
 import 'package:beats_music/services/db/dao/track_dao.dart';
-import 'package:beats_music/model/statistics/artist_statistics.dart';
-import 'package:beats_music/model/statistics/play_history.dart';
-import 'package:beats_music/model/statistics/song_statistics.dart';
 
 ///
 /// Owns database open / close / backup-restore responsibilities that were
@@ -24,23 +22,8 @@ class DBProvider {
   static late String appDocDir;
   static late Future<Isar> db;
 
-  static final List<CollectionSchema<dynamic>> _schemas = [
-    TrackDBSchema,
-    SearchHistoryDBSchema,
-    PlaylistEntryDBSchema,
-    LyricsDBSchema,
-    PlaylistDBSchema,
-    NotificationsDBSchema,
-    PlaybackHistoryDBSchema,
-    AppSettingsBoolDBSchema,
-    AppSettingsStrDBSchema,
-    DownloadDBSchema,
-    CacheEntryDBSchema,
-    PluginStorageEntitySchema,
-    PlayHistoryDBSchema,
-    SongStatisticsDBSchema,
-    ArtistStatisticsDBSchema,
-  ];
+  static const List<CollectionSchema<dynamic>> schemas = databaseSchemas;
+  static List<CollectionSchema<dynamic>> get _schemas => schemas;
 
   /// Initialise path state and open the database.
   static Future<Isar> init({

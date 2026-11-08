@@ -40,6 +40,7 @@ class SettingKeys {
   // ── Backup ──────────────────────────────────────────────────────────────────
   static const String backupPath = "backupPath";
   static const String autoBackup = "autoBackup";
+  static const String lastBackupTimestamp = "lastBackupTimestamp";
 
   // ── History ─────────────────────────────────────────────────────────────────
   static const String historyClearTime = "autoHistoryCleanupTime";

@@ -196,40 +196,41 @@ class _SquareImgCardState extends State<SquareImgCard> {
                   ),
                   if (!widget.isWide) ...[
                     const SizedBox(height: 6),
-                    SizedBox(
-                      height: 32,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 32),
                       child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.title,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Default_Theme.secondoryTextStyle.merge(
-                            const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Default_Theme.primaryColor1,
-                              height: 1.1,
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.title,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Default_Theme.secondoryTextStyle.merge(
+                              const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Default_Theme.primaryColor1,
+                                height: 1.1,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          widget.subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style:
-                              Default_Theme.secondoryTextStyle.merge(TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Default_Theme.primaryColor1
-                                .withValues(alpha: 0.62),
-                            height: 1.1,
-                          )),
-                        ),
+                          const SizedBox(height: 2),
+                          Text(
+                            widget.subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style:
+                                Default_Theme.secondoryTextStyle.merge(TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Default_Theme.primaryColor1
+                                  .withValues(alpha: 0.62),
+                              height: 1.1,
+                            )),
+                          ),
                         ],
                       ),
                     ),

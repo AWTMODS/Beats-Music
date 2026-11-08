@@ -181,6 +181,17 @@ class PluginBootstrapService {
 
         if (local != null) {
           if (_compareVersions(plugin.version, local.manifest.version) <= 0) {
+            // Discovery proves the files exist, not that the plugin can run.
+            // A previous partial setup may have installed it without loading it.
+            if (!pluginService.getLoadedPlugins().contains(plugin.id)) {
+              try {
+                await pluginService.loadPlugin(
+                    pluginId: plugin.id, pluginType: local.pluginType);
+              } catch (error) {
+                errors.add('Could not load "${plugin.name}": $error');
+              }
+            }
+            bootstrapTargetIds.add(plugin.id);
             processedPlugins++;
             continue;
           }
@@ -665,7 +676,7 @@ class PluginBootstrapService {
     try {
       final response = await http
           .get(Uri.parse(hostedRepositoriesUrl))
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
 

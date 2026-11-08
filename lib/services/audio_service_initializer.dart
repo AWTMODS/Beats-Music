@@ -2,6 +2,7 @@ import 'package:beats_music/services/beats_player.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:beats_music/services/audio_device_service.dart';
 
 /// Initializes the audio session and player.
 ///
@@ -36,6 +37,7 @@ Future<void> setupAudioSession() async {
     // We handle ducking ourselves via interruptionEventStream.
     androidWillPauseWhenDucked: false,
   ));
+  await AudioDeviceService.instance.init();
 }
 
 /// Singleton that creates and owns the [BeatsMusicPlayer] instance.

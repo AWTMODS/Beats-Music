@@ -3,11 +3,11 @@ description: Modern Music Player.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.7.1+26101901
+version: 1.7.6+26110801
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
-  flutter: '>=3.47.0'
+  flutter: '>=3.47.9'
 
 # isar version for community fork of isar (temporary)
 # isar_version: &isar_version 3.3.0-dev.3 
@@ -99,6 +99,7 @@ dependencies:
 
 dependency_overrides:
   ffi: ^2.1.2  # Required for jni / objective_c nativeFree
+  shared_preferences_android: 2.5.0
 
 
 dev_dependencies:

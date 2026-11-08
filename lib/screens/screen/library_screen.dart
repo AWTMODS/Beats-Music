@@ -30,6 +30,7 @@ import 'package:beats_music/core/models/library_search_result.dart';
 import 'package:beats_music/screens/widgets/animated_list_item.dart';
 import 'package:beats_music/blocs/downloader/cubit/downloader_cubit.dart';
 import 'package:beats_music/screens/widgets/thumbnail_grid.dart';
+import 'package:beats_music/services/auto_sync_service.dart';
 
 enum LibraryFilter { playlists, albums, artists, downloaded }
 
@@ -546,8 +547,19 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
                 final isDownloadedFilter =
                     _activeFilter == LibraryFilter.downloaded;
 
-                return CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
+                return RefreshIndicator(
+                  color: Default_Theme.accentColor1,
+                  backgroundColor: Default_Theme.themeColor,
+                  onRefresh: () async {
+                    await AutoSyncService().syncNow();
+                    if (context.mounted) {
+                      await context.read<LibraryItemsCubit>().refresh();
+                    }
+                  },
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
                   slivers: [
                     customDiscoverBar(context),
                     SliverToBoxAdapter(
@@ -642,6 +654,7 @@ class _LibraryScreenViewState extends State<_LibraryScreenView> {
                         ),
                     ],
                   ],
+                  ),
                 );
               },
             );

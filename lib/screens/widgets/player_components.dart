@@ -24,6 +24,7 @@ import 'package:beats_music/blocs/recommendation/cubit/recommendation_cubit.dart
 import 'package:beats_music/blocs/recommendation/cubit/recommendation_state.dart';
 import 'package:beats_music/screens/widgets/up_next_panel.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:beats_music/services/audio_device_service.dart';
 
 class CoverImageVolSlider extends StatelessWidget {
   const CoverImageVolSlider({super.key});
@@ -375,33 +376,44 @@ class _DeviceAndActionsRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Audio Device / Connection status in theme green
-          InkWell(
-            onTap: () {
-              SnackbarService.showMessage('Listening on this device');
+          StreamBuilder<AudioOutputInfo>(
+            stream: AudioDeviceService.instance.outputStream,
+            initialData: AudioDeviceService.instance.currentOutput,
+            builder: (context, snapshot) {
+              final info = snapshot.data ?? AudioOutputInfo.defaultPhone;
+              return InkWell(
+                onTap: () => _showDeviceSheet(context, info),
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        info.icon,
+                        size: 18,
+                        color: AppTheme.successAccent,
+                      ),
+                      const SizedBox(width: 8),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 190),
+                        child: Text(
+                          info.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppTheme.successAccent,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
             },
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(
-                    Icons.devices_rounded,
-                    size: 18,
-                    color: AppTheme.successAccent,
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Wired Connection',
-                    style: TextStyle(
-                      color: AppTheme.successAccent,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
 
           // Right action buttons: Share & Queue
@@ -447,6 +459,134 @@ class _DeviceAndActionsRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDeviceSheet(BuildContext context, AudioOutputInfo info) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Container(
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const Text(
+                  'Listening On',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.successAccent.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppTheme.successAccent.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.successAccent.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          info.icon,
+                          color: AppTheme.successAccent,
+                          size: 26,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              info.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: AppTheme.successAccent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Connected & Playing',
+                                  style: TextStyle(
+                                    color: AppTheme.successAccent,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppTheme.successAccent,
+                        size: 24,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    'Audio automatically routes to your connected Bluetooth headset, wired headphones, or phone speaker.',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

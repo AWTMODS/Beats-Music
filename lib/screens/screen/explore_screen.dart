@@ -549,7 +549,6 @@ class _HomeSectionsList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       shrinkWrap: true,
-      itemExtent: 275,
       padding: const EdgeInsets.only(top: 0),
       physics: const NeverScrollableScrollPhysics(),
       itemCount: sections.length,

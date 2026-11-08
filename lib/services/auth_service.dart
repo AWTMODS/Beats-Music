@@ -184,15 +184,13 @@ class AuthService {
     try {
       if (auth?.currentUser != null && !auth!.currentUser!.isAnonymous) {
           debugPrint("AuthService: Signing out. Backing up data...");
-          // Backup before logout - parallelize for speed
+          // Backup before logout - sequentially to ensure DB consistency
           final syncService = CloudSyncService();
-          await Future.wait([
-            syncService.uploadStats(),
-            syncService.uploadPlaylists(),
-            syncService.uploadLikedSongs(),
-            syncService.uploadRecentlyPlayed(),
-            syncService.uploadDownloadsList(),
-          ]);
+          try { await syncService.uploadPlaylists(); } catch (_) {}
+          try { await syncService.uploadLikedSongs(); } catch (_) {}
+          try { await syncService.uploadRecentlyPlayed(); } catch (_) {}
+          try { await syncService.uploadDownloadsList(); } catch (_) {}
+          try { await syncService.uploadStats(); } catch (_) {}
           
           // Stop auto-sync
           AutoSyncService().stopAutoSync();
@@ -217,14 +215,32 @@ class AuthService {
     debugPrint("AuthService: Sign in successful. Triggering Cloud Restore (Background)...");
     try {
         final syncService = CloudSyncService();
-        // Run independently in background so UI doesn't hang
-        await Future.wait([
-          syncService.downloadStats(),
-          syncService.downloadPlaylists(),
-          syncService.downloadLikedSongs(),
-          syncService.downloadRecentlyPlayed(),
-          syncService.downloadDownloadsList(),
-        ]);
+        // Run sequentially so Isar write transactions do not collide!
+        try {
+          await syncService.downloadPlaylists();
+        } catch (e) {
+          debugPrint("AuthService: downloadPlaylists error: $e");
+        }
+        try {
+          await syncService.downloadLikedSongs();
+        } catch (e) {
+          debugPrint("AuthService: downloadLikedSongs error: $e");
+        }
+        try {
+          await syncService.downloadRecentlyPlayed();
+        } catch (e) {
+          debugPrint("AuthService: downloadRecentlyPlayed error: $e");
+        }
+        try {
+          await syncService.downloadDownloadsList();
+        } catch (e) {
+          debugPrint("AuthService: downloadDownloadsList error: $e");
+        }
+        try {
+          await syncService.downloadStats();
+        } catch (e) {
+          debugPrint("AuthService: downloadStats error: $e");
+        }
         
         // Start auto-sync timer
         AutoSyncService().startAutoSync();

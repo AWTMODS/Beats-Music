@@ -56,6 +56,14 @@ class AutoSyncService {
       return;
     }
     
+    // Trigger an initial sync immediately on startup / login
+    unawaited(() async {
+      final enabled = await isAutoSyncEnabled();
+      if (enabled) {
+        await _performSync();
+      }
+    }());
+
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(const Duration(minutes: 5), (timer) async {
       final enabled = await isAutoSyncEnabled();
@@ -74,7 +82,7 @@ class AutoSyncService {
     debugPrint('AutoSync: Stopped');
   }
   
-  /// Manually trigger sync (called when playlist is created/modified)
+  /// Manually trigger sync (called when playlist is created/modified or pulled to refresh)
   Future<void> syncNow() async {
     final enabled = await isAutoSyncEnabled();
     if (!enabled) {
@@ -82,7 +90,8 @@ class AutoSyncService {
       return;
     }
     
-    if (_auth.currentUser == null || _auth.currentUser!.isAnonymous) {
+    final user = _currentUser;
+    if (user == null || user.isAnonymous) {
       debugPrint('AutoSync: Sync skipped (not logged in)');
       return;
     }
@@ -103,25 +112,61 @@ class AutoSyncService {
       debugPrint('AutoSync: Starting background sync...');
       final startTime = DateTime.now();
       
-      // Upload all data types
-      await Future.wait([
-        _cloudSync.uploadPlaylists(),
-        _cloudSync.uploadLikedSongs(),
-        _cloudSync.uploadRecentlyPlayed(),
-        _cloudSync.uploadDownloadsList(),
-        _cloudSync.uploadStats(),
-      ]);
+      // 1. Download all data types (Sync Down / Restore) FIRST!
+      // Must be executed sequentially to prevent Isar write transaction collisions:
+      // "IsarError: An async write transaction is already in progress in this isolate."
+      try {
+        await _cloudSync.downloadPlaylists();
+      } catch (e) {
+        debugPrint('AutoSync: downloadPlaylists error: $e');
+      }
+      try {
+        await _cloudSync.downloadLikedSongs();
+      } catch (e) {
+        debugPrint('AutoSync: downloadLikedSongs error: $e');
+      }
+      try {
+        await _cloudSync.downloadRecentlyPlayed();
+      } catch (e) {
+        debugPrint('AutoSync: downloadRecentlyPlayed error: $e');
+      }
+      try {
+        await _cloudSync.downloadDownloadsList();
+      } catch (e) {
+        debugPrint('AutoSync: downloadDownloadsList error: $e');
+      }
+      try {
+        await _cloudSync.downloadStats();
+      } catch (e) {
+        debugPrint('AutoSync: downloadStats error: $e');
+      }
 
-      // Download all data types (Sync Down)
-      // We do this sequentially after upload to ensure we have the latest merged state
-      // or parallel? Parallel is faster. DB service handles transactions safely.
-      await Future.wait([
-        _cloudSync.downloadPlaylists(),
-        _cloudSync.downloadLikedSongs(),
-        _cloudSync.downloadRecentlyPlayed(),
-        _cloudSync.downloadDownloadsList(),
-        _cloudSync.downloadStats(),
-      ]);
+      // 2. Upload all data types (Sync Up / Backup) after local DB has merged cloud data
+      try {
+        await _cloudSync.uploadPlaylists();
+      } catch (e) {
+        debugPrint('AutoSync: uploadPlaylists error: $e');
+      }
+      try {
+        await _cloudSync.uploadLikedSongs();
+      } catch (e) {
+        debugPrint('AutoSync: uploadLikedSongs error: $e');
+      }
+      try {
+        await _cloudSync.uploadRecentlyPlayed();
+      } catch (e) {
+        debugPrint('AutoSync: uploadRecentlyPlayed error: $e');
+      }
+      try {
+        await _cloudSync.uploadDownloadsList();
+      } catch (e) {
+        debugPrint('AutoSync: uploadDownloadsList error: $e');
+      }
+      try {
+        await _cloudSync.uploadStats();
+      } catch (e) {
+        debugPrint('AutoSync: uploadStats error: $e');
+      }
       
       final duration = DateTime.now().difference(startTime);
       

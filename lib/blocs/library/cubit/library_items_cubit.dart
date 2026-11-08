@@ -72,6 +72,11 @@ class LibraryItemsCubit extends Cubit<LibraryItemsState> {
     }
   }
 
+  /// Manually refresh playlists from DB.
+  Future<void> refresh() async {
+    await _fetchPlaylists();
+  }
+
   /// Convert DB rows to view-model items using only domain types.
   Future<List<PlaylistItemProperties>> _toItemProperties(
       List<PlaylistDB> dbs) async {
@@ -173,6 +178,7 @@ class LibraryItemsCubit extends Cubit<LibraryItemsState> {
     if (playlistName == 'Null' || playlistName.isEmpty) return;
     try {
       await _playlistDao.addTrackToPlaylistByName(playlistName, track);
+      await _fetchPlaylists();
       if (showSnackbar) {
         SnackbarService.showMessage('${track.title} added to $playlistName');
       }
@@ -193,6 +199,7 @@ class LibraryItemsCubit extends Cubit<LibraryItemsState> {
     final playlist = await _playlistDao.getPlaylistByName(playlistName);
     if (playlist == null) return;
     await _playlistDao.removeTrackFromPlaylist(playlist.id, track.id);
+    await _fetchPlaylists();
     if (showSnackbar) {
       SnackbarService.showMessage('${track.title} removed from $playlistName');
     }
@@ -221,6 +228,7 @@ class LibraryItemsCubit extends Cubit<LibraryItemsState> {
   /// Like or unlike a track.
   Future<void> setTrackLiked(Track track, bool liked) async {
     await _playlistDao.setTrackLiked(track, liked);
+    await _fetchPlaylists();
   }
 
   /// Get all playlist names containing a given track.

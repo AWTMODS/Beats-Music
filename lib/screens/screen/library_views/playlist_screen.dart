@@ -44,6 +44,7 @@ class _PlaylistViewState extends State<PlaylistView> {
 
     if (widget.initialPlaylistName != null &&
         widget.initialPlaylistName!.trim().isNotEmpty) {
+      _didTriggerInitialLoad = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _startInitialLoad(widget.initialPlaylistName!);
       });

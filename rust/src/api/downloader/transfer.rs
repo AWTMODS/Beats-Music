@@ -113,6 +113,13 @@ pub fn download_task_blocking(
 
     let status = response.status();
     if !status.is_success() && status.as_u16() != 206 {
+        // A signed URL can be revoked before its advertised expiry. Retry
+        // through the provider rather than reusing the rejected cached URL.
+        if matches!(status.as_u16(), 401 | 403 | 410) {
+            if let Ok(mut guard) = task.lock() {
+                guard.persisted.selected_stream = None;
+            }
+        }
         return Err(format!("Server responded with {status}"));
     }
 
