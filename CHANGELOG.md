@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.9] - 2026-11-10
+
+### Fixes & Improvements
+
+- **Native Package Installer Bridge**:
+  - Implemented direct Android native platform channel (`com.beats.app/package_installer`) in `MainActivity` using `FileProvider` and `Intent.ACTION_VIEW` (`FLAG_GRANT_READ_URI_PERMISSION`).
+  - Fixed `MissingPluginException(No implementation found for method open_file on channel open_file)` caused by `open_filex` channel destruction when the app was in the background or playing audio.
+  - Added robust fallback to manual installation and browser download when package opening is constrained.
+- **Updater Cache & Cleanup**:
+  - Added version-aware metadata tracking (`beats_update_meta.json`) to accurately verify downloaded APK versions and build numbers before installation.
+  - Automatically cleans up obsolete or already-installed update files on cold start, freeing storage space.
+
 ## [1.7.8] - 2026-11-10
 
 ### Fixes & Improvements

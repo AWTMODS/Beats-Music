@@ -1,17 +1,17 @@
 {
   "android": {
-    "version": "1.7.8",
-    "build": "26111002",
-    "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.7.8/BeatsMusic_v1.7.8_universal-release.apk"
+    "version": "1.7.9",
+    "build": "26111003",
+    "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.7.9/BeatsMusic_v1.7.9_universal-release.apk"
   },
   "windows": {
-    "version": "1.7.8",
-    "build": "26111002",
-    "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.7.8/BeatsMusic_v1.7.8_x86_64-release.apk"
+    "version": "1.7.9",
+    "build": "26111003",
+    "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.7.9/BeatsMusic_v1.7.9_x86_64-release.apk"
   },
   "linux": {
-    "version": "1.7.8",
-    "build": "26111002",
-    "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.7.8/BeatsMusic_v1.7.8_x86_64-release.apk"
+    "version": "1.7.9",
+    "build": "26111003",
+    "url": "https://github.com/AWTMODS/Beats-Music/releases/download/v1.7.9/BeatsMusic_v1.7.9_x86_64-release.apk"
   }
 }

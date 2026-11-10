@@ -7,6 +7,11 @@ import 'package:beats_music/core/constants/setting_keys.dart';
 
 // The final changelog string for testing all features
 const String changelogText = """
+## [1.7.9] - 2026-11-10
+
+### Fixes & Improvements
+- **Native Package Installer Bridge**: Implemented native platform channel for opening downloaded update APKs directly via Android's system package installer, resolving `MissingPluginException` issues when the app runs in the background.
+
 ## [1.7.8] - 2026-11-10
 
 ### Fixes & Improvements
