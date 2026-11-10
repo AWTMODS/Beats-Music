@@ -296,7 +296,11 @@ class _UpdateAvailableView extends StatelessWidget {
       isDismissible: false,
       enableDrag: false,
       backgroundColor: Colors.transparent,
-      builder: (_) => _DownloadSheet(url: url),
+      builder: (_) => _DownloadSheet(
+        url: url,
+        newVersion: (data['newVer'] as String?) ?? '',
+        newBuild: (data['newBuild']?.toString()) ?? '',
+      ),
     );
   }
 }
@@ -305,7 +309,13 @@ class _UpdateAvailableView extends StatelessWidget {
 
 class _DownloadSheet extends StatefulWidget {
   final String url;
-  const _DownloadSheet({required this.url});
+  final String newVersion;
+  final String newBuild;
+  const _DownloadSheet({
+    required this.url,
+    this.newVersion = '',
+    this.newBuild = '',
+  });
 
   @override
   State<_DownloadSheet> createState() => _DownloadSheetState();
@@ -324,7 +334,10 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   }
 
   Future<void> _startDownload() async {
-    final hasDownloadedApk = await ApkUpdateService.isApkDownloaded();
+    final hasDownloadedApk = await ApkUpdateService.isApkDownloaded(
+      targetVersion: widget.newVersion,
+      targetBuild: widget.newBuild,
+    );
     if (hasDownloadedApk) {
       setState(() {
         _state = ApkUpdateState.installing;
@@ -346,6 +359,8 @@ class _DownloadSheetState extends State<_DownloadSheet> {
 
     final result = await ApkUpdateService.downloadAndInstall(
       widget.url,
+      targetVersion: widget.newVersion,
+      targetBuild: widget.newBuild,
       cancelToken: _cancelToken,
       onProgress: (p) {
         if (mounted) setState(() => _progress = p);

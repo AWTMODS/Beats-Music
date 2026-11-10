@@ -4,6 +4,7 @@ import 'dart:io' as io;
 
 import 'package:beats_music/core/constants/setting_keys.dart';
 import 'package:beats_music/core/di/service_locator.dart';
+import 'package:beats_music/services/apk_update_service.dart';
 import 'package:beats_music/services/db/dao/settings_dao.dart';
 import 'package:beats_music/services/local_music_service.dart';
 import 'package:beats_music/services/plugin_bootstrap_service.dart';
@@ -118,6 +119,15 @@ Future<void> bootstrapApp() async {
     log('Could not load bootstrap flag (will re-run bootstrap)',
         error: e, name: 'Bootstrap');
   }
+  // Clean up any stale or already-installed update APKs in background on Android
+  if (io.Platform.isAndroid) {
+    unawaited(
+      ApkUpdateService.cleanupIfInstalled().catchError((e) {
+        log('Error cleaning up APK update: $e', name: 'Bootstrap');
+      }),
+    );
+  }
+
   _log('[BOOTSTRAP] 9. bootstrapApp finished completely!');
 }
 

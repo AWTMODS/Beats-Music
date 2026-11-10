@@ -65,7 +65,10 @@ class _UpdateSheetState extends State<UpdateSheet> {
 
   Future<void> _checkLocalApk() async {
     if (Platform.isAndroid) {
-      final exists = await ApkUpdateService.isApkDownloaded();
+      final exists = await ApkUpdateService.isApkDownloaded(
+        targetVersion: widget.newVersion,
+        targetBuild: widget.newBuild,
+      );
       if (mounted) {
         setState(() {
           _hasLocalApk = exists;
@@ -118,6 +121,8 @@ class _UpdateSheetState extends State<UpdateSheet> {
 
     final result = await ApkUpdateService.downloadAndInstall(
       widget.downloadUrl,
+      targetVersion: widget.newVersion,
+      targetBuild: widget.newBuild,
       cancelToken: _cancelToken,
       onProgress: (p) {
         if (mounted) setState(() => _progress = p);
@@ -142,7 +147,10 @@ class _UpdateSheetState extends State<UpdateSheet> {
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) Navigator.pop(context);
     } else if (result.state == ApkUpdateState.error) {
-      final hasApk = await ApkUpdateService.isApkDownloaded();
+      final hasApk = await ApkUpdateService.isApkDownloaded(
+        targetVersion: widget.newVersion,
+        targetBuild: widget.newBuild,
+      );
       setState(() {
         _isDownloading = false;
         _isInstalling = false;

@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:beats_music/services/beats_updater_tools.dart';
 import 'package:dio/dio.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -43,12 +46,172 @@ class ApkUpdateService {
     return File('${dir.path}/beats_update.apk');
   }
 
-  /// Checks whether an update APK is already downloaded on disk and non-empty.
-  static Future<bool> isApkDownloaded() async {
+  /// Resolves the metadata file that stores the target version and build info
+  /// for the downloaded update APK.
+  static Future<File> getApkMetaFile() async {
+    final Directory dir = Platform.isAndroid
+        ? (await getExternalStorageDirectory()) ??
+            await getApplicationSupportDirectory()
+        : await getTemporaryDirectory();
+
+    return File('${dir.path}/beats_update_meta.json');
+  }
+
+  /// Deletes any downloaded update APK, partial download, and associated metadata.
+  static Future<void> deleteDownloadedApk() async {
+    try {
+      final apk = await getApkFile();
+      if (await apk.exists()) {
+        await apk.delete();
+        log('ApkUpdateService: Deleted APK at ${apk.path}', name: 'ApkUpdate');
+      }
+      final part = File('${apk.path}.part');
+      if (await part.exists()) {
+        await part.delete();
+      }
+      final meta = await getApkMetaFile();
+      if (await meta.exists()) {
+        await meta.delete();
+      }
+    } catch (e) {
+      log('ApkUpdateService: Error deleting downloaded APK: $e',
+          name: 'ApkUpdate');
+    }
+  }
+
+  /// Cleans up any cached update APK if:
+  /// - The app has already been updated to or past that version.
+  /// - The metadata file is missing or invalid.
+  /// - The cached download is older than 3 days.
+  ///
+  /// Safe to invoke on cold start or background bootstrap.
+  static Future<void> cleanupIfInstalled() async {
+    try {
+      final apk = await getApkFile();
+      if (!await apk.exists()) return;
+
+      final metaFile = await getApkMetaFile();
+      if (!await metaFile.exists()) {
+        log('ApkUpdateService: Unknown/untracked APK found on disk. Deleting.',
+            name: 'ApkUpdate');
+        await deleteDownloadedApk();
+        return;
+      }
+
+      final content = await metaFile.readAsString();
+      final Map<String, dynamic> meta = jsonDecode(content);
+      final metaVersion = (meta['version'] as String?) ?? '';
+      final metaBuild = (meta['build']?.toString()) ?? '';
+
+      final packageInfo = await PackageInfo.fromPlatform();
+
+      // If the downloaded APK is NOT newer than the current app, it was already installed.
+      final isNewer = isUpdateAvailable(
+        packageInfo.version,
+        packageInfo.buildNumber,
+        metaVersion,
+        metaBuild,
+        checkBuild: true,
+      );
+
+      if (!isNewer) {
+        log('ApkUpdateService: Installed app (${packageInfo.version}+${packageInfo.buildNumber}) is >= downloaded update ($metaVersion+$metaBuild). Deleting obsolete update APK.',
+            name: 'ApkUpdate');
+        await deleteDownloadedApk();
+        return;
+      }
+
+      // Also clean up if older than 3 days
+      final downloadedAt = meta['downloadedAt'] as int?;
+      if (downloadedAt != null) {
+        final age = DateTime.now().millisecondsSinceEpoch - downloadedAt;
+        if (age > 3 * 24 * 60 * 60 * 1000) {
+          log('ApkUpdateService: Cached APK is older than 3 days. Deleting.',
+              name: 'ApkUpdate');
+          await deleteDownloadedApk();
+        }
+      }
+    } catch (e) {
+      log('ApkUpdateService: Failed during cleanupIfInstalled: $e',
+          name: 'ApkUpdate');
+    }
+  }
+
+  /// Checks whether an update APK is already downloaded on disk, non-empty,
+  /// and matches the requested [targetVersion] and [targetBuild].
+  ///
+  /// If the existing APK belongs to an older version or the app is already
+  /// running that version, it will be automatically deleted and `false` returned.
+  static Future<bool> isApkDownloaded({
+    String? targetVersion,
+    String? targetBuild,
+  }) async {
     try {
       final file = await getApkFile();
-      return await file.exists() && (await file.length()) > 1024 * 1024;
-    } catch (_) {
+      if (!await file.exists() || (await file.length()) < 1024 * 1024) {
+        return false;
+      }
+
+      final metaFile = await getApkMetaFile();
+      if (!await metaFile.exists()) {
+        // Stale or untracked APK file without metadata
+        log('ApkUpdateService: Untracked APK found without metadata. Deleting.',
+            name: 'ApkUpdate');
+        await deleteDownloadedApk();
+        return false;
+      }
+
+      Map<String, dynamic> meta;
+      try {
+        meta = jsonDecode(await metaFile.readAsString());
+      } catch (_) {
+        await deleteDownloadedApk();
+        return false;
+      }
+
+      final metaVersion = (meta['version'] as String?) ?? '';
+      final metaBuild = (meta['build']?.toString()) ?? '';
+
+      final packageInfo = await PackageInfo.fromPlatform();
+      final isNewerThanCurrent = isUpdateAvailable(
+        packageInfo.version,
+        packageInfo.buildNumber,
+        metaVersion,
+        metaBuild,
+        checkBuild: true,
+      );
+
+      if (!isNewerThanCurrent) {
+        log('ApkUpdateService: Downloaded APK ($metaVersion+$metaBuild) is already installed or older than current app (${packageInfo.version}+${packageInfo.buildNumber}). Deleting.',
+            name: 'ApkUpdate');
+        await deleteDownloadedApk();
+        return false;
+      }
+
+      // If targetVersion was specified, ensure it matches
+      if (targetVersion != null && targetVersion.isNotEmpty) {
+        String norm(String v) =>
+            v.trim().replaceFirst(RegExp(r'^v', caseSensitive: false), '');
+        if (norm(metaVersion) != norm(targetVersion)) {
+          log('ApkUpdateService: Cached APK version ($metaVersion) does not match target ($targetVersion). Deleting stale APK.',
+              name: 'ApkUpdate');
+          await deleteDownloadedApk();
+          return false;
+        }
+
+        if (targetBuild != null && targetBuild.isNotEmpty) {
+          if (metaBuild.trim() != targetBuild.trim()) {
+            log('ApkUpdateService: Cached APK build ($metaBuild) does not match target ($targetBuild). Deleting stale APK.',
+                name: 'ApkUpdate');
+            await deleteDownloadedApk();
+            return false;
+          }
+        }
+      }
+
+      return true;
+    } catch (e) {
+      log('ApkUpdateService: Error in isApkDownloaded: $e', name: 'ApkUpdate');
       return false;
     }
   }
@@ -134,6 +297,8 @@ class ApkUpdateService {
   /// callers must use setState / streams accordingly.
   static Future<ApkUpdateResult> downloadAndInstall(
     String url, {
+    String? targetVersion,
+    String? targetBuild,
     void Function(double progress)? onProgress,
     void Function(int received, int total)? onBytesProgress,
     CancelToken? cancelToken,
@@ -154,12 +319,14 @@ class ApkUpdateService {
       final savePath = file.path;
       final tempPath = '$savePath.part';
 
-      // Delete stale downloads if present
-      if (await file.exists()) await file.delete();
+      // Delete stale downloads and prior metadata if present
+      await deleteDownloadedApk();
+
       final tempFile = File(tempPath);
       if (await tempFile.exists()) await tempFile.delete();
 
-      log('ApkUpdateService: Downloading $url → $tempPath', name: 'ApkUpdate');
+      log('ApkUpdateService: Downloading $url → $tempPath (target: $targetVersion+$targetBuild)',
+          name: 'ApkUpdate');
 
       try {
         await _dio.download(
@@ -183,6 +350,21 @@ class ApkUpdateService {
         // Atomically rename .part file to final .apk upon verified completion
         if (await tempFile.exists()) {
           await tempFile.rename(savePath);
+
+          // Persist metadata to track version of the downloaded APK
+          try {
+            final metaFile = await getApkMetaFile();
+            final metaData = {
+              'version': targetVersion ?? '',
+              'build': targetBuild ?? '',
+              'url': url,
+              'downloadedAt': DateTime.now().millisecondsSinceEpoch,
+            };
+            await metaFile.writeAsString(jsonEncode(metaData));
+          } catch (e) {
+            log('ApkUpdateService: Failed writing metadata: $e',
+                name: 'ApkUpdate');
+          }
         } else {
           throw const FileSystemException('Downloaded temporary file not found');
         }
