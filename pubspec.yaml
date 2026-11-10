@@ -3,7 +3,7 @@ description: Modern Music Player.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.7.6+26110801
+version: 1.7.7+26111001
 
 environment:
   sdk: '>=3.3.0 <4.0.0'

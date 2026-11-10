@@ -253,19 +253,37 @@ class _LikeButtonState extends State<_LikeButton> {
                         setState(() {
                           _likeFuture = Future.value(true);
                         });
-                        await context.read<LibraryItemsCubit>().setTrackLiked(
-                            mediaItemToTrack(currentMedia), true);
-                        SnackbarService.showMessage(
-                            l10n.playerLiked(currentMedia.title));
+                        try {
+                          await context.read<LibraryItemsCubit>().setTrackLiked(
+                              mediaItemToTrack(currentMedia), true);
+                          SnackbarService.showMessage(
+                              l10n.playerLiked(currentMedia.title));
+                        } catch (e) {
+                          if (mounted) {
+                            setState(() {
+                              _likeFuture = Future.value(false);
+                            });
+                          }
+                          SnackbarService.showMessage('Failed to like track: $e');
+                        }
                       },
                       onDisliked: () async {
                         setState(() {
                           _likeFuture = Future.value(false);
                         });
-                        await context.read<LibraryItemsCubit>().setTrackLiked(
-                            mediaItemToTrack(currentMedia), false);
-                        SnackbarService.showMessage(
-                            l10n.playerUnliked(currentMedia.title));
+                        try {
+                          await context.read<LibraryItemsCubit>().setTrackLiked(
+                              mediaItemToTrack(currentMedia), false);
+                          SnackbarService.showMessage(
+                              l10n.playerUnliked(currentMedia.title));
+                        } catch (e) {
+                          if (mounted) {
+                            setState(() {
+                              _likeFuture = Future.value(true);
+                            });
+                          }
+                          SnackbarService.showMessage('Failed to unlike track: $e');
+                        }
                       },
                     );
                   },

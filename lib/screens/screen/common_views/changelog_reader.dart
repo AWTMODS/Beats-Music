@@ -7,6 +7,14 @@ import 'package:beats_music/core/constants/setting_keys.dart';
 
 // The final changelog string for testing all features
 const String changelogText = """
+## [1.7.7] - 2026-11-10
+
+### Fixes & Stability
+- **Display Refresh Rate in Background**: Fixed fatal PlatformException(noActivity) when app starts in background or lockscreen without an attached activity.
+- **Player Artwork Layout**: Fixed fatal ArgumentError in double.clamp on small screens, landscape orientation, and split-screen mode.
+- **Async Cubit Resilience**: Fixed fatal StateError (Cannot emit new states after calling close) in PluginRepositoryCubit and other async cubits when navigating back during active fetches.
+- **Like / Favorite Action Boundaries**: Added defensive error handling and automatic UI heart state rollback.
+
 ## [1.7.6] - 2026-11-08
 
 ### Fixes & Improvements

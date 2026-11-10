@@ -20,6 +20,13 @@ class RecommendationCubit extends Cubit<RecommendationState> {
         _statsService = statsService,
         super(RecommendationInitial());
 
+  @override
+  void emit(RecommendationState state) {
+    if (!isClosed) {
+      super.emit(state);
+    }
+  }
+
   Future<void> fetchRecommendations({List<String> resolverPluginIds = const []}) async {
     if (state is RecommendationLoading) return;
     emit(RecommendationLoading());

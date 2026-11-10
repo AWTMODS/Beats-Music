@@ -162,12 +162,16 @@ class _TrackOptionsBottomSheet extends StatelessWidget {
                                 _BottomSheetTile(
                                   icon: MingCute.heart_line,
                                   title: l10n.playerAddToFavorites,
-                                  onTap: () {
-                                    parentContext
-                                        .read<LibraryItemsCubit>()
-                                        .setTrackLiked(song, true);
-                                    SnackbarService.showMessage(
-                                        l10n.snackbarAddedToLiked(song.title));
+                                  onTap: () async {
+                                    try {
+                                      await parentContext
+                                          .read<LibraryItemsCubit>()
+                                          .setTrackLiked(song, true);
+                                      SnackbarService.showMessage(
+                                          l10n.snackbarAddedToLiked(song.title));
+                                    } catch (e) {
+                                      SnackbarService.showMessage('Failed to add to liked: $e');
+                                    }
                                   },
                                 ),
                                 _BottomSheetTile(

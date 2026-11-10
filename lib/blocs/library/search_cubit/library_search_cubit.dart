@@ -20,6 +20,13 @@ class LibrarySearchCubit extends Cubit<LibrarySearchState> {
 
   String _currentQuery = '';
 
+  @override
+  void emit(LibrarySearchState state) {
+    if (!isClosed) {
+      super.emit(state);
+    }
+  }
+
   void search(String query, LibraryItemsState itemsState) {
     _currentQuery = query;
 

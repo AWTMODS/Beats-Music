@@ -46,6 +46,7 @@ import 'package:beats_music/utils/url_checker.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:beats_music/l10n/app_localizations.dart';
 import 'package:beats_music/blocs/add_to_playlist/cubit/add_to_playlist_cubit.dart';
@@ -157,7 +158,11 @@ Future<void> importItems(String path) async {
 
 Future<void> setHighRefreshRate() async {
   if (io.Platform.isAndroid) {
-    await FlutterDisplayMode.setHighRefreshRate();
+    try {
+      await FlutterDisplayMode.setHighRefreshRate();
+    } catch (e) {
+      _log('[MAIN] setHighRefreshRate ignored error: $e');
+    }
   }
 }
 
@@ -190,10 +195,11 @@ Future<void> main() async {
       return;
     }
 
-    // Layout overflow warnings and silent errors should NOT be treated as fatal crashes
+    // Layout overflow warnings, background activity detachment, and silent errors should NOT be treated as fatal crashes
     final exceptionStr = details.exceptionAsString();
     if (exceptionStr.contains('overflowed by') ||
         exceptionStr.contains('RenderFlex overflowed') ||
+        exceptionStr.contains('Activity not attached to plugin') ||
         details.silent) {
       try {
         FirebaseCrashlytics.instance.recordFlutterError(details);
@@ -275,6 +281,17 @@ Future<void> main() async {
       PlatformDispatcher.instance.onError = (error, stack) {
         if (error is NetworkImageLoadException) {
           return true; 
+        }
+
+        // If the app is launched in background or transitioning and an activity is not attached,
+        // treat noActivity platform exceptions as non-fatal warnings rather than fatal crashes
+        if (error is PlatformException &&
+            (error.code == 'noActivity' ||
+             (error.message?.contains('Activity not attached') ?? false))) {
+          try {
+            FirebaseCrashlytics.instance.recordError(error, stack, fatal: false);
+          } catch (_) {}
+          return true;
         }
         
         bool isNetworkError = error is io.SocketException || 
@@ -557,6 +574,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       // User came back - cancel existing suggestion
       NotificationManager().cancelReengagementNotification();
+      if (io.Platform.isAndroid) {
+        setHighRefreshRate();
+      }
     }
   }
 
@@ -583,9 +603,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   Future<void> _requestNotificationPermission() async {
     if (io.Platform.isAndroid) {
-      final status = await Permission.notification.status;
-      if (status.isDenied) {
-        await Permission.notification.request();
+      try {
+        final status = await Permission.notification.status;
+        if (status.isDenied) {
+          await Permission.notification.request();
+        }
+      } catch (e) {
+        debugPrint('[MAIN] Notification permission request error: $e');
       }
     }
   }

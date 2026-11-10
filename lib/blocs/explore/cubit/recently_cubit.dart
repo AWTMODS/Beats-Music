@@ -31,6 +31,13 @@ class RecentlyCubit extends Cubit<RecentlyCubitState> {
   }
 
   @override
+  void emit(RecentlyCubitState state) {
+    if (!isClosed) {
+      super.emit(state);
+    }
+  }
+
+  @override
   Future<void> close() {
     _watcher?.cancel();
     return super.close();

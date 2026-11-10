@@ -204,10 +204,16 @@ class _PlayerUI extends StatelessWidget {
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
         final screenHeight = constraints.maxHeight;
-        final albumArtSize = (screenWidth - 48).clamp(
-          200.0,
-          min<double>((screenWidth - 48).toDouble(), (screenHeight * 0.40).toDouble()),
-        ).toDouble();
+        final maxCoverDimension = min<double>(
+          max<double>(0.0, screenWidth - 48),
+          max<double>(0.0, screenHeight * 0.40),
+        );
+        // Ensure lower bound never exceeds upper bound on compact, split-screen, or landscape views
+        final minCoverDimension = min<double>(200.0, maxCoverDimension);
+        final albumArtSize = maxCoverDimension.clamp(
+          minCoverDimension,
+          max<double>(minCoverDimension, 380.0),
+        );
 
         return Stack(
           alignment: Alignment.center,

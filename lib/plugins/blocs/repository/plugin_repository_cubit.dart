@@ -24,10 +24,19 @@ class PluginRepositoryCubit extends Cubit<PluginRepositoryState> {
 
   PluginRepositoryCubit(this._service) : super(PluginRepositoryInitial());
 
+  @override
+  void emit(PluginRepositoryState state) {
+    if (!isClosed) {
+      super.emit(state);
+    }
+  }
+
   Future<void> loadRepositories() async {
+    if (isClosed) return;
     emit(PluginRepositoryLoading());
     try {
       final urls = await _service.getSavedRepositoryUrls();
+      if (isClosed) return;
       if (urls.isEmpty) {
         emit(PluginRepositoryLoaded([]));
         return;
@@ -35,6 +44,7 @@ class PluginRepositoryCubit extends Cubit<PluginRepositoryState> {
 
       final List<PluginRepositoryModel> results = [];
       for (final url in urls) {
+        if (isClosed) return;
         try {
           final repo = await _service.fetchRepository(url);
           results.add(repo);
@@ -44,20 +54,26 @@ class PluginRepositoryCubit extends Cubit<PluginRepositoryState> {
         }
       }
 
+      if (isClosed) return;
       emit(PluginRepositoryLoaded(results));
     } catch (e) {
+      if (isClosed) return;
       emit(PluginRepositoryError('Failed to load repositories: $e'));
     }
   }
 
   Future<void> addRepository(String url) async {
+    if (isClosed) return;
     try {
       emit(PluginRepositoryLoading());
       // First verify it's valid
       await _service.fetchRepository(url);
+      if (isClosed) return;
       await _service.addRepositoryUrl(url);
+      if (isClosed) return;
       await loadRepositories();
     } catch (e) {
+      if (isClosed) return;
       emit(PluginRepositoryError('Invalid repository: $e'));
       // try reloading to restore previous state
       await loadRepositories();
@@ -65,11 +81,14 @@ class PluginRepositoryCubit extends Cubit<PluginRepositoryState> {
   }
 
   Future<void> removeRepository(String url) async {
+    if (isClosed) return;
     try {
       emit(PluginRepositoryLoading());
       await _service.removeRepositoryUrl(url);
+      if (isClosed) return;
       await loadRepositories();
     } catch (e) {
+      if (isClosed) return;
       emit(PluginRepositoryError('Failed to remove repository: $e'));
       await loadRepositories();
     }

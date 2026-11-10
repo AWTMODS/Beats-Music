@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.7.7] - 2026-11-10
+
+### Fixes & Stability
+
+- **Display Refresh Rate in Background**:
+  - Fixed fatal `PlatformException(noActivity)` crash when app is started in the background or lockscreen without an attached activity (e.g. by `AudioService` or notification controls).
+  - Automatically re-applies high refresh rate safely upon returning to the foreground (`AppLifecycleState.resumed`).
+- **Responsive Player Artwork Layout**:
+  - Fixed fatal `ArgumentError` (`Invalid argument(s): 200.0` in `double.clamp`) on small screens, landscape orientation, and Android split-screen / multi-window mode.
+  - Sizing constraints are now mathematically guaranteed to prevent `lowerLimit > upperLimit` while preserving responsive cover scaling.
+- **Async Cubit Lifecycle Resilience**:
+  - Fixed fatal `StateError` (`Cannot emit new states after calling close`) in `PluginRepositoryCubit` when navigating away while background repository fetches are in-flight.
+  - Added safe `emit` overrides and cancellation checks across `PluginRepositoryCubit`, `RecentlyCubit`, `RecommendationCubit`, and `LibrarySearchCubit`.
+- **Like / Favorite Action Boundaries**:
+  - Added defensive error handling and automatic UI heart state rollback in player like controls and options sheet.
+
 ## [1.7.6] - 2026-11-08
 
 ### Fixes & Improvements
