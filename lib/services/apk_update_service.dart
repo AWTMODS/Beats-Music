@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:beats_music/services/beats_updater_tools.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -256,29 +257,59 @@ class ApkUpdateService {
       log('ApkUpdateService: Opening installer for ${file.path}',
           name: 'ApkUpdate');
 
-      final result = await OpenFilex.open(
-        file.path,
-        type: 'application/vnd.android.package-archive',
-      );
-
-      log('ApkUpdateService: OpenFilex result → ${result.type} ${result.message}',
-          name: 'ApkUpdate');
-
-      if (result.type != ResultType.done) {
-        String msg = result.message;
-        if (result.type == ResultType.permissionDenied) {
-          msg =
-              'Permission denied to install APK. Please enable "Allow from this source" in Settings.';
-        } else if (result.type == ResultType.noAppToOpen) {
-          msg = 'No package installer app found on this device to open APK.';
+      // ── 1. Try dedicated native Android installer channel first ─────────────
+      // This bypasses third-party plugin lifecycle bugs (e.g. open_filex
+      // channel detachment when app runs with background audio or orientation changes).
+      if (Platform.isAndroid) {
+        try {
+          const nativeChannel = MethodChannel('com.beats.app/package_installer');
+          final success = await nativeChannel.invokeMethod<bool>('installApk', {
+            'filePath': file.path,
+          });
+          if (success == true) {
+            log('ApkUpdateService: Native installer launched successfully',
+                name: 'ApkUpdate');
+            return const ApkUpdateResult(state: ApkUpdateState.installing);
+          }
+        } catch (e) {
+          log('ApkUpdateService: Native installer channel failed: $e, falling back to open_filex',
+              name: 'ApkUpdate');
         }
-        return ApkUpdateResult(
-          state: ApkUpdateState.error,
-          errorMessage: msg,
-        );
       }
 
-      return const ApkUpdateResult(state: ApkUpdateState.installing);
+      // ── 2. Fallback to open_filex ──────────────────────────────────────────
+      try {
+        final result = await OpenFilex.open(
+          file.path,
+          type: 'application/vnd.android.package-archive',
+        );
+
+        log('ApkUpdateService: OpenFilex result → ${result.type} ${result.message}',
+            name: 'ApkUpdate');
+
+        if (result.type != ResultType.done) {
+          String msg = result.message;
+          if (result.type == ResultType.permissionDenied) {
+            msg =
+                'Permission denied to install APK. Please enable "Allow from this source" in Settings.';
+          } else if (result.type == ResultType.noAppToOpen) {
+            msg = 'No package installer app found on this device to open APK.';
+          }
+          return ApkUpdateResult(
+            state: ApkUpdateState.error,
+            errorMessage: msg,
+          );
+        }
+
+        return const ApkUpdateResult(state: ApkUpdateState.installing);
+      } catch (e) {
+        log('ApkUpdateService: OpenFilex threw: $e', name: 'ApkUpdate');
+        return ApkUpdateResult(
+          state: ApkUpdateState.error,
+          errorMessage:
+              'Failed to open package installer automatically. Please install the APK directly from your file manager or browser.',
+        );
+      }
     } catch (e, st) {
       log('ApkUpdateService: Error opening installer: $e\n$st',
           name: 'ApkUpdate');
