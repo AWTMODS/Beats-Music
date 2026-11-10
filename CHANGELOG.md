@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.7.8] - 2026-11-10
+
+### Fixes & Improvements
+
+- **In-App Updater Cache & Cleanup**:
+  - Added version-aware metadata tracking (`beats_update_meta.json`) to accurately verify downloaded APK versions and build numbers before installation.
+  - Fixed an issue where the updater would re-attempt installing an old cached APK instead of downloading newer releases.
+  - Added automatic background cleanup on app launch (`cleanupIfInstalled`) to remove obsolete or already-installed update files, freeing ~70 MB of disk space.
+
 ## [1.7.7] - 2026-11-10
 
 ### Fixes & Stability

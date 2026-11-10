@@ -7,6 +7,11 @@ import 'package:beats_music/core/constants/setting_keys.dart';
 
 // The final changelog string for testing all features
 const String changelogText = """
+## [1.7.8] - 2026-11-10
+
+### Fixes & Improvements
+- **In-App Updater Cache & Cleanup**: Added version-aware metadata tracking for update packages, fixed stale APK reinstallation when newer updates are available, and added automatic background cleanup of obsolete downloaded APKs on app launch.
+
 ## [1.7.7] - 2026-11-10
 
 ### Fixes & Stability
