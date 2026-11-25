@@ -16,6 +16,18 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 subprojects {
+    if (name != "app" && !state.executed) {
+        afterEvaluate {
+            if (plugins.hasPlugin("com.android.library")) {
+                extensions.findByName("android")?.let { ext ->
+                    try {
+                        ext.javaClass.getMethod("setCompileSdkVersion", Int::class.javaPrimitiveType)
+                            .invoke(ext, 37)
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+    }
     project.evaluationDependsOn(":app")
 }
 
