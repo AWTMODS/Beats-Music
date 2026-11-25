@@ -8,11 +8,11 @@ class ToggleButton extends StatefulWidget {
   final bool initialState; // Parameter to set initial state
 
   const ToggleButton({
-    Key? key,
+    super.key,
     required this.label,
     required this.onChanged,
     this.initialState = false, // Default to false (inactive)
-  }) : super(key: key);
+  });
 
   @override
   _ToggleButtonState createState() => _ToggleButtonState();

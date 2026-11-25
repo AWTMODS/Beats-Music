@@ -240,7 +240,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                           physics: const BouncingScrollPhysics(),
                           itemCount: repo.plugins.length,
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (_, _) =>
                               const SizedBox(height: 12),
                           itemBuilder: (context, index) => _buildPluginTile(
                               context, repo.plugins[index], state),
@@ -381,8 +381,8 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
               border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
               image: DecorationImage(image: imageProvider, fit: BoxFit.cover)),
         ),
-        placeholder: (_, __) => _defaultIcon(),
-        errorWidget: (_, __, ___) => _defaultIcon(),
+        placeholder: (_, _) => _defaultIcon(),
+        errorWidget: (_, _, _) => _defaultIcon(),
       );
     }
     return _defaultIcon();

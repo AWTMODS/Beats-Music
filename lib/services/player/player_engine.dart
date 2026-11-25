@@ -25,8 +25,12 @@ class EqualizerBand {
   EqualizerBand(this.centerFrequency, {this.gain = 0.0});
 }
 
+/// FIX M-07: Replaced the 20-step await loop with a Timer.periodic that fires
+/// at ~30fps and calls setVolume fire-and-forget. This eliminates 20 sequential
+/// platform-channel round-trips and removes jitter from event-loop pressure.
 class VolumeFader {
   bool _cancelled = false;
+  Timer? _timer;
 
   Future<void> fade(
       Player player, double startVol, double endVol, Duration duration) async {
@@ -36,19 +40,30 @@ class VolumeFader {
       await player.setVolume(endVol.clamp(0.0, 100.0));
       return;
     }
-    const steps = 20;
-    final stepDuration =
-        Duration(milliseconds: duration.inMilliseconds ~/ steps);
-    for (int i = 1; i <= steps; i++) {
-      if (_cancelled) break;
-      final vol = startVol + ((endVol - startVol) * (i / steps));
-      await player.setVolume(vol.clamp(0.0, 100.0));
-      if (_cancelled) break;
-      await Future.delayed(stepDuration);
-    }
+
+    final startMs = DateTime.now().millisecondsSinceEpoch;
+    final endMs = startMs + duration.inMilliseconds;
+
+    _timer = Timer.periodic(const Duration(milliseconds: 33), (t) {
+      if (_cancelled) {
+        t.cancel();
+        return;
+      }
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final frac = ((now - startMs) / (endMs - startMs)).clamp(0.0, 1.0);
+      final vol = startVol + (endVol - startVol) * frac;
+      // Fire and forget — do NOT await. Awaiting here would back-pressure the timer.
+      player.setVolume(vol.clamp(0.0, 100.0));
+      if (frac >= 1.0) t.cancel();
+    });
   }
 
-  void cancel() => _cancelled = true;
+  void cancel() {
+    _cancelled = true;
+    _timer?.cancel();
+    _timer = null;
+  }
+
   void dispose() => cancel();
 }
 
@@ -89,8 +104,17 @@ class PlayerEngine {
   double _playerAVolume = 100.0;
   double _playerBVolume = 100.0;
   bool _hasMedia = false;
+
+  /// Last native error message per player. media_kit also reports errors mpv
+  /// recovers from (e.g. a reconnected `tcp:` read), so a diagnostic only
+  /// means "failed" if the player then unloads (idle) on its own.
   final Map<Player, String> _nativeDiagnostics = {};
   Duration _lastPlaybackPosition = Duration.zero;
+
+  /// A switch to the preloaded track is in flight. Until the players are
+  /// swapped, positions from the outgoing player must not become the
+  /// recovery position: a failure now belongs to the incoming track.
+  bool _switchingTrack = false;
 
   /// Native EOF can reset the reported position before notifying completion.
   Duration get recoveryPosition => _lastPlaybackPosition;
@@ -113,6 +137,7 @@ class PlayerEngine {
       StreamController<String>.broadcast();
 
   late final List<StreamSubscription> _subs;
+  late final Future<void> _nativeConfiguration;
 
   bool _eqEnabled = false;
   final List<EqualizerBand> _eqBands = [
@@ -130,39 +155,59 @@ class PlayerEngine {
   static const Duration _eqApplyDebounce = Duration(milliseconds: 180);
   Timer? _eqApplyDebounceTimer;
 
-  PlayerEngine() {
-    _playerA = Player(
-        configuration: const PlayerConfiguration(
-            title: 'Beats', bufferSize: 4 * 1024 * 1024));
-    _playerB = Player(
-        configuration: const PlayerConfiguration(
-            title: 'Beats', bufferSize: 4 * 1024 * 1024));
+  // FIX L-01: Reactive EQ streams so EqualizerView can subscribe and stay
+  // in sync even if EQ state changes from outside the view (settings restore,
+  // revive, eqSource toggle).
+  final BehaviorSubject<bool> _eqEnabledSubject = BehaviorSubject.seeded(false);
+  final BehaviorSubject<List<double>> _eqBandGainsSubject =
+      BehaviorSubject.seeded(List.filled(10, 0.0));
+  bool _skipSilenceEnabled = false;
+  final BehaviorSubject<bool> _skipSilenceSubject =
+      BehaviorSubject.seeded(false);
 
-    _configureNativePlayer(_playerA);
-    _configureNativePlayer(_playerB);
+  Stream<bool> get equalizerEnabledStream => _eqEnabledSubject.stream;
+  Stream<List<double>> get equalizerBandGainsStream =>
+      _eqBandGainsSubject.stream;
+  bool get skipSilenceEnabled => _skipSilenceEnabled;
+  Stream<bool> get skipSilenceStream => _skipSilenceSubject.stream;
+
+  PlayerEngine({Player? playerA, Player? playerB}) {
+    _playerA = playerA ??
+        Player(
+            configuration: const PlayerConfiguration(
+                title: 'BloomeeTunes', bufferSize: 4 * 1024 * 1024));
+    _playerB = playerB ??
+        Player(
+            configuration: const PlayerConfiguration(
+                title: 'BloomeeTunes', bufferSize: 4 * 1024 * 1024));
+
+    _nativeConfiguration = Future.wait([
+      _configureNativePlayer(_playerA),
+      _configureNativePlayer(_playerB),
+    ]).then((_) {});
 
     _activePlayerSubject = BehaviorSubject.seeded(_playerA);
     _subs = _buildSubscriptions();
   }
 
-  void _configureNativePlayer(Player player) {
+  Future<void> _configureNativePlayer(Player player) async {
     if (player.platform is NativePlayer) {
       final native = player.platform as NativePlayer;
-      native.observeProperty('idle-active', (value) async {
+      await native.observeProperty('idle-active', (value) async {
         if (value == 'yes') _handleNativeIdle(player);
       });
       try {
         // media_kit enables disk caching by default. In that mode mpv's byte
         // limit caps packet metadata, not downloaded audio. Bound both time
         // and in-memory bytes, including the paused standby player.
-        native.setProperty('cache-on-disk', 'no');
-        native.setProperty('cache', 'auto');
-        native.setProperty('cache-secs', '20');
-        native.setProperty('demuxer-readahead-secs', '20');
-        native.setProperty('demuxer-max-bytes', '${4 * 1024 * 1024}');
-        native.setProperty('demuxer-max-back-bytes', '${1024 * 1024}');
-        native.setProperty('network-timeout', '15');
-        native.setProperty('stream-lavf-o',
+        await native.setProperty('cache-on-disk', 'no');
+        await native.setProperty('cache', 'auto');
+        await native.setProperty('cache-secs', '20');
+        await native.setProperty('demuxer-readahead-secs', '20');
+        await native.setProperty('demuxer-max-bytes', '${4 * 1024 * 1024}');
+        await native.setProperty('demuxer-max-back-bytes', '${1024 * 1024}');
+        await native.setProperty('network-timeout', '15');
+        await native.setProperty('stream-lavf-o',
             'reconnect=1,reconnect_streamed=1,reconnect_delay_max=5');
       } catch (error, stack) {
         log('Could not configure native playback buffering',
@@ -178,7 +223,9 @@ class PlayerEngine {
         _deriveState();
       }),
       _activePlayerSubject.switchMap((p) => p.stream.position).listen((pos) {
-        if (pos > Duration.zero) _lastPlaybackPosition = pos;
+        if (pos > Duration.zero && !_switchingTrack) {
+          _lastPlaybackPosition = pos;
+        }
         _positionSubject.add(pos);
         _checkCrossfadeTrigger(pos);
       }),
@@ -198,10 +245,12 @@ class PlayerEngine {
         if (completed && _hasMedia && !_disposed && !_crossfadeTriggered) {
           final pos = recoveryPosition;
           final dur = _durationSubject.value;
-          // MATHEMATICAL ABNORMAL EOF DETECTION:
-          // If the player 'completed' but we are more than 2 seconds away from the known duration,
-          // the CDN severed the socket. Route to the error machine, do NOT advance to the next track.
-          if (dur > Duration.zero && (dur - pos) > const Duration(seconds: 2)) {
+          final endedEarly =
+              dur > Duration.zero && (dur - pos) > const Duration(seconds: 2);
+          // Unknown duration and nothing played: the stream died, it did not
+          // finish. Treating it as a completion silently skipped the track.
+          final endedUnplayed = dur <= Duration.zero && pos <= Duration.zero;
+          if (endedEarly || endedUnplayed) {
             log('Abnormal EOF detected (pos: $pos, dur: $dur). Routing to error handler.',
                 name: 'PlayerEngine');
             _triggerEngineFailure(
@@ -250,7 +299,6 @@ class PlayerEngine {
       _triggerEngineFailure(diagnostic);
     } else if (player == _standby) {
       _standbyPreloaded = false;
-      _pendingPreloadUri = null;
     }
   }
 
@@ -277,8 +325,24 @@ class PlayerEngine {
     _errorController.add(error);
   }
 
+  /// Stops [player] on purpose. The resulting idle state is our own doing,
+  /// so diagnostics from its earlier playback must not turn it into a load
+  /// failure (of whichever track is current by then).
+  Future<void> _stopPlayer(Player player) {
+    _nativeDiagnostics.remove(player);
+    return player.stop().catchError((_) {});
+  }
+
+  /// Starts a switch to another track: from here on, a failure belongs to
+  /// the incoming track, which has not played anything yet.
+  void _beginTrackSwitch() {
+    _switchingTrack = true;
+    _lastPlaybackPosition = Duration.zero;
+  }
+
   void _swapActivePlayer() {
     _aIsActive = !_aIsActive;
+    _switchingTrack = false;
     final p = _active;
     _lastPlaybackPosition = p.state.position;
     _playingSubject.add(p.state.playing);
@@ -351,6 +415,7 @@ class PlayerEngine {
       bool autoPlay = true,
       Duration? initialPosition}) async {
     if (_disposed) return EngineFailure('Engine disposed');
+    _switchingTrack = false;
     _lastPlaybackPosition = initialPosition ?? Duration.zero;
     final gen = ++_generation;
     _nativeDiagnostics.remove(_active);
@@ -367,6 +432,8 @@ class PlayerEngine {
     setLoadingState();
 
     try {
+      await _nativeConfiguration;
+      if (_disposed || _generation != gen) return EngineCanceled();
       await _active.setVolume(_userVolume * 100.0);
       await _active.open(
           Media(uri.toString(),
@@ -375,7 +442,11 @@ class PlayerEngine {
       if (_disposed || _generation != gen) return EngineCanceled();
 
       _hasMedia = true;
-      if (_eqEnabled) await _applyEqualizerToPlayer(_active);
+      // FIX M-09: Apply EQ only to active player after open; standby gets it
+      // when it becomes active (after _swapActivePlayer in crossfade paths).
+      if (_eqEnabled || _skipSilenceEnabled) {
+        await _applyEqualizerToPlayer(_active);
+      }
       _deriveState();
       return EngineSuccess();
     } catch (e) {
@@ -406,13 +477,16 @@ class PlayerEngine {
     _crossfadeTriggered = false;
 
     setLoadingState();
+    _beginTrackSwitch();
     final oldPlayer = _active;
     final newPlayer = _standby;
     final nextUri = _preloadedNextUri!;
     final nextHeaders = _preloadedNextHeaders;
 
     try {
-      oldPlayer.stop().catchError((_) {});
+      // Not awaited: the new track starts without waiting for the old one to
+      // unload. Its idle notification may arrive before the swap below.
+      _stopPlayer(oldPlayer);
       if (_generation != gen || _disposed) return EngineCanceled();
 
       await newPlayer.setVolume(_userVolume * 100.0);
@@ -437,12 +511,16 @@ class PlayerEngine {
       _hasMedia = true;
 
       _swapActivePlayer();
-      if (_eqEnabled) await _applyEqualizerToPlayer(_active);
+      // FIX M-09: Apply EQ to the newly active player after swap.
+      if (_eqEnabled || _skipSilenceEnabled) {
+        await _applyEqualizerToPlayer(_active);
+      }
 
       return EngineSuccess();
     } catch (e) {
       if (_generation != gen) return EngineCanceled();
-      newPlayer.stop().catchError((_) {});
+      _switchingTrack = false;
+      _stopPlayer(newPlayer);
       _standbyPreloaded = false;
       _triggerEngineFailure(e.toString());
       return EngineFailure(e);
@@ -473,6 +551,7 @@ class PlayerEngine {
     _crossfadeTriggered = false;
 
     setLoadingState();
+    _beginTrackSwitch();
 
     final oldPlayer = _active;
     final newPlayer = _standby;
@@ -493,7 +572,7 @@ class PlayerEngine {
       }
 
       if (_generation != gen || _disposed) {
-        newPlayer.stop().catchError((_) {});
+        _stopPlayer(newPlayer);
         return EngineCanceled();
       }
 
@@ -502,7 +581,10 @@ class PlayerEngine {
       _hasMedia = true;
 
       _swapActivePlayer();
-      if (_eqEnabled) await _applyEqualizerToPlayer(_active);
+      // FIX M-09: Apply EQ to the new active player immediately after swap.
+      if (_eqEnabled || _skipSilenceEnabled) {
+        await _applyEqualizerToPlayer(_active);
+      }
 
       _oldPlayerFader.fade(oldPlayer, oldStartVol, 0.0, duration);
       _newPlayerFader.fade(newPlayer, 0.0, _userVolume * 100.0, duration);
@@ -511,7 +593,7 @@ class PlayerEngine {
         if (!_disposed) {
           _oldPlayerFader.cancel();
           _newPlayerFader.cancel();
-          await oldPlayer.stop().catchError((_) {});
+          await _stopPlayer(oldPlayer);
           await oldPlayer.setVolume(_userVolume * 100.0).catchError((_) {});
           await newPlayer.setVolume(_userVolume * 100.0).catchError((_) {});
           _isTransitioning = false;
@@ -529,6 +611,7 @@ class PlayerEngine {
       return EngineSuccess();
     } catch (e) {
       if (_generation != gen) return EngineCanceled();
+      _switchingTrack = false;
       _oldPlayerFader.cancel();
       _newPlayerFader.cancel();
       _fadeCleanupTimer?.cancel();
@@ -543,7 +626,7 @@ class PlayerEngine {
     if (_disposed) return;
     final player = _active;
     if (!player.state.playing) {
-      player.stop().catchError((_) {});
+      _stopPlayer(player);
       return;
     }
     _isTransitioning = true;
@@ -555,7 +638,7 @@ class PlayerEngine {
     _fadeOutCleanupTimer = Timer(duration, () {
       if (!_disposed) {
         _oldPlayerFader.cancel();
-        player.stop().catchError((_) {});
+        _stopPlayer(player);
         player.setVolume(_userVolume * 100.0).catchError((_) {});
         _isTransitioning = false;
       }
@@ -564,6 +647,7 @@ class PlayerEngine {
 
   Future<void> stop({bool keepLoadingState = false}) async {
     if (_disposed) return;
+    _switchingTrack = false;
     _lastPlaybackPosition = Duration.zero;
     ++_generation;
     _nativeDiagnostics.clear();
@@ -663,6 +747,9 @@ class PlayerEngine {
     }
 
     try {
+      await _nativeConfiguration;
+      if (_disposed) return false;
+      _nativeDiagnostics.remove(_standby);
       await _standby.setVolume(0);
       await _standby.open(Media(uri.toString(), httpHeaders: httpHeaders),
           play: false);
@@ -688,20 +775,19 @@ class PlayerEngine {
     _standbyPreloaded = false;
     _pendingPreloadUri = null;
     _pendingPreloadHeaders = null;
-    if (!_isTransitioning) {
-      try {
-        await _standby.stop();
-      } catch (_) {}
-    }
+    if (!_isTransitioning) await _stopPlayer(_standby);
   }
 
   bool get isPreloaded => _standbyPreloaded || _pendingPreloadUri != null;
+
+  // ── Equalizer ──────────────────────────────────────────────────────────────
 
   List<EqualizerBand> get equalizerBands => List.unmodifiable(_eqBands);
   bool get equalizerEnabled => _eqEnabled;
 
   Future<void> setEqualizerEnabled(bool enabled) async {
     _eqEnabled = enabled;
+    _eqEnabledSubject.add(enabled);
     _eqApplyDebounceTimer?.cancel();
     await _applyEqualizer();
   }
@@ -710,6 +796,8 @@ class PlayerEngine {
       {bool immediate = false}) async {
     if (bandIndex < 0 || bandIndex >= _eqBands.length) return;
     _eqBands[bandIndex].gain = gain.clamp(_eqMinGainDb, _eqMaxGainDb);
+    _eqBandGainsSubject
+        .add(_eqBands.map((b) => b.gain).toList(growable: false));
     if (!_eqEnabled) return;
     if (immediate) {
       _eqApplyDebounceTimer?.cancel();
@@ -726,6 +814,8 @@ class PlayerEngine {
     for (var i = 0; i < count; i++) {
       _eqBands[i].gain = gains[i].clamp(_eqMinGainDb, _eqMaxGainDb);
     }
+    _eqBandGainsSubject
+        .add(_eqBands.map((b) => b.gain).toList(growable: false));
     if (!_eqEnabled) return;
     if (immediate) {
       _eqApplyDebounceTimer?.cancel();
@@ -739,7 +829,15 @@ class PlayerEngine {
     for (final band in _eqBands) {
       band.gain = 0.0;
     }
+    _eqBandGainsSubject
+        .add(_eqBands.map((b) => b.gain).toList(growable: false));
     _eqApplyDebounceTimer?.cancel();
+    await _applyEqualizer();
+  }
+
+  Future<void> setSkipSilenceEnabled(bool enabled) async {
+    _skipSilenceEnabled = enabled;
+    _skipSilenceSubject.add(enabled);
     await _applyEqualizer();
   }
 
@@ -752,12 +850,25 @@ class PlayerEngine {
     });
   }
 
+  /// FIX M-09: Applies the EQ filter with context-awareness.
+  /// - During normal playback: apply to active player only.
+  /// - When not transitioning: apply to both players so the standby
+  ///   is ready for preload and crossfade with the correct filter.
+  /// - After a crossfade completes: re-apply to the now-active player
+  ///   via the post-crossfade Timer in crossfadeToPreloaded.
   Future<void> _applyEqualizer() async {
     if (_disposed) return;
     try {
+      final filter = _buildAudioFilter();
+      log('Applying EQ filter: ${filter.isEmpty ? '<off>' : filter}',
+          name: 'PlayerEngine');
+
       if (_isTransitioning) {
+        // During crossfade, only update the new active player (post-swap).
+        // The old player is fading out and will be stopped soon anyway.
         await _applyEqualizerToPlayer(_active);
       } else {
+        // Outside of transition, apply to both so preloaded standby is ready.
         await Future.wait([
           _applyEqualizerToPlayer(_playerA),
           _applyEqualizerToPlayer(_playerB),
@@ -771,7 +882,7 @@ class PlayerEngine {
   Future<void> _applyEqualizerToPlayer(Player player) async {
     if (_disposed) return;
     try {
-      final filter = _eqEnabled ? _buildEqualizerFilter() : '';
+      final filter = _buildAudioFilter();
       final platform = player.platform;
       if (platform is NativePlayer) {
         await platform.setProperty('af', filter);
@@ -781,22 +892,34 @@ class PlayerEngine {
     }
   }
 
+  String _buildAudioFilter() {
+    final filters = <String>[];
+    if (_eqEnabled) {
+      final eq = _buildEqualizerFilter();
+      if (eq.isNotEmpty) filters.add(eq);
+    }
+    if (_skipSilenceEnabled) {
+      filters.add(
+        'lavfi=[silenceremove=start_periods=1:start_duration=0.3:start_threshold=-50dB:stop_periods=-1:stop_duration=0.4:stop_threshold=-50dB]',
+      );
+    }
+    return filters.join(',');
+  }
+
   String _buildEqualizerFilter() {
     final parts = <String>[];
     for (var i = 0; i < _eqBands.length; i++) {
       final band = _eqBands[i];
       if (band.gain.abs() < 0.05) continue;
 
-      // Use Q-factors for width (t=q). Higher Q means narrower peak.
-      // Values inspired by BloomeeTunes for better audio separation.
-      final qFactor = switch (i) {
-        0 || 1 => 0.5, // Broad low-end
-        8 || 9 => 0.6, // Slightly broad highs
-        _ => 1.0,      // Sharp mid-range
+      final width = switch (i) {
+        0 || 1 => 1.8,
+        8 || 9 => 1.6,
+        _ => 1.25,
       };
 
       parts.add(
-        'equalizer=f=${band.centerFrequency}:t=q:w=$qFactor:g=${band.gain.toStringAsFixed(2)}',
+        'equalizer=f=${band.centerFrequency}:t=o:w=$width:g=${band.gain.toStringAsFixed(2)}',
       );
     }
     if (parts.isEmpty) return '';
@@ -819,6 +942,7 @@ class PlayerEngine {
       await sub.cancel();
     }
 
+    await _nativeConfiguration;
     await _activePlayerSubject.close();
     await Future.wait([_playerA.dispose(), _playerB.dispose()]);
     await _stateSubject.close();
@@ -830,6 +954,8 @@ class PlayerEngine {
     await _speedSubject.close();
     await _completionController.close();
     await _errorController.close();
+    await _eqEnabledSubject.close();
+    await _eqBandGainsSubject.close();
+    await _skipSilenceSubject.close();
   }
 }
-

@@ -25,7 +25,7 @@ class LibItemCard extends StatelessWidget {
   final bool showMenuButton;
   final bool isPinned;
   const LibItemCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.imageUrls,
     required this.subtitle,
@@ -36,7 +36,7 @@ class LibItemCard extends StatelessWidget {
     this.onMenuTap,
     this.showMenuButton = false,
     this.isPinned = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

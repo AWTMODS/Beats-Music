@@ -2,6 +2,22 @@ import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:beats_music/screens/screen/home_views/setting_views/custom_switch.dart';
 import 'package:flutter/material.dart';
 
+const double kSettingsContentMaxWidth = 680.0;
+
+/// Page padding that keeps list content within [kSettingsContentMaxWidth],
+/// centered, on wide screens. Falls back to [minHorizontal] on phones.
+EdgeInsets settingsPagePadding(
+  BuildContext context, {
+  double minHorizontal = 20,
+  double vertical = 16,
+}) {
+  final width = MediaQuery.sizeOf(context).width;
+  final side = ((width - kSettingsContentMaxWidth) / 2)
+      .clamp(minHorizontal, double.infinity)
+      .toDouble();
+  return EdgeInsets.symmetric(horizontal: side, vertical: vertical);
+}
+
 class SettingSectionHeader extends StatelessWidget {
   final String label;
   const SettingSectionHeader({required this.label, super.key});
@@ -841,7 +857,7 @@ class _DropdownBottomSheet<T> extends StatelessWidget {
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
               itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 4),
+              separatorBuilder: (_, _) => const SizedBox(height: 4),
               itemBuilder: (context, index) {
                 final item = items[index];
                 final isSelected = item.value == currentValue;

@@ -67,7 +67,7 @@ class LocalMusicCubit extends Cubit<LocalMusicState> {
   Future<void> addFolderViaPicker() async {
     // Folder management only makes sense on desktop platforms.
     if (LocalMusicService.isMobile || Platform.isIOS) return;
-    final result = await FilePicker.platform.getDirectoryPath();
+    final result = await FilePicker.getDirectoryPath();
     if (result == null) return;
     await _service.addFolder(result);
     await scan();

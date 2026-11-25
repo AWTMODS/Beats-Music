@@ -50,7 +50,7 @@ class NotificationManager {
     );
 
     await _notificationsPlugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         final payload = response.payload;
         if (payload != null && payload.isNotEmpty) {
@@ -106,7 +106,7 @@ class NotificationManager {
 
   /// Cancels any scheduled re-engagement notifications
   Future<void> cancelReengagementNotification() async {
-    await _notificationsPlugin.cancel(888); 
+    await _notificationsPlugin.cancel(id: 888); 
   }
 
   /// Schedules a smart re-engagement notification based on user's trending song
@@ -160,10 +160,10 @@ class NotificationManager {
       );
 
       await _notificationsPlugin.show(
-        888,
-        notificationTitle,
-        message,
-        platformChannelSpecifics,
+        id: 888,
+        title: notificationTitle,
+        body: message,
+        notificationDetails: platformChannelSpecifics,
         payload: trendingSong.songId, // Pass the song ID to handle "Tap to Play"
       );
 

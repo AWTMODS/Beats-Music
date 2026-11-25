@@ -1,6 +1,9 @@
 import 'dart:developer';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/services.dart';
 
 import 'package:beats_music/core/adapters/track_adapter.dart';
 import 'package:beats_music/core/models/exported.dart' hide MediaItem;
@@ -29,6 +32,7 @@ import 'package:beats_music/services/discord_service.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:async/async.dart';
+import 'package:easy_debounce/easy_debounce.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -38,11 +42,14 @@ enum ShuffleModeState {
   smartShuffle,
 }
 
+/// What a playlist's play button does (see
+/// [BeatsMusicPlayer.playOrResumePlaylist]).
+enum PlaylistPlayAction { resume, resyncAndResume, load }
+
 /// Main music player — extends [BaseAudioHandler] for OS notification / media
 /// controls and orchestrates [PlayerEngine],[QueueManager],
 /// and [PlayerErrorHandler].
-class BeatsMusicPlayer extends BaseAudioHandler
-    with SeekHandler, QueueHandler {
+class BeatsMusicPlayer extends BaseAudioHandler with SeekHandler, QueueHandler {
   late PlayerEngine engine;
 
   // Modular components
@@ -55,6 +62,8 @@ class BeatsMusicPlayer extends BaseAudioHandler
   late RecentlyPlayedTracker _recentlyPlayedTracker;
   late MediaResolverService _resolver;
   late SmartTrackReplacementService _smartTrackReplacementService;
+  SmartTrackReplacementService get smartReplacement =>
+      _smartTrackReplacementService;
   late ListeningStatisticsService _statsService;
 
   // State subjects (Kept alive indefinitely to avoid orphaning UI StreamBuilders)
@@ -86,6 +95,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
   Timer? _relatedSongTimer;
   StreamSubscription<AudioInterruptionEvent>? _audioInterruptionSub;
   StreamSubscription<void>? _audioNoisySub;
+  StreamSubscription<dynamic>? _audioEventsSub;
 
   AudioSession? _audioSession;
   bool _audioSessionConfigured = false;
@@ -324,7 +334,11 @@ class BeatsMusicPlayer extends BaseAudioHandler
       }
 
       await engine.setEqualizerEnabled(eqOn);
-      log('Engine settings restored: crossfade=${cfSeconds}s, eq=$eqOn',
+      final skipSilence =
+          await settingsDao.getSettingBool(SettingKeys.skipSilence) ?? false;
+      await engine.setSkipSilenceEnabled(skipSilence);
+      _setupNativeAudioEvents();
+      log('Engine settings restored: crossfade=${cfSeconds}s, eq=$eqOn, skipSilence=$skipSilence',
           name: 'BeatsMusicPlayer');
     } catch (e) {
       log('Failed to restore engine settings: $e', name: 'BeatsMusicPlayer');
@@ -441,17 +455,35 @@ class BeatsMusicPlayer extends BaseAudioHandler
       queue.add(
         List<MediaItem>.from(tracks.map((t) => trackToMediaItem(t))),
       );
+      _refreshPreloadIfStale();
       if (_queueManager.isRestoring) return;
-      EasyThrottle.throttle(
-        'persist_queue',
-        const Duration(seconds: 2),
-        () => unawaited(_queueManager.persistQueueState()),
-      );
+      _schedulePersist();
     });
 
     _relatedSongTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!_isDisposed && engine.playing) _checkRelatedSongs();
     });
+  }
+
+  /// Persists queue + current index shortly after the last change.
+  void _schedulePersist() {
+    if (_isDisposed || _queueManager.isRestoring) return;
+    EasyDebounce.debounce(
+      'persist_queue',
+      const Duration(seconds: 1),
+      () => unawaited(_queueManager.persistQueueState()),
+    );
+  }
+
+  bool get _isLoadingTrack => !(_playCompleter?.isCompleted ?? true);
+
+  /// Re-preloads when a queue edit or loop change altered the next track.
+  void _refreshPreloadIfStale() {
+    if (_isDisposed || _isLoadingTrack || engine.state == EngineState.idle) {
+      return;
+    }
+    final nextId = _queueManager.peekNext(loopMode: loopMode.value)?.id;
+    if (nextId != _preloadedTrackId) _preResolveNextTrack();
   }
 
   // ─── State Broadcasting ────────────────────────────────────────────────────
@@ -541,7 +573,8 @@ class BeatsMusicPlayer extends BaseAudioHandler
   }
 
   @override
-  Future<dynamic> customAction(String name, [Map<String, dynamic>? extras]) async {
+  Future<dynamic> customAction(String name,
+      [Map<String, dynamic>? extras]) async {
     if (name == 'like') {
       await _setLikedInternal(true);
     } else if (name == 'unlike') {
@@ -653,8 +686,45 @@ class BeatsMusicPlayer extends BaseAudioHandler
     engine.crossfadeDuration = duration;
   }
 
+  Future<void> setSkipSilenceEnabled(bool enabled) async {
+    await engine.setSkipSilenceEnabled(enabled);
+  }
+
+  void _setupNativeAudioEvents() {
+    if (!Platform.isAndroid || _audioEventsSub != null) return;
+    const channel = EventChannel('com.beats.app/audio_events');
+    _audioEventsSub = channel.receiveBroadcastStream().listen(
+      (event) async {
+        if (_isDisposed) return;
+        final settingsDao = SettingsDAO(DBProvider.db);
+        if (event == 'muted') {
+          final pauseOnMute =
+              await settingsDao.getSettingBool(SettingKeys.pauseOnMute) ??
+                  false;
+          if (pauseOnMute && engine.playing) {
+            log('Pause-on-Mute triggered', name: 'BeatsMusicPlayer');
+            await pause();
+          }
+        } else if (event == 'bluetooth_connected') {
+          final btResume = await settingsDao
+                  .getSettingBool(SettingKeys.bluetoothAutoResume) ??
+              false;
+          if (btResume &&
+              !engine.playing &&
+              _queueManager.currentTrack != null) {
+            log('Bluetooth Auto-Resume triggered', name: 'BeatsMusicPlayer');
+            await play();
+          }
+        }
+      },
+      onError: (e) {
+        log('Audio events channel error: $e', name: 'BeatsMusicPlayer');
+      },
+    );
+  }
+
   Future<void> shuffle(bool enabled) async {
-    _queueManager.shuffle(enabled);
+    _queueManager.setShuffle(enabled);
     if (!enabled && shuffleState.value != ShuffleModeState.off) {
       shuffleState.add(ShuffleModeState.off);
     } else if (enabled && shuffleState.value == ShuffleModeState.off) {
@@ -662,16 +732,17 @@ class BeatsMusicPlayer extends BaseAudioHandler
     }
   }
 
-  void setShuffleModeState(ShuffleModeState state, {List<Track>? recommendations}) {
+  void setShuffleModeState(ShuffleModeState state,
+      {List<Track>? recommendations}) {
     shuffleState.add(state);
     if (state == ShuffleModeState.off) {
-      _queueManager.shuffle(false);
+      _queueManager.setShuffle(false);
     } else {
-      _queueManager.shuffle(true);
+      _queueManager.setShuffle(true);
       if (state == ShuffleModeState.smartShuffle &&
           recommendations != null &&
           recommendations.isNotEmpty) {
-        _queueManager.addTracks(recommendations, atLast: true);
+        _queueManager.addTracks(recommendations);
       }
     }
   }
@@ -693,8 +764,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
 
     final prev = _playCompleter;
     final completer = CancelableCompleter<void>(
-      onCancel: () =>
-          log('Canceled: ${track.title}', name: 'BeatsMusicPlayer'),
+      onCancel: () => log('Canceled: ${track.title}', name: 'BeatsMusicPlayer'),
     );
     _playCompleter = completer;
     prev?.operation.cancel();
@@ -881,7 +951,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
       // AUTO-HEAL: Permanently update the playlist/library with the working ID.
       unawaited(_smartTrackReplacementService
           .applyReplacement(
-        originalTrack: track,
+        original: track,
         replacement: replacement,
       )
           .then((_) {
@@ -910,12 +980,16 @@ class BeatsMusicPlayer extends BaseAudioHandler
           isMalformed) {
         unawaited(_smartTrackReplacementService
             .applyReplacement(
-          originalTrack: track,
+          original: track,
           replacement: replacement,
         )
             .catchError((e) {
           log('Failed to auto-heal: $e', name: 'BeatsMusicPlayer');
-          return const SmartTrackReplacementApplyResult(updatedPlaylists: []);
+          return TrackReplacement(
+            original: track,
+            replacement: replacement,
+            playlists: const [],
+          );
         }));
       }
 
@@ -936,9 +1010,10 @@ class BeatsMusicPlayer extends BaseAudioHandler
     );
     if (enabled == false) return null;
 
-    final replacementCandidate =
-        await _smartTrackReplacementService.findBestReplacement(track);
-    if (replacementCandidate == null) return null;
+    final candidates =
+        await _smartTrackReplacementService.findAutoReplacements(track);
+    if (candidates.isEmpty) return null;
+    final replacementCandidate = candidates.first;
 
     SnackbarService.showMessage(
       'Playing a fallback source for ${track.title} from ${replacementCandidate.pluginName}.',
@@ -1111,12 +1186,10 @@ class BeatsMusicPlayer extends BaseAudioHandler
     try {
       final track = _queueManager.currentTrack;
       if (track == null) return;
-      final queueItems = _queueManager.tracks;
 
       await _relatedSongsManager.checkForRelatedSongs(
         currentMedia: track,
-        queue: queueItems,
-        currentPlayingIdx: _queueManager.currentIndex,
+        remaining: () => _queueManager.remaining,
         loopMode: loopMode.value,
       );
     } finally {
@@ -1284,9 +1357,9 @@ class BeatsMusicPlayer extends BaseAudioHandler
 
       _queueManager.loadTracks(
         sanitizedTracks,
-        playlistName: playlist.title,
-        idx: newIdx,
-        shuffling: shuffling,
+        title: playlist.title,
+        index: newIdx,
+        shuffle: shuffling,
       );
       queueTitle.add(playlist.title);
 
@@ -1306,6 +1379,58 @@ class BeatsMusicPlayer extends BaseAudioHandler
     }
   }
 
+  /// Whether the queue is currently playing from the playlist [title].
+  bool isQueueFromPlaylist(String title) {
+    final current = _queueManager.currentTrack;
+    return current != null && _queueManager.queueTitle.value == title;
+  }
+
+  /// The library's play button for a playlist: "locked" to that playlist.
+  Future<void> playOrResumePlaylist(Playlist playlist) async {
+    final current = _queueManager.currentTrack;
+    switch (decidePlaylistPlay(
+      queueTitle: _queueManager.queueTitle.value,
+      currentTrackId: current?.id,
+      queuedTrackIds: _queueManager.tracks.map((t) => t.id),
+      playlist: playlist,
+    )) {
+      case PlaylistPlayAction.resume:
+        await play();
+      case PlaylistPlayAction.resyncAndResume:
+        final idx = playlist.tracks.indexWhere((t) => t.id == current!.id);
+        await loadPlaylist(playlist, idx: idx, doPlay: false);
+        await play();
+      case PlaylistPlayAction.load:
+        await loadPlaylist(playlist, doPlay: true);
+    }
+  }
+
+  static PlaylistPlayAction decidePlaylistPlay({
+    required String queueTitle,
+    required String? currentTrackId,
+    required Iterable<String> queuedTrackIds,
+    required Playlist playlist,
+  }) {
+    if (playlist.tracks.isEmpty) return PlaylistPlayAction.load;
+    final playlistIds = {for (final t in playlist.tracks) t.id};
+    final ownsCurrent = queueTitle == playlist.title &&
+        currentTrackId != null &&
+        playlistIds.contains(currentTrackId);
+    if (!ownsCurrent) return PlaylistPlayAction.load;
+    return queuedTrackIds.toSet().containsAll(playlistIds)
+        ? PlaylistPlayAction.resume
+        : PlaylistPlayAction.resyncAndResume;
+  }
+
+  Future<void> addPlaylistToQueue(Playlist playlist) async {
+    if (playlist.tracks.isEmpty) return;
+    if (_queueManager.tracks.isEmpty) {
+      await loadPlaylist(playlist, doPlay: false);
+    } else {
+      _queueManager.addTracks(playlist.tracks);
+    }
+  }
+
   @override
   Future<void> addQueueItem(MediaItem mediaItem) async {
     _queueManager.addTrack(mediaItemToTrack(mediaItem));
@@ -1319,16 +1444,17 @@ class BeatsMusicPlayer extends BaseAudioHandler
   Future<void> addQueueItems(List<MediaItem> mediaItems,
       {String queueName = 'Queue', bool atLast = false}) async {
     final tracks = mediaItems.map(mediaItemToTrack).toList();
-    _queueManager.addTracks(tracks, atLast: atLast);
+    _queueManager.addTracks(tracks);
   }
 
   Future<void> addQueueTracks(List<Track> tracks, {bool atLast = false}) async {
-    _queueManager.addTracks(tracks, atLast: atLast);
+    _queueManager.addTracks(tracks);
   }
 
   Future<void> updateQueueTracks(List<Track> tracks,
-      {bool doPlay = false, int startIndex = 0}) async {
-    _queueManager.updateQueue(tracks, startIndex: startIndex);
+      {bool doPlay = false, int startIndex = 0, String? title}) async {
+    _queueManager.loadTracks(tracks,
+        index: startIndex, title: title ?? 'Queue');
     if (doPlay) {
       final track = _queueManager.currentTrack;
       if (track != null) await _enqueuePlayTrack(track, doPlay: true);
@@ -1369,20 +1495,21 @@ class BeatsMusicPlayer extends BaseAudioHandler
   @override
   Future<void> updateQueue(List<MediaItem> queue, {bool doPlay = false}) async {
     final tracks = queue.map(mediaItemToTrack).toList();
-    _queueManager.updateQueue(tracks);
+    _queueManager.loadTracks(tracks, title: 'Queue');
     if (doPlay) {
       final track = _queueManager.currentTrack;
       if (track != null) await _enqueuePlayTrack(track, doPlay: true);
     }
   }
 
-  Future<void> replaceTrackInQueue(Track replacement) async {
-    final changed = _queueManager.replaceTrackById(replacement.id, replacement);
+  Future<void> replaceTrackInQueue(Track replacement, {Track? original}) async {
+    final oldId = original?.id ?? replacement.id;
+    final changed = _queueManager.replaceTrack(oldId, replacement);
     if (!changed) {
       return;
     }
 
-    if (_currentTrack.id == replacement.id) {
+    if (_currentTrack.id == oldId) {
       _updateCurrentTrack(replacement);
     }
   }
@@ -1429,6 +1556,7 @@ class BeatsMusicPlayer extends BaseAudioHandler
     await _positionSuccessSub?.cancel(); // Cancel success verifier
     await _audioInterruptionSub?.cancel();
     await _audioNoisySub?.cancel();
+    await _audioEventsSub?.cancel();
 
     _errorHandler.dispose();
     _queueManager.dispose();
@@ -1453,5 +1581,3 @@ class BeatsMusicPlayer extends BaseAudioHandler
     await super.stop();
   }
 }
-
-

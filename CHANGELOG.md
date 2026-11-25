@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.8.0] - 2026-11-25
+
+### Added
+- **Skip Silence**: Added real-time silence skipping (`mpv` `silenceremove` filter) in Player Settings, composed cleanly with the 10-band equalizer across preloads and crossfades.
+- **Pause on Mute & Bluetooth Auto-Resume**: Added native Android audio event monitoring (`com.beats.app/audio_events`) to automatically pause playback when media volume hits zero and resume when a Bluetooth A2DP/BLE audio device connects.
+- **Last.fm Offline Scrobble Queue**: Scrobbles are saved while offline and synced automatically later, with sync status, pending count, Sync Now, and Clear Queue controls in Last.fm settings.
+- **Native Rust Discord Rich Presence**: Rebuilt Discord RPC on a dedicated background Rust IPC thread with live connection status, account preview, and customization options.
+- **Desktop Window & System Tray**: Added custom desktop title bar, tray playback controls (Play/Pause, Next, Previous, Show/Hide, Quit), and configurable close-button behavior in Window & Tray settings.
+- **Ambient Artwork Backgrounds**: Added `ArtworkAmbientBackground` and `ArtworkGlowColor` support for playlist views and the desktop Up Next queue panel.
+- **Localization**: Added 121 new translation keys to `app_en.arb` and regenerated localization bindings.
+
+### Changed
+- **Modular Home Screen**: Upgraded Home with lazy-loading `HomeMediaShelf` and a smoother, non-blocking `ChartCarousel` that decodes artwork at display size and pauses when off-screen, while preserving Beats' Shortcut Grid, Jump Back In, Your Playlists, AI Recommendations, and Side Drawer.
+- **Native Rust Core & Track Matching**: Upgraded `flutter_rust_bridge` to `2.12.0`, unified plugin/download HTTP requests into one compressed async `reqwest` pool (`gzip`, `zstd`), and moved cross-plugin track matching to native Rust (~5x faster).
+- **Queue & Playlist Improvements**:
+  - Moving or removing queue items no longer reloads every row and its artwork; added mobile swipe-to-remove and long-press drag.
+  - Playing an already-queued playlist resumes or resyncs it instead of restarting from the beginning; adding a playlist to queue skips already-queued tracks.
+  - Playlist reorder mode now shows a Done button and exits cleanly on Back/Escape.
+- **SDK & Plugins Upgrade**: Upgraded to **Flutter 3.50.1** and **Dart 3.14.0**, updated CI workflows (including `libayatana-appindicator3-dev` for Linux), removed unused packages (`carousel_slider`, `fuzzywuzzy`, `dart_discord_rpc`), and upgraded 25+ plugins (including `file_picker ^13.4.1`, `flutter_local_notifications ^23.0.4`, `go_router ^18.1.4`, Firebase, and `share_plus ^13.3.1`).
+
+### Fixed
+- **Progress Bar Freeze**: Fixed the full player's progress bar freezing at the start of a song after opening the player.
+- **Playback Stability**: Fixed songs being skipped silently on abnormal EOF / early stream termination, isolated preloaded track errors from blaming the current track, and switched queue persistence to trailing debounce (`_schedulePersist`).
+- **Database Maintenance Crash**: Fixed `IsarError` (`An async write transaction is already in progress`) in `TrackDAO.purgeOrphanTracks` / `purgeOrphanTrack` by using queued async `writeTxn` transactions and guarding `DBProvider.scheduleMaintenance`.
+- **Search History & Query Cleanup**: Preserved clean entity search queries and deduplicated search history.
+
 ## [1.7.9] - 2026-11-10
 
 ### Fixes & Improvements

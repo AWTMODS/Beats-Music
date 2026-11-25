@@ -220,7 +220,7 @@ class MediaResolverService {
           throw Exception('Unexpected response type: lyricsResult'),
       lyricsSearchResults: (_) =>
           throw Exception('Unexpected response type: lyricsSearchResults'),
-      lyricsById: (_, __) =>
+      lyricsById: (_, _) =>
           throw Exception('Unexpected response type: lyricsById'),
       suggestions: (_) =>
           throw Exception('Unexpected response type: suggestions'),

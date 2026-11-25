@@ -28,7 +28,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:beats_music/core/constants/route_paths.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:go_router/go_router.dart';
-import 'chart/carousal_widget.dart';
+import 'home/chart_carousel.dart';
+import 'home/home_layout.dart';
+import 'home/media_shelf.dart';
 import '../widgets/horizontal_card_view.dart';
 import '../widgets/side_drawer.dart';
 import 'package:badges/badges.dart' as badges;
@@ -179,24 +181,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
         ],
         child: Scaffold(
           drawer: const SideDrawer(),
-          body: RefreshIndicator(
-            onRefresh: () async {
-              final pluginId = _effectiveHomePluginId(
-                context.read<PluginBloc>().state.loadedContentResolvers,
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final m = HomeMetrics(
+                width: constraints.maxWidth,
+                screenHeight: MediaQuery.sizeOf(context).height,
               );
-              _homeContentBloc.add(
-                GetHomeSections(pluginId: pluginId, bypassCache: true),
-              );
-            },
-            child: CustomScrollView(
-              physics: const ClampingScrollPhysics(),
-              slivers: [
-                const CustomDiscoverBar(),
-                SliverList(
-                  delegate: SliverChildListDelegate(
-                    [
-                      const ShortcutGrid(),
-                      const CaraouselWidget(),
+              return RefreshIndicator(
+                onRefresh: () async {
+                  final pluginId = _effectiveHomePluginId(
+                    context.read<PluginBloc>().state.loadedContentResolvers,
+                  );
+                  _homeContentBloc.add(
+                    GetHomeSections(pluginId: pluginId, bypassCache: true),
+                  );
+                },
+                child: CustomScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  slivers: [
+                    const CustomDiscoverBar(),
+                    SliverList(
+                      delegate: SliverChildListDelegate(
+                        [
+                          const ShortcutGrid(),
+                          ChartCarousel(metrics: m),
                       // Jump back in (Recently Played & Smart Radio) Section
                       const _JumpBackInWidget(),
                       // Recents / User Playlists Section (Only visible if user has actual playlists with artwork/tracks)
@@ -442,6 +450,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 ),
               ],
             ),
+          );
+            },
           ),
           backgroundColor: Default_Theme.themeColor,
         ),
@@ -554,22 +564,25 @@ class _HomeSectionsList extends StatelessWidget {
       itemCount: sections.length,
       itemBuilder: (context, index) {
         final section = sections[index];
-        return HorizontalCardView(
-          section: section,
-          pluginId: contentBloc.state.activePluginId ?? '',
-          canLoadMore: section.moreLink != null,
-          isLoadingMore: state.isHomeSectionLoading(section.id),
-          onLoadMore: section.moreLink == null
-              ? null
-              : () {
-                  contentBloc.add(
-                    LoadMoreHomeSectionItems(
-                      pluginId: contentBloc.state.activePluginId ?? '',
-                      sectionId: section.id,
-                      moreLink: section.moreLink!,
-                    ),
-                  );
-                },
+        return Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: HomeMediaShelf(
+            section: section,
+            pluginId: contentBloc.state.activePluginId ?? '',
+            canLoadMore: section.moreLink != null,
+            isLoadingMore: state.isHomeSectionLoading(section.id),
+            onLoadMore: section.moreLink == null
+                ? null
+                : () {
+                    contentBloc.add(
+                      LoadMoreHomeSectionItems(
+                        pluginId: contentBloc.state.activePluginId ?? '',
+                        sectionId: section.id,
+                        moreLink: section.moreLink!,
+                      ),
+                    );
+                  },
+          ),
         );
       },
     );

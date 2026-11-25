@@ -17,7 +17,7 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
 class MiniPlayerWidget extends StatelessWidget {
-  const MiniPlayerWidget({Key? key}) : super(key: key);
+  const MiniPlayerWidget({super.key});
 
   @override
   Widget build(BuildContext context) {

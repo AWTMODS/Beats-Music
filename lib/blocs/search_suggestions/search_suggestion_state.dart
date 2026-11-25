@@ -46,11 +46,9 @@ final class SearchSuggestionLoading extends SearchSuggestionState {
 
 final class SearchSuggestionLoaded extends SearchSuggestionState {
   const SearchSuggestionLoaded(
-    List<String> suggestionList,
-    List<Map<String, String>> dbSuggestionList, {
-    List<plugin_models.EntitySuggestion> entitySuggestionList = const [],
-    bool isPluginLoading = false,
-  }) : super(suggestionList, dbSuggestionList,
-            entitySuggestionList: entitySuggestionList,
-            isPluginLoading: isPluginLoading);
+    super.suggestionList,
+    super.dbSuggestionList, {
+    super.entitySuggestionList,
+    super.isPluginLoading,
+  });
 }

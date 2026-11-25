@@ -53,7 +53,10 @@ class PlayerSettings extends StatelessWidget {
                 curr.autoResolveUnavailableTracks ||
             prev.crossfadeDuration != curr.crossfadeDuration ||
             prev.eqEnabled != curr.eqEnabled ||
-            prev.eqPreset != curr.eqPreset,
+            prev.eqPreset != curr.eqPreset ||
+            prev.skipSilence != curr.skipSilence ||
+            prev.pauseOnMute != curr.pauseOnMute ||
+            prev.bluetoothAutoResume != curr.bluetoothAutoResume,
         builder: (context, state) {
           return ListView(
             physics: const BouncingScrollPhysics(),
@@ -102,6 +105,40 @@ class PlayerSettings extends StatelessWidget {
                     onChanged: (v) => context
                         .read<SettingsCubit>()
                         .setAutoResolveUnavailableTracks(v),
+                  ),
+                  const SettingDivider(),
+                  SettingToggleTile(
+                    icon: MingCute.fast_forward_line,
+                    title: 'Skip Silence',
+                    subtitle: 'Automatically skip silent parts during playback',
+                    value: state.skipSilence,
+                    onChanged: (v) {
+                      context.read<SettingsCubit>().setSkipSilence(v);
+                      context
+                          .read<BeatsPlayerCubit>()
+                          .BeatsPlayer
+                          .setSkipSilenceEnabled(v);
+                    },
+                  ),
+                  const SettingDivider(),
+                  SettingToggleTile(
+                    icon: MingCute.volume_mute_line,
+                    title: 'Pause on Mute',
+                    subtitle: 'Pause playback when media volume is turned to zero',
+                    value: state.pauseOnMute,
+                    onChanged: (v) =>
+                        context.read<SettingsCubit>().setPauseOnMute(v),
+                  ),
+                  const SettingDivider(),
+                  SettingToggleTile(
+                    icon: MingCute.bluetooth_line,
+                    title: 'Bluetooth Auto-Resume',
+                    subtitle:
+                        'Automatically resume playback when a Bluetooth audio device connects',
+                    value: state.bluetoothAutoResume,
+                    onChanged: (v) => context
+                        .read<SettingsCubit>()
+                        .setBluetoothAutoResume(v),
                   ),
                   const SettingDivider(),
                   _CrossfadeSlider(

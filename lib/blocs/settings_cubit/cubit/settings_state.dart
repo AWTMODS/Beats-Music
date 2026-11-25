@@ -17,6 +17,9 @@ class SettingsState extends Equatable {
   final bool autoSaveLyrics;
   final bool autoPlay;
   final bool autoResolveUnavailableTracks;
+  final bool skipSilence;
+  final bool pauseOnMute;
+  final bool bluetoothAutoResume;
   final String languageCode;
   final String countryCode;
   final Map chartMap;
@@ -48,6 +51,9 @@ class SettingsState extends Equatable {
     required this.chartMap,
     required this.autoPlay,
     required this.autoResolveUnavailableTracks,
+    required this.skipSilence,
+    required this.pauseOnMute,
+    required this.bluetoothAutoResume,
     required this.crossfadeDuration,
     required this.eqEnabled,
     required this.eqBandGains,
@@ -78,6 +84,9 @@ class SettingsState extends Equatable {
     bool? autoSaveLyrics,
     bool? autoPlay,
     bool? autoResolveUnavailableTracks,
+    bool? skipSilence,
+    bool? pauseOnMute,
+    bool? bluetoothAutoResume,
     int? crossfadeDuration,
     bool? eqEnabled,
     List<double>? eqBandGains,
@@ -108,6 +117,9 @@ class SettingsState extends Equatable {
       autoPlay: autoPlay ?? this.autoPlay,
       autoResolveUnavailableTracks:
           autoResolveUnavailableTracks ?? this.autoResolveUnavailableTracks,
+      skipSilence: skipSilence ?? this.skipSilence,
+      pauseOnMute: pauseOnMute ?? this.pauseOnMute,
+      bluetoothAutoResume: bluetoothAutoResume ?? this.bluetoothAutoResume,
       crossfadeDuration: crossfadeDuration ?? this.crossfadeDuration,
       eqEnabled: eqEnabled ?? this.eqEnabled,
       eqBandGains: eqBandGains != null
@@ -146,6 +158,9 @@ class SettingsState extends Equatable {
         autoSaveLyrics,
         autoPlay,
         autoResolveUnavailableTracks,
+        skipSilence,
+        pauseOnMute,
+        bluetoothAutoResume,
         crossfadeDuration,
         eqEnabled,
         eqBandGains,
@@ -179,6 +194,9 @@ class SettingsInitial extends SettingsState {
           autoSaveLyrics: false,
           autoPlay: true,
           autoResolveUnavailableTracks: true,
+          skipSilence: false,
+          pauseOnMute: false,
+          bluetoothAutoResume: false,
           crossfadeDuration: 2,
           eqEnabled: false,
           eqBandGains: List<double>.filled(10, 0.0),

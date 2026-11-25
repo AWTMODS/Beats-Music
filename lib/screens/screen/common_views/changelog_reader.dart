@@ -254,10 +254,10 @@ class ChangelogScreen extends StatelessWidget {
   final bool showOlderVersions;
 
   const ChangelogScreen({
-    Key? key,
+    super.key,
     required this.changelogText,
     this.showOlderVersions = true, // Default to true
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -274,7 +274,7 @@ class ChangelogScreen extends StatelessWidget {
               await Navigator.of(context).maybePop();
               if (!context.mounted) return;
               Navigator.of(context).push(PageRouteBuilder(
-                pageBuilder: (_, __, ___) => const About(),
+                pageBuilder: (_, _, _) => const About(),
                 transitionsBuilder: (_, animation, secondaryAnimation, child) {
                   final offsetAnimation = Tween<Offset>(
                     begin: const Offset(0, 0.1),
@@ -432,13 +432,13 @@ class VersionCard extends StatefulWidget {
   final bool forceExpanded;
 
   const VersionCard({
-    Key? key,
+    super.key,
     required this.version,
     required this.listIndex,
     this.installedVersion,
     this.latestStableVersion,
     this.forceExpanded = false,
-  }) : super(key: key);
+  });
 
   @override
   _VersionCardState createState() => _VersionCardState();
@@ -628,7 +628,7 @@ class _VersionCardState extends State<VersionCard> {
 class CategorySection extends StatelessWidget {
   final ChangeCategory category;
 
-  const CategorySection({Key? key, required this.category}) : super(key: key);
+  const CategorySection({super.key, required this.category});
 
   ({String emoji, Color color}) _getEmojiForCategory(String title) {
     switch (title.toLowerCase()) {
@@ -676,8 +676,7 @@ class ChangeItemWidget extends StatelessWidget {
   final int level;
 
   const ChangeItemWidget(
-      {Key? key, required this.item, required this.color, this.level = 0})
-      : super(key: key);
+      {super.key, required this.item, required this.color, this.level = 0});
 
   List<InlineSpan> _buildStyledText(String text) {
     final List<InlineSpan> spans = [];

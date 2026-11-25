@@ -8,7 +8,8 @@ Track createTestTrack(String id, {String title = 'Test Track'}) {
     id: id,
     title: title,
     artists: [const ArtistSummary(id: 'artist-1', name: 'Test Artist')],
-    thumbnail: const Artwork(url: 'https://example.com/art.jpg', layout: ImageLayout.square),
+    thumbnail: const Artwork(
+        url: 'https://example.com/art.jpg', layout: ImageLayout.square),
     isExplicit: false,
   );
 }
@@ -29,16 +30,16 @@ void main() {
       expect(queue.tracks, isEmpty);
       expect(queue.currentTrack, isNull);
       expect(queue.currentIndex, 0);
-      expect(queue.hasNext(), isFalse);
-      expect(queue.hasPrevious(), isFalse);
+      expect(queue.peekNext(), isNull);
     });
 
-    test('loadTracks populates queue, deduplicates, and sets current track', () {
+    test('loadTracks populates queue, deduplicates, and sets current track',
+        () {
       final t1 = createTestTrack('track-1', title: 'Song 1');
       final t2 = createTestTrack('track-2', title: 'Song 2');
       final t3 = createTestTrack('track-1', title: 'Duplicate Song 1');
 
-      queue.loadTracks([t1, t2, t3], idx: 1);
+      queue.loadTracks([t1, t2, t3], index: 1);
 
       expect(queue.length, 2);
       expect(queue.currentTrack?.id, 'track-2');
@@ -49,9 +50,9 @@ void main() {
       final t1 = createTestTrack('1');
       final t2 = createTestTrack('2');
       final t3 = createTestTrack('3');
-      queue.loadTracks([t1, t2, t3], idx: 0);
+      queue.loadTracks([t1, t2, t3], index: 0);
 
-      expect(queue.hasNext(), isTrue);
+      expect(queue.peekNext(), isNotNull);
       expect(queue.advanceToNext(loopMode: LoopMode.off), isTrue);
       expect(queue.currentIndex, 1);
 
@@ -59,7 +60,7 @@ void main() {
       expect(queue.currentIndex, 2);
 
       // Reached the end with LoopMode.off -> returns false and stays at 2
-      expect(queue.hasNext(loopMode: LoopMode.off), isFalse);
+      expect(queue.peekNext(loopMode: LoopMode.off), isNull);
       expect(queue.advanceToNext(loopMode: LoopMode.off), isFalse);
       expect(queue.currentIndex, 2);
 
@@ -70,7 +71,6 @@ void main() {
       expect(queue.currentIndex, 0);
 
       // At start with LoopMode.off -> returns false
-      expect(queue.hasPrevious(loopMode: LoopMode.off), isFalse);
       expect(queue.advanceToPrevious(loopMode: LoopMode.off), isFalse);
       expect(queue.currentIndex, 0);
     });
@@ -78,7 +78,7 @@ void main() {
     test('LoopMode.all wraps around on start and end', () {
       final t1 = createTestTrack('1');
       final t2 = createTestTrack('2');
-      queue.loadTracks([t1, t2], idx: 1);
+      queue.loadTracks([t1, t2], index: 1);
 
       expect(queue.advanceToNext(loopMode: LoopMode.all), isTrue);
       expect(queue.currentIndex, 0);
@@ -89,9 +89,9 @@ void main() {
 
     test('Shuffle mode preserves valid playback index and shuffles', () {
       final tracks = List.generate(5, (i) => createTestTrack('id-$i'));
-      queue.loadTracks(tracks, idx: 0);
+      queue.loadTracks(tracks, index: 0);
 
-      queue.shuffle(true);
+      queue.setShuffle(true);
       expect(queue.shuffleMode.value, isTrue);
 
       final current = queue.currentTrack;
@@ -104,7 +104,7 @@ void main() {
       final t2 = createTestTrack('2');
       final newTrack = createTestTrack('new-item');
 
-      queue.loadTracks([t1, t2], idx: 0);
+      queue.loadTracks([t1, t2], index: 0);
       queue.addTrack(newTrack);
 
       expect(queue.length, 3);
@@ -117,7 +117,9 @@ void main() {
   });
 
   group('Audio Navigation & 3-Second Rewind Threshold Logic', () {
-    test('Playback position > 3s triggers rewind to start without changing queue', () {
+    test(
+        'Playback position > 3s triggers rewind to start without changing queue',
+        () {
       const position = Duration(seconds: 4);
       const threshold = Duration(seconds: 3);
 
@@ -152,4 +154,3 @@ void main() {
     });
   });
 }
-

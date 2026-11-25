@@ -158,6 +158,10 @@ Future<void> importItems(String path) async {
 
 Future<void> setHighRefreshRate() async {
   if (io.Platform.isAndroid) {
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (lifecycle != null && lifecycle != AppLifecycleState.resumed) {
+      return;
+    }
     try {
       await FlutterDisplayMode.setHighRefreshRate();
     } catch (e) {

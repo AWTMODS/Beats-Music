@@ -1,21 +1,17 @@
-import 'dart:io';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:icons_plus/icons_plus.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:file_picker/file_picker.dart';
 
 import 'package:beats_music/blocs/library/cubit/library_items_cubit.dart';
 import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
 import 'package:beats_music/core/models/media_playlist_model.dart';
+import 'package:beats_music/screens/screen/library_views/cubit/current_playlist_cubit.dart';
 import 'package:beats_music/screens/screen/library_views/playlist_edit_view.dart';
 import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:beats_music/core/theme/app_theme.dart';
 import 'package:beats_music/l10n/app_localizations.dart';
-import 'package:beats_music/services/import_export_service.dart';
+import 'package:beats_music/screens/widgets/backup_import_flow.dart';
+import 'package:beats_music/blocs/backup/backup_cubit.dart';
 
 /// Shows options for an internal/local playlist
 void showPlaylistOptsInrSheet(BuildContext context, Playlist playlist) {
@@ -27,7 +23,10 @@ void showPlaylistOptsInrSheet(BuildContext context, Playlist playlist) {
     builder: (sheetContext) => _PlaylistOptionsSheet(
       title: playlist.title,
       isInternal: true,
-      onEdit: () {
+      onEdit: () async {
+        final playlistCubit = context.read<CurrentPlaylistCubit>();
+        await playlistCubit.ensureAllTracksLoaded();
+        if (!context.mounted || !sheetContext.mounted) return;
         Navigator.pop(sheetContext);
         Navigator.push(context,
             MaterialPageRoute(builder: (context) => const PlaylistEditView()));
@@ -84,187 +83,159 @@ class _PlaylistOptionsSheet extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 400),
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Default_Theme.themeColor.withValues(alpha: 0.85),
-                border: Border(
-                    top: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.08), width: 1)),
-              ),
-              child: SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 12, bottom: 16),
-                        width: 42,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Default_Theme.themeColor,
+              border: Border(
+                  top: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.08), width: 1)),
+            ),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 12, bottom: 16),
+                      width: 42,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 8),
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.95),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
-                        ),
-                        maxLines: 2,
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.95),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
                       ),
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 16),
-                    Flexible(
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (!isInternal)
-                              _OptionGroup(
-                                children: [
-                                  _BottomSheetTile(
-                                    icon: MingCute.play_circle_fill,
-                                    iconColor: Default_Theme.accentColor2,
-                                    title: l10n.playlistPlay,
-                                    onTap: () async {
-                                      final list = await ctx
-                                          .read<LibraryItemsCubit>()
-                                          .getPlaylistTracks(title);
-                                      if (list != null && list.isNotEmpty) {
-                                        ctx
-                                            .read<BeatsPlayerCubit>()
-                                            .BeatsPlayer
-                                            .loadPlaylist(
-                                                Playlist(
-                                                    tracks: list, title: title),
-                                                doPlay: true);
-                                        SnackbarService.showMessage(
-                                            l10n.snackbarNowPlaying(title));
-                                      }
-                                    },
-                                  ),
-                                  _BottomSheetTile(
-                                    icon: MingCute.playlist_2_line,
-                                    title: l10n.playlistAddToQueue,
-                                    onTap: () async {
-                                      final list = await ctx
-                                          .read<LibraryItemsCubit>()
-                                          .getPlaylistTracks(title);
-                                      if (list != null && list.isNotEmpty) {
-                                        ctx
-                                            .read<BeatsPlayerCubit>()
-                                            .BeatsPlayer
-                                            .addQueueTracks(list);
-                                        SnackbarService.showMessage(
-                                            l10n.snackbarPlaylistAddedToQueue(
-                                                title));
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
+                  ),
+                  const SizedBox(height: 16),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!isInternal)
                             _OptionGroup(
                               children: [
+                                _BottomSheetTile(
+                                  icon: MingCute.play_circle_fill,
+                                  iconColor: Default_Theme.accentColor2,
+                                  title: l10n.playlistPlay,
+                                  onTap: () async {
+                                    final libraryCubit =
+                                        ctx.read<LibraryItemsCubit>();
+                                    final playerCubit =
+                                        ctx.read<BeatsPlayerCubit>();
+                                    final list = await libraryCubit
+                                        .getPlaylistTracks(title);
+                                    if (list != null && list.isNotEmpty) {
+                                      playerCubit.BeatsPlayer
+                                          .playOrResumePlaylist(Playlist(
+                                              tracks: list, title: title));
+                                      SnackbarService.showMessage(
+                                          l10n.snackbarNowPlaying(title));
+                                    }
+                                  },
+                                ),
+                                _BottomSheetTile(
+                                  icon: MingCute.playlist_2_line,
+                                  title: l10n.playlistAddToQueue,
+                                  onTap: () async {
+                                    final libraryCubit =
+                                        ctx.read<LibraryItemsCubit>();
+                                    final playerCubit =
+                                        ctx.read<BeatsPlayerCubit>();
+                                    final list = await libraryCubit
+                                        .getPlaylistTracks(title);
+                                    if (list != null && list.isNotEmpty) {
+                                      playerCubit.BeatsPlayer
+                                          .addPlaylistToQueue(Playlist(
+                                              tracks: list, title: title));
+                                      SnackbarService.showMessage(l10n
+                                          .snackbarPlaylistAddedToQueue(title));
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          _OptionGroup(
+                            children: [
+                              if (ctx.read<BackupCubit>().canShareFiles)
                                 _BottomSheetTile(
                                   icon: MingCute.share_forward_line,
                                   title: isInternal
                                       ? l10n.playlistShareFile
                                       : l10n.playlistShare,
-                                  onTap: () async {
-                                    SnackbarService.showMessage(
-                                        l10n.snackbarPreparingShare(title));
-                                    final tmpPath = await ImportExportService
-                                        .exportPlaylist(title);
-                                    if (tmpPath != null) {
-                                      await SharePlus.instance
-                                          .share(ShareParams(
-                                        files: [XFile(tmpPath)],
-                                        text: title,
-                                      ));
+                                  onTap: () => BackupImportFlow.export(ctx,
+                                      share: true, playlistName: title),
+                                ),
+                              _BottomSheetTile(
+                                icon: MingCute.file_export_line,
+                                title: l10n.playlistExportFile,
+                                onTap: () => BackupImportFlow.export(ctx,
+                                    playlistName: title),
+                              ),
+                            ],
+                          ),
+                          _OptionGroup(
+                            children: [
+                              if (isInternal)
+                                _BottomSheetTile(
+                                  icon: MingCute.edit_2_line,
+                                  title: l10n.playlistEdit,
+                                  onTap: onEdit ?? () {},
+                                ),
+                              if (!isInternal) ...[
+                                _BottomSheetTile(
+                                  icon: isPinned
+                                      ? MingCute.unlink_line
+                                      : MingCute.pin_2_fill,
+                                  iconColor: isPinned
+                                      ? null
+                                      : Default_Theme.accentColor2,
+                                  title: isPinned
+                                      ? l10n.playlistUnpin
+                                      : l10n.playlistPinToTop,
+                                  onTap: () {
+                                    if (playlistId != null) {
+                                      ctx
+                                          .read<LibraryItemsCubit>()
+                                          .togglePin(playlistId!);
                                     }
                                   },
                                 ),
-                                if (!Platform.isAndroid)
-                                  _BottomSheetTile(
-                                    icon: MingCute.file_export_line,
-                                    title: l10n.playlistExportFile,
-                                    onTap: () async {
-                                      String? path = await FilePicker.platform
-                                          .getDirectoryPath();
-                                      if (path == null || path == "/") {
-                                        path = (await getDownloadsDirectory())
-                                            ?.path
-                                            .toString();
-                                      }
-                                      SnackbarService.showMessage(
-                                          l10n.snackbarPreparingExport(title));
-                                      final tmpPath = await ImportExportService
-                                          .exportPlaylist(title,
-                                              filePath: path);
-                                      SnackbarService.showMessage(l10n
-                                          .snackbarExportedTo(tmpPath ?? ''));
-                                    },
-                                  ),
+                                _BottomSheetTile(
+                                  icon: MingCute.delete_2_line,
+                                  title: l10n.playlistDelete,
+                                  iconColor: Colors.redAccent,
+                                  titleColor: Colors.redAccent,
+                                  onTap: () => ctx
+                                      .read<LibraryItemsCubit>()
+                                      .removePlaylistByName(title),
+                                ),
                               ],
-                            ),
-                            _OptionGroup(
-                              children: [
-                                if (isInternal)
-                                  _BottomSheetTile(
-                                    icon: MingCute.edit_2_line,
-                                    title: l10n.playlistEdit,
-                                    onTap: onEdit ?? () {},
-                                  ),
-                                if (!isInternal) ...[
-                                  _BottomSheetTile(
-                                    icon: isPinned
-                                        ? MingCute.unlink_line
-                                        : MingCute.pin_2_fill,
-                                    iconColor: isPinned
-                                        ? null
-                                        : Default_Theme.accentColor2,
-                                    title: isPinned
-                                        ? l10n.playlistUnpin
-                                        : l10n.playlistPinToTop,
-                                    onTap: () {
-                                      if (playlistId != null) {
-                                        ctx
-                                            .read<LibraryItemsCubit>()
-                                            .togglePin(playlistId!);
-                                      }
-                                    },
-                                  ),
-                                  _BottomSheetTile(
-                                    icon: MingCute.delete_2_line,
-                                    title: l10n.playlistDelete,
-                                    iconColor: Colors.redAccent,
-                                    titleColor: Colors.redAccent,
-                                    onTap: () => ctx
-                                        .read<LibraryItemsCubit>()
-                                        .removePlaylistByName(title),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -379,5 +350,3 @@ class _BottomSheetTile extends StatelessWidget {
     );
   }
 }
-
-

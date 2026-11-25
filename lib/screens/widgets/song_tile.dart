@@ -272,7 +272,7 @@ class SongCardWidget extends StatelessWidget {
                             icon: MingCute.more_2_fill,
                             onTap: onOptionsTap,
                           ),
-                        if (trailing != null) trailing!,
+                        ?trailing,
                       ],
                     ),
                   ],

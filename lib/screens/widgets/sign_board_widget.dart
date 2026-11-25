@@ -5,10 +5,10 @@ class SignBoardWidget extends StatelessWidget {
   final String message;
   final IconData icon;
   const SignBoardWidget({
-    Key? key,
+    super.key,
     required this.message,
     required this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

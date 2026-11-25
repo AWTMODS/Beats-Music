@@ -1,4 +1,4 @@
-library legacy_media_id_mapper;
+library;
 
 const pluginJisSaavnId = 'content-resolver.bloomfactory.jisaavn';
 const pluginYtMusicId = 'content-resolver.bloomfactory.ytmusic';

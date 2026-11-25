@@ -5,7 +5,7 @@
 ///
 /// This is NOT for plugin lifecycle events (use [PluginEventBus] for that).
 /// This is for app-wide error notifications that any part of the system can emit.
-library global_event_bus;
+library;
 
 import 'dart:async';
 import 'dart:developer';

@@ -391,7 +391,7 @@ class _EqualizerViewState extends State<EqualizerView>
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: _kPresets.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final name = _kPresets.keys.elementAt(index);
           final isActive = name == _selectedPreset;

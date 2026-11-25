@@ -175,9 +175,9 @@ class _ImportMediaFromPlatformsViewState
             onPressed: () {
               final l10n = AppLocalizations.of(context)!;
               Navigator.of(context).pop();
-              FilePicker.platform.pickFiles().then((value) {
-                if (value != null && value.files[0].path != null) {
-                  final path = value.files[0].path!;
+              FilePicker.pickFiles().then((files) {
+                if (files.isNotEmpty && files.first.path != null) {
+                  final path = files.first.path!;
                   if (path.endsWith('.blm') || path.endsWith('.json')) {
                     SnackbarService.showMessage(l10n.snackbarImportingMedia);
                     ImportExportService.importJSON(path).then((_) {
@@ -211,12 +211,12 @@ class _ImportMediaFromPlatformsViewState
   // ─── Import M3U playlist ──────────────────────────────────────────────────
 
   Future<void> _importM3UFile(BuildContext context) async {
-    final result = await FilePicker.platform.pickFiles(
+    final files = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: const ['m3u', 'm3u8'],
     );
-    if (result == null || result.files.isEmpty) return;
-    final filePath = result.files.first.path;
+    if (files.isEmpty) return;
+    final filePath = files.first.path;
     if (filePath == null) return;
 
     if (!context.mounted) return;
@@ -346,7 +346,7 @@ class _ImportMediaFromPlatformsViewState
           ),
           ValueListenableBuilder<TextEditingValue>(
             valueListenable: controller,
-            builder: (_, val, __) => FilledButton(
+            builder: (_, val, _) => FilledButton(
               onPressed: val.text.trim().isEmpty
                   ? null
                   : () => Navigator.of(dialogCtx).pop(val.text.trim()),

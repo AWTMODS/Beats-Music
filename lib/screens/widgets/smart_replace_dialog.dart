@@ -92,7 +92,7 @@ class _SmartReplaceDialogState extends State<_SmartReplaceDialog> {
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: candidates.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final candidate = candidates[index];
                 final isApplying = _applyingTrackId == candidate.track.id;
@@ -152,7 +152,7 @@ class _SmartReplaceDialogState extends State<_SmartReplaceDialog> {
 
     try {
       final applyResult = await _service.applyReplacement(
-        originalTrack: widget.track,
+        original: widget.track,
         replacement: candidate.track,
       );
 
@@ -177,7 +177,7 @@ class _SmartReplaceDialogState extends State<_SmartReplaceDialog> {
       // the playlist screen reflects the change without requiring a reload.
       try {
         final playlistCubit = context.read<CurrentPlaylistCubit>();
-        if (applyResult.updatedPlaylists
+        if (applyResult.playlists
             .contains(playlistCubit.currentPlaylistName)) {
           playlistCubit.replaceTrack(widget.track, candidate.track);
         }
@@ -185,7 +185,7 @@ class _SmartReplaceDialogState extends State<_SmartReplaceDialog> {
         // CurrentPlaylistCubit not in scope (not called from playlist screen).
       }
 
-      final playlistCount = applyResult.updatedPlaylists.length;
+      final playlistCount = applyResult.playlists.length;
       final queueSuffix =
           queueContainsOriginal ? l10n.smartReplaceQueueUpdated : '';
       final playlistMessage = playlistCount == 0

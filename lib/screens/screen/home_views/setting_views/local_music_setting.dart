@@ -55,7 +55,7 @@ class _LocalMusicSettingsState extends State<LocalMusicSettings> {
   }
 
   Future<void> _addFolder() async {
-    final path = await FilePicker.platform.getDirectoryPath();
+    final path = await FilePicker.getDirectoryPath();
     if (path == null) return;
     await _cubit.addFolder(path);
     final folders = await _cubit.getFolders();

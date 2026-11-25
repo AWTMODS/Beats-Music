@@ -74,7 +74,7 @@ import 'app_localizations_zh.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -97,11 +97,11 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
@@ -117,7 +117,7 @@ abstract class AppLocalizations {
     Locale('pt'),
     Locale('ru'),
     Locale('tr'),
-    Locale('zh')
+    Locale('zh'),
   ];
 
   /// No description provided for @onboardingTitle.
@@ -3179,7 +3179,11 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import complete: {playlists} playlists created, {tracks} track entries added, {history} history records added and {settings} preferences applied.'**
   String backupImportResult(
-      int playlists, int tracks, int history, int settings);
+    int playlists,
+    int tracks,
+    int history,
+    int settings,
+  );
 
   /// No description provided for @backupRefreshFailed.
   ///
@@ -3252,7 +3256,11 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Found {tracks} tracks, {playlists} playlists and {downloads} download records. {unavailable} files are currently unavailable; their records will be preserved.'**
   String libraryRecoverySummary(
-      int tracks, int playlists, int downloads, int unavailable);
+    int tracks,
+    int playlists,
+    int downloads,
+    int unavailable,
+  );
 
   /// No description provided for @libraryRecoveryWarnings.
   ///
@@ -4303,6 +4311,684 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue Anyway'**
   String get pluginBootstrapContinue;
+
+  /// No description provided for @lastfmStatusSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Scrobble status'**
+  String get lastfmStatusSection;
+
+  /// No description provided for @lastfmStatusSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'All caught up'**
+  String get lastfmStatusSynced;
+
+  /// No description provided for @lastfmStatusSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get lastfmStatusSending;
+
+  /// No description provided for @lastfmStatusQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 scrobble waiting} other{{count} scrobbles waiting}}'**
+  String lastfmStatusQueued(int count);
+
+  /// No description provided for @lastfmStatusRetrying.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · will retry shortly'**
+  String get lastfmStatusRetrying;
+
+  /// No description provided for @lastfmStatusAuthPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused · sign in again'**
+  String get lastfmStatusAuthPaused;
+
+  /// No description provided for @lastfmStatusOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Scrobbling is turned off'**
+  String get lastfmStatusOff;
+
+  /// No description provided for @lastfmStatQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get lastfmStatQueued;
+
+  /// No description provided for @lastfmStatLastSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sent'**
+  String get lastfmStatLastSent;
+
+  /// No description provided for @lastfmNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get lastfmNever;
+
+  /// No description provided for @lastfmJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get lastfmJustNow;
+
+  /// No description provided for @lastfmMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}m ago'**
+  String lastfmMinutesAgo(int n);
+
+  /// No description provided for @lastfmHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}h ago'**
+  String lastfmHoursAgo(int n);
+
+  /// No description provided for @lastfmDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}d ago'**
+  String lastfmDaysAgo(int n);
+
+  /// No description provided for @lastfmLastTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Last scrobbled'**
+  String get lastfmLastTrack;
+
+  /// No description provided for @lastfmErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach Last.fm. Your scrobbles are safe and will be sent automatically.'**
+  String get lastfmErrorNetwork;
+
+  /// No description provided for @lastfmErrorAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Last.fm session is no longer valid. Remove the keys and authenticate again.'**
+  String get lastfmErrorAuth;
+
+  /// No description provided for @lastfmErrorRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Last.fm rejected 1 scrobble and it was discarded.} other{Last.fm rejected {count} scrobbles and they were discarded.}}'**
+  String lastfmErrorRejected(int count);
+
+  /// No description provided for @lastfmSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get lastfmSyncNow;
+
+  /// No description provided for @lastfmClearQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear queue'**
+  String get lastfmClearQueue;
+
+  /// No description provided for @lastfmQueueCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Scrobble queue cleared'**
+  String get lastfmQueueCleared;
+
+  /// No description provided for @settingsDiscord.
+  ///
+  /// In en, this message translates to:
+  /// **'Discord'**
+  String get settingsDiscord;
+
+  /// No description provided for @settingsDiscordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rich Presence: show what you\'re listening to.'**
+  String get settingsDiscordSubtitle;
+
+  /// No description provided for @discordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discord'**
+  String get discordTitle;
+
+  /// No description provided for @discordEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on Discord'**
+  String get discordEnable;
+
+  /// No description provided for @discordEnableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share the song you\'re playing on your Discord profile.'**
+  String get discordEnableSubtitle;
+
+  /// No description provided for @discordStatusIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to share'**
+  String get discordStatusIdle;
+
+  /// No description provided for @discordStatusConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to Discord…'**
+  String get discordStatusConnecting;
+
+  /// No description provided for @discordStatusConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected as {name}'**
+  String discordStatusConnected(String name);
+
+  /// No description provided for @discordStatusConnectedNoUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to Discord'**
+  String get discordStatusConnectedNoUser;
+
+  /// No description provided for @discordStatusNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Discord isn\'t running'**
+  String get discordStatusNotFound;
+
+  /// No description provided for @discordStatusError.
+  ///
+  /// In en, this message translates to:
+  /// **'Discord refused the connection'**
+  String get discordStatusError;
+
+  /// No description provided for @discordReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect'**
+  String get discordReconnect;
+
+  /// No description provided for @discordSectionPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get discordSectionPreview;
+
+  /// No description provided for @discordSectionCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get discordSectionCard;
+
+  /// No description provided for @discordSectionPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get discordSectionPrivacy;
+
+  /// No description provided for @discordPreviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a song to preview your card.'**
+  String get discordPreviewEmpty;
+
+  /// No description provided for @discordKindListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening to Beats'**
+  String get discordKindListening;
+
+  /// No description provided for @discordWhenPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'When paused'**
+  String get discordWhenPaused;
+
+  /// No description provided for @discordPausedKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep showing'**
+  String get discordPausedKeep;
+
+  /// No description provided for @discordPausedHideLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide after 5 minutes'**
+  String get discordPausedHideLater;
+
+  /// No description provided for @discordPausedHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide right away'**
+  String get discordPausedHide;
+
+  /// No description provided for @discordShowArtwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Album artwork'**
+  String get discordShowArtwork;
+
+  /// No description provided for @discordShowArtworkSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover art with a play or pause badge.'**
+  String get discordShowArtworkSubtitle;
+
+  /// No description provided for @discordShowProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Time bar'**
+  String get discordShowProgress;
+
+  /// No description provided for @discordShowProgressSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live progress bar that follows seeks.'**
+  String get discordShowProgressSubtitle;
+
+  /// No description provided for @discordShowLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Clickable links'**
+  String get discordShowLinks;
+
+  /// No description provided for @discordShowLinksSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Song, artist and album open their pages.'**
+  String get discordShowLinksSubtitle;
+
+  /// No description provided for @discordShareLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Share local files'**
+  String get discordShareLocal;
+
+  /// No description provided for @discordShareLocalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Also publish songs from your local library.'**
+  String get discordShareLocalSubtitle;
+
+  /// No description provided for @discordFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs the Discord desktop app running on this computer. Changes apply instantly; Discord accepts about one update every 4 seconds.'**
+  String get discordFooter;
+
+  /// No description provided for @discordStatusRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retrying in {seconds}s'**
+  String discordStatusRetry(int seconds);
+
+  /// No description provided for @discordStatusIdleDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Connects automatically when music plays.'**
+  String get discordStatusIdleDetail;
+
+  /// No description provided for @discordPausedKeepSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows a paused badge without the time bar.'**
+  String get discordPausedKeepSubtitle;
+
+  /// No description provided for @discordPausedHideLaterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Short pauses keep your card, long ones clear it.'**
+  String get discordPausedHideLaterSubtitle;
+
+  /// No description provided for @discordPausedHideSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears the moment you pause.'**
+  String get discordPausedHideSubtitle;
+
+  /// No description provided for @discordPreviewCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'How friends see you on Discord.'**
+  String get discordPreviewCaption;
+
+  /// No description provided for @discordStatusText.
+  ///
+  /// In en, this message translates to:
+  /// **'Status text'**
+  String get discordStatusText;
+
+  /// No description provided for @discordStatusTextSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What friends see next to your name.'**
+  String get discordStatusTextSubtitle;
+
+  /// No description provided for @discordStatusTextApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App name'**
+  String get discordStatusTextApp;
+
+  /// No description provided for @discordStatusTextArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get discordStatusTextArtist;
+
+  /// No description provided for @discordStatusTextSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Song title'**
+  String get discordStatusTextSong;
+
+  /// No description provided for @libraryReorderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get libraryReorderHint;
+
+  /// No description provided for @libraryReorderHintPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder. Pinned items stay on top.'**
+  String get libraryReorderHintPinned;
+
+  /// No description provided for @tooltipRemoveFromQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from queue'**
+  String get tooltipRemoveFromQueue;
+
+  /// No description provided for @windowMinimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize'**
+  String get windowMinimize;
+
+  /// No description provided for @windowMaximize.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximize'**
+  String get windowMaximize;
+
+  /// No description provided for @windowRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Down'**
+  String get windowRestore;
+
+  /// No description provided for @windowClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get windowClose;
+
+  /// No description provided for @settingsWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Window & Tray'**
+  String get settingsWindow;
+
+  /// No description provided for @settingsWindowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Close button, tray icon and background playback'**
+  String get settingsWindowSubtitle;
+
+  /// No description provided for @windowCloseSection.
+  ///
+  /// In en, this message translates to:
+  /// **'When you close the window'**
+  String get windowCloseSection;
+
+  /// No description provided for @windowCloseTray.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep playing in the system tray'**
+  String get windowCloseTray;
+
+  /// No description provided for @windowCloseTrayMac.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep playing in the menu bar'**
+  String get windowCloseTrayMac;
+
+  /// No description provided for @windowCloseTraySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hides the window and keeps the music going. Uses the fewest resources.'**
+  String get windowCloseTraySubtitle;
+
+  /// No description provided for @windowCloseMinimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize the window'**
+  String get windowCloseMinimize;
+
+  /// No description provided for @windowCloseMinimizeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps playing with the window minimized to the taskbar.'**
+  String get windowCloseMinimizeSubtitle;
+
+  /// No description provided for @windowCloseMinimizeSubtitleMac.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps playing with the window minimized to the Dock.'**
+  String get windowCloseMinimizeSubtitleMac;
+
+  /// No description provided for @windowCloseQuit.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit Beats'**
+  String get windowCloseQuit;
+
+  /// No description provided for @windowCloseQuitSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops playback and closes the app completely.'**
+  String get windowCloseQuitSubtitle;
+
+  /// No description provided for @windowTrayUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No system tray is available, so closing minimizes the window instead.'**
+  String get windowTrayUnavailable;
+
+  /// No description provided for @windowTrayMenuSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Tray menu'**
+  String get windowTrayMenuSection;
+
+  /// No description provided for @windowTrayFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Click the tray icon to bring Beats back, or right-click it for playback controls.'**
+  String get windowTrayFootnote;
+
+  /// No description provided for @windowTrayFootnoteMac.
+  ///
+  /// In en, this message translates to:
+  /// **'Click the menu bar icon for playback controls or to bring Beats back.'**
+  String get windowTrayFootnoteMac;
+
+  /// No description provided for @windowTrayFootnoteLinux.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the tray icon\'s menu for playback controls. On GNOME, tray icons need the AppIndicator extension.'**
+  String get windowTrayFootnoteLinux;
+
+  /// No description provided for @trayNothingPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing playing'**
+  String get trayNothingPlaying;
+
+  /// No description provided for @trayPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get trayPlay;
+
+  /// No description provided for @trayPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get trayPause;
+
+  /// No description provided for @trayNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get trayNext;
+
+  /// No description provided for @trayPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get trayPrevious;
+
+  /// No description provided for @trayShowWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Beats'**
+  String get trayShowWindow;
+
+  /// No description provided for @trayHideWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Beats'**
+  String get trayHideWindow;
+
+  /// No description provided for @trayQuit.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit Beats'**
+  String get trayQuit;
+
+  /// No description provided for @feedKindAnnouncement.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get feedKindAnnouncement;
+
+  /// No description provided for @feedKindApp.
+  ///
+  /// In en, this message translates to:
+  /// **'New app'**
+  String get feedKindApp;
+
+  /// No description provided for @feedKindForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up'**
+  String get feedKindForm;
+
+  /// No description provided for @feedKindNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Important'**
+  String get feedKindNotice;
+
+  /// No description provided for @feedKindUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get feedKindUpdate;
+
+  /// No description provided for @feedUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Beats {version} is available'**
+  String feedUpdateTitle(String version);
+
+  /// No description provided for @feedUpdateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'See what\'s new and download it.'**
+  String get feedUpdateBody;
+
+  /// No description provided for @feedUpdateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'View update'**
+  String get feedUpdateAction;
+
+  /// No description provided for @feedOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get feedOpen;
+
+  /// No description provided for @feedDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get feedDismiss;
+
+  /// No description provided for @feedNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get feedNew;
+
+  /// No description provided for @feedDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get feedDraft;
+
+  /// No description provided for @feedPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview drafts'**
+  String get feedPreview;
+
+  /// No description provided for @feedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up'**
+  String get feedEmpty;
+
+  /// No description provided for @feedEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'News, new apps and updates will show up here.'**
+  String get feedEmptySubtitle;
+
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates & news'**
+  String get settingsNotifications;
+
+  /// No description provided for @settingsNotificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update alerts, news and announcements'**
+  String get settingsNotificationsSubtitle;
+
+  /// No description provided for @feedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'News & announcements'**
+  String get feedSection;
+
+  /// No description provided for @feedOnHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on Home'**
+  String get feedOnHome;
+
+  /// No description provided for @feedOnHomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A small card for news and new apps. Important notices always show.'**
+  String get feedOnHomeSubtitle;
 }
 
 class _AppLocalizationsDelegate
@@ -4316,20 +5002,20 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) => <String>[
-        'ar',
-        'bn',
-        'de',
-        'en',
-        'es',
-        'fr',
-        'hi',
-        'ja',
-        'ko',
-        'pt',
-        'ru',
-        'tr',
-        'zh'
-      ].contains(locale.languageCode);
+    'ar',
+    'bn',
+    'de',
+    'en',
+    'es',
+    'fr',
+    'hi',
+    'ja',
+    'ko',
+    'pt',
+    'ru',
+    'tr',
+    'zh',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -4367,8 +5053,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

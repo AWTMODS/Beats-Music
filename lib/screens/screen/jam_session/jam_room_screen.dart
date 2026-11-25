@@ -678,7 +678,7 @@ class _JamRoomScreenState extends State<JamRoomScreen>
                         children: [
                           AnimatedBuilder(
                             animation: _pulseController,
-                            builder: (_, __) => Container(
+                            builder: (_, _) => Container(
                               width: 8,
                               height: 8,
                               decoration: BoxDecoration(
@@ -1195,7 +1195,7 @@ class _AnimatedBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
-      builder: (_, __) {
+      builder: (_, _) {
         final t = controller.value;
         return Container(
           decoration: BoxDecoration(
@@ -1277,7 +1277,7 @@ class _FloatingEmojiWidgetState extends State<_FloatingEmojiWidget>
     final size = MediaQuery.of(context).size;
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (_, __) => Positioned(
+      builder: (_, _) => Positioned(
         left: widget.data.x * size.width - 20,
         top: _yAnim.value * size.height,
         child: Opacity(

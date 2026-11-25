@@ -113,7 +113,7 @@ class LoadImageCached extends StatefulWidget {
   final BorderRadius? borderRadius;
 
   const LoadImageCached({
-    Key? key,
+    super.key,
     required this.imageUrl,
     this.placeholderUrl = "assets/icons/beats_music_logo.png",
     this.fit = BoxFit.cover,
@@ -121,7 +121,7 @@ class LoadImageCached extends StatefulWidget {
     this.width,
     this.height,
     this.borderRadius,
-  }) : super(key: key);
+  });
 
   /// Creates a LoadImageCached that automatically fills all available space
   /// from its parent, making sizing fully deterministic and independent of

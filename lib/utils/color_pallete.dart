@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Public API:
-/// await analyzeImageColors(url) -> returns a map { 'overlay': Color, 'text': Color, 'palette': List<Color> }
+/// await analyzeImageColors(url) -> returns a map `{ 'overlay': Color, 'text': Color, 'palette': List<Color> }`
 Future<Map<String, dynamic>> analyzeImageColors(
   String imageUrl, {
   int numColors = 12,

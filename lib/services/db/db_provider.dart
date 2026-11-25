@@ -120,19 +120,23 @@ class DBProvider {
     playlistDAO.ensurePlaylist(localMusicPlaylist);
 
     Future.delayed(const Duration(seconds: 30), () async {
-      // Read configured history retention days.
-      final daysStr = await settingsDAO.getSettingStr(
-            'historyClearTime',
-            defaultValue: '7',
-          ) ??
-          '7';
-      final days = int.tryParse(daysStr) ?? 7;
+      try {
+        // Read configured history retention days.
+        final daysStr = await settingsDAO.getSettingStr(
+              'historyClearTime',
+              defaultValue: '7',
+            ) ??
+            '7';
+        final days = int.tryParse(daysStr) ?? 7;
 
-      await historyDAO.purgeOldHistory(days);
-      await trackDAO.purgeOrphanTracks();
-      await cacheDAO.purgeExpiredCache();
-      await searchHistoryDAO.limitSearchHistory();
-      log('Scheduled maintenance complete', name: 'DBProvider');
+        await historyDAO.purgeOldHistory(days);
+        await trackDAO.purgeOrphanTracks();
+        await cacheDAO.purgeExpiredCache();
+        await searchHistoryDAO.limitSearchHistory();
+        log('Scheduled maintenance complete', name: 'DBProvider');
+      } catch (e, st) {
+        log('Scheduled maintenance error: $e\n$st', name: 'DBProvider');
+      }
     });
   }
 

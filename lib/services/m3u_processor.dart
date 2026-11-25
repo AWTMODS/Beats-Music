@@ -98,7 +98,7 @@ String convertJsonToM3U(Map<String, dynamic> jsonData) {
   }
 }
 
-/// Parses an M3U formatted string and converts it back to a Map<String, dynamic>
+/// Parses an M3U formatted string and converts it back to a `Map<String, dynamic>`
 /// matching the original JSON structure.  `playlistName` in the returned map
 /// may be `null` when the file has no `#PLAYLIST:` tag (standard M3U files).
 /// The caller is responsible for prompting the user for a name in that case.

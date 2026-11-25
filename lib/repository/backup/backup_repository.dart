@@ -44,7 +44,7 @@ class BackupRepository {
     final paths = <String>{p.join(live.directory!, '${live.name}.isar')};
     final roots = <String>{
       supportPath,
-      if (documentsPath != null) documentsPath!
+      ?documentsPath
     };
     // Only retained v3 databases and snapshots are supported.
     for (final root in roots) {

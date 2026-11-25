@@ -15,6 +15,9 @@ class SettingKeys {
   static const String autoPlay = "autoPlaySimilarItems";
   static const String autoResolveUnavailableTracks =
       "autoResolveUnavailableTracks";
+  static const String skipSilence = "skipSilence";
+  static const String pauseOnMute = "pauseOnMute";
+  static const String bluetoothAutoResume = "bluetoothAutoResume";
 
   // ── Crossfade ───────────────────────────────────────────────────────────────
   /// Crossfade duration in seconds (0 = disabled). Stored as String.
@@ -47,6 +50,10 @@ class SettingKeys {
 
   /// Special playlist name for recently played tracks.
   static const String recentlyPlayedPlaylist = "recently_played";
+
+  // ── Discord / Desktop ───────────────────────────────────────────────────────
+  static const String discordPresence = "discordPresence";
+  static const String desktopCloseAction = "desktopCloseAction";
 
   // ── Location / charts ───────────────────────────────────────────────────────
   static const String languageCode = "languageCode";

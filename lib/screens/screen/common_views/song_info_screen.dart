@@ -20,9 +20,9 @@ import 'package:url_launcher/url_launcher.dart';
 class SongInfoScreen extends StatefulWidget {
   final Track song;
   const SongInfoScreen({
-    Key? key,
+    super.key,
     required this.song,
-  }) : super(key: key);
+  });
 
   @override
   State<SongInfoScreen> createState() => _SongInfoScreenState();

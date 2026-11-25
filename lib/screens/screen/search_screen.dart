@@ -34,9 +34,9 @@ import 'package:beats_music/src/rust/api/plugin/models.dart' as plugin_models;
 class SearchScreen extends StatefulWidget {
   final String searchQuery;
   const SearchScreen({
-    Key? key,
+    super.key,
     this.searchQuery = "",
-  }) : super(key: key);
+  });
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -1214,8 +1214,8 @@ class _RecentSearchTileState extends State<_RecentSearchTile> {
         width: 48,
         height: 48,
         fit: BoxFit.cover,
-        placeholder: (_, __) => _placeholder(),
-        errorWidget: (_, __, ___) => _placeholder(),
+        placeholder: (_, _) => _placeholder(),
+        errorWidget: (_, _, _) => _placeholder(),
       );
     }
     return _placeholder();
@@ -1466,7 +1466,7 @@ class _EntitySuggestionTile extends StatelessWidget {
           width: 42,
           height: 42,
           fit: BoxFit.cover,
-          errorWidget: (_, __, ___) => _placeholder());
+          errorWidget: (_, _, _) => _placeholder());
     }
     return _placeholder();
   }

@@ -34,9 +34,9 @@ class DownloaderInitial extends DownloaderState {}
 /// State when both downloads and downloaded songs are loaded
 class DownloaderLoaded extends DownloaderState {
   const DownloaderLoaded({
-    required List<DownloadProgress> downloads,
-    required List<Track> downloaded,
-  }) : super(downloads: downloads, downloaded: downloaded);
+    required super.downloads,
+    required super.downloaded,
+  });
 }
 
 /// This state is emitted whenever there is an update to any download's

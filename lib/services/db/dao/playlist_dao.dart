@@ -70,6 +70,19 @@ class PlaylistDAO {
     return isar.playlistDBs.filter().nameEqualTo(name).findFirst();
   }
 
+  Future<(int, Playlist)?> getPlaylistHeader(String name) async {
+    final row = await getPlaylistByName(name);
+    return row == null
+        ? null
+        : (row.id, playlistDBToPlaylist(row).copyWith(tracks: const []));
+  }
+
+  Future<List<Track>> loadTracksPage(int playlistId,
+          {required int offset, required int limit}) async =>
+      (await getPlaylistTracksPage(playlistId, offset: offset, limit: limit))
+          .map(trackDBToTrack)
+          .toList(growable: false);
+
   /// Find a playlist by Isar internal [id].
   Future<PlaylistDB?> getPlaylistById(int id) async {
     final isar = await _db;
@@ -381,6 +394,18 @@ class PlaylistDAO {
     return isar.playlistEntryDBs.filter().playlistIdEqualTo(playlistId).count();
   }
 
+  /// Return the first track (by position) of [playlistId], or null if empty.
+  Future<TrackDB?> getFirstPlaylistTrack(int playlistId) async {
+    final isar = await _db;
+    final entry = await isar.playlistEntryDBs
+        .where()
+        .playlistIdEqualToAnyPosition(playlistId)
+        .findFirst();
+    if (entry == null) return null;
+    await entry.track.load();
+    return entry.track.value;
+  }
+
   /// Return an ordered page of tracks for [playlistId].
   ///
   /// [offset] and [limit] are zero-based and bounded by Isar query paging.
@@ -416,6 +441,58 @@ class PlaylistDAO {
     }
 
     return entries.map((e) => e.track.value).whereType<TrackDB>().toList();
+  }
+
+  Future<({List<String> playlists, int droppedDuplicates})>
+      replaceTrackInPlaylists(
+    String oldMediaId,
+    Track replacement, {
+    Set<String> skipPlaylists = const {},
+  }) async {
+    const none = (playlists: <String>[], droppedDuplicates: 0);
+    if (oldMediaId == replacement.id) return none;
+    final isar = await _db;
+    return isar.writeTxnSync(() {
+      final old =
+          isar.trackDBs.filter().mediaIdEqualTo(oldMediaId).findFirstSync();
+      if (old == null) return none;
+      final entries = isar.playlistEntryDBs
+          .filter()
+          .track((q) => q.idEqualTo(old.id))
+          .findAllSync();
+      if (entries.isEmpty) return none;
+
+      final newId = _trackDAO.upsertTrackInTransaction(isar, replacement);
+      final newRow = isar.trackDBs.getSync(newId);
+      final now = DateTime.now();
+      final changed = <String>[];
+      var dropped = 0;
+      for (final entry in entries) {
+        final playlistId = entry.playlistId;
+        if (playlistId == null) continue;
+        final playlist = isar.playlistDBs.getSync(playlistId);
+        if (playlist == null || skipPlaylists.contains(playlist.name)) continue;
+
+        final hasReplacement = isar.playlistEntryDBs
+                .filter()
+                .playlistIdEqualTo(playlistId)
+                .and()
+                .track((q) => q.idEqualTo(newId))
+                .countSync() >
+            0;
+        if (hasReplacement) {
+          isar.playlistEntryDBs.deleteSync(entry.id);
+          dropped++;
+        } else {
+          entry.track.value = newRow;
+          entry.track.saveSync();
+        }
+        playlist.updatedAt = now;
+        isar.playlistDBs.putSync(playlist);
+        changed.add(playlist.name);
+      }
+      return (playlists: changed, droppedDuplicates: dropped);
+    });
   }
 
   /// Remove broken playlist-entry rows (missing track link or playlistId).

@@ -5,7 +5,7 @@
 ///
 /// All conversions funnel through this file. No other code should construct
 /// MediaItem or MediaItemModel directly.
-library track_adapter;
+library;
 
 import 'dart:io';
 

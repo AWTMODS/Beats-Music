@@ -81,7 +81,7 @@ class _ImportProcessScreenState extends State<ImportProcessScreen> {
                     alignment: Alignment.topCenter,
                     children: <Widget>[
                       ...previousChildren,
-                      if (currentChild != null) currentChild,
+                      ?currentChild,
                     ],
                   ),
                   child: _buildPhaseContent(context, state),
@@ -290,7 +290,7 @@ class _UrlInputView extends StatelessWidget {
                     const BoxConstraints(minWidth: 40, minHeight: 40),
                 suffixIcon: ValueListenableBuilder<TextEditingValue>(
                   valueListenable: controller,
-                  builder: (_, v, __) => v.text.isEmpty
+                  builder: (_, v, _) => v.text.isEmpty
                       ? const SizedBox.shrink()
                       : IconButton(
                           icon: Icon(Icons.cancel,
@@ -403,8 +403,8 @@ class _CollectionHeader extends StatelessWidget {
                   ? CachedNetworkImage(
                       imageUrl: info.thumbnailUrl!,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => _thumbPlaceholder(),
-                      errorWidget: (_, __, ___) => _thumbPlaceholder(),
+                      placeholder: (_, _) => _thumbPlaceholder(),
+                      errorWidget: (_, _, _) => _thumbPlaceholder(),
                     )
                   : _thumbPlaceholder(),
             ),
@@ -529,7 +529,7 @@ class _ResolvingView extends StatelessWidget {
           child: ListView.separated(
             padding: const EdgeInsets.only(bottom: 24),
             itemCount: state.tracks.length,
-            separatorBuilder: (_, __) => Divider(
+            separatorBuilder: (_, _) => Divider(
                 height: 1,
                 color: Default_Theme.primaryColor1.withValues(alpha: 0.05),
                 indent: 72),
@@ -750,7 +750,7 @@ class _ResolvingTrackTile extends StatelessWidget {
                   ? CachedNetworkImage(
                       imageUrl: src.thumbnailUrl!,
                       fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => _miniPlaceholder(),
+                      errorWidget: (_, _, _) => _miniPlaceholder(),
                     )
                   : _miniPlaceholder(),
             ),
@@ -864,7 +864,7 @@ class _ReviewTrackTile extends StatelessWidget {
                           ? CachedNetworkImage(
                               imageUrl: src.thumbnailUrl!,
                               fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) => _miniPlaceholder(),
+                              errorWidget: (_, _, _) => _miniPlaceholder(),
                             )
                           : _miniPlaceholder(),
                     ),
@@ -1058,7 +1058,7 @@ class _CandidateTile extends StatelessWidget {
                     ? CachedNetworkImage(
                         imageUrl: track.thumbnail.url,
                         fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => _miniPlaceholder(),
+                        errorWidget: (_, _, _) => _miniPlaceholder(),
                       )
                     : _miniPlaceholder(),
               ),

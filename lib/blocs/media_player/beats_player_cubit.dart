@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:beats_music/services/beats_player.dart';
 import 'package:bloc/bloc.dart';
 import 'package:rxdart/rxdart.dart';
@@ -5,7 +7,9 @@ part 'beats_player_state.dart';
 
 class BeatsPlayerCubit extends Cubit<BeatsPlayerState> {
   final BeatsMusicPlayer BeatsPlayer;
+  BeatsMusicPlayer get beatsPlayer => BeatsPlayer;
   late ValueStream<ProgressBarStreams> progressStreams;
+  StreamSubscription<ProgressBarStreams>? _progressConnection;
 
   BeatsPlayerCubit(this.BeatsPlayer)
       : super(BeatsPlayerState(isReady: true)) {
@@ -19,7 +23,13 @@ class BeatsPlayerCubit extends Cubit<BeatsPlayerState> {
   }
 
   void _setupProgressStreams() {
-    progressStreams = Rx.combineLatest4(
+    // Must stay connected for the cubit's lifetime. Do NOT use
+    // shareValueSeeded()/refCount(): the mini player and the full player hand
+    // the stream over in the same frame (see PlayerViewActivity), so the
+    // listener count briefly hits zero, and refCount() then cancels the source
+    // and closes the subject for good. Every later listener only gets the
+    // last cached value: the progress bar freezes while audio keeps playing.
+    final connectable = Rx.combineLatest4(
       Rx.defer(() => BeatsPlayer.engine.positionStream, reusable: true),
       Rx.defer(() => BeatsPlayer.engine.durationStream, reusable: true),
       Rx.defer(() => BeatsPlayer.engine.bufferedStream, reusable: true),
@@ -31,7 +41,7 @@ class BeatsPlayerCubit extends Cubit<BeatsPlayerState> {
         buffered: buffered,
         isPlaying: playing,
       ),
-    ).shareValueSeeded(
+    ).publishValueSeeded(
       ProgressBarStreams(
         position: Duration.zero,
         duration: Duration.zero,
@@ -39,13 +49,16 @@ class BeatsPlayerCubit extends Cubit<BeatsPlayerState> {
         isPlaying: false,
       ),
     );
+    _progressConnection = connectable.connect();
+    progressStreams = connectable;
   }
 
   @override
-  Future<void> close() {
+  Future<void> close() async {
     // Intentionally does NOT stop the player.
     // The AudioService foreground service manages its own lifecycle via
     // onTaskRemoved() / onNotificationDeleted().
+    await _progressConnection?.cancel();
     return super.close();
   }
 }

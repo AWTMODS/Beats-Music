@@ -5,7 +5,7 @@
 ///
 /// Stamped in Rust before crossing FFI. Parsed here in Dart.
 /// No other file in the codebase should construct or destructure this format.
-library media_id;
+library;
 
 import 'dart:convert' show utf8;
 import 'package:crypto/crypto.dart' show sha256;

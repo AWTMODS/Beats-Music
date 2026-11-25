@@ -67,9 +67,9 @@ final class LyricsError extends LyricsState {
 
 /// Emitted when no lyrics plugin is configured in the priority list.
 final class LyricsNoPlugin extends LyricsError {
-  LyricsNoPlugin(Track track) : super(track);
+  LyricsNoPlugin(super.track);
 }
 
 final class LyricsLoaded extends LyricsState {
-  const LyricsLoaded(Lyrics lyrics, Track track) : super(lyrics, track);
+  const LyricsLoaded(super.lyrics, super.track);
 }

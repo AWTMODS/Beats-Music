@@ -10,9 +10,9 @@ class CategoryLabel extends StatelessWidget {
   final String category;
 
   const CategoryLabel({
-    Key? key,
+    super.key,
     required this.category,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -47,11 +47,11 @@ class ColumnsCards extends StatelessWidget {
   final ScrollController scrollController; // Added scrollController
 
   const ColumnsCards({
-    Key? key,
+    super.key,
     required this.list,
     required this.columnSize,
     required this.scrollController, // Added scrollController
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -107,11 +107,11 @@ class TabSongListWidget extends StatelessWidget {
   final int columnSize;
 
   const TabSongListWidget({
-    Key? key,
+    super.key,
     required this.list,
     required this.category,
     required this.columnSize,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

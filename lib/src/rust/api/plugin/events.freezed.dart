@@ -1396,7 +1396,7 @@ class _$PluginManagerEvent_PluginDeleteFailedCopyWithImpl<$Res>
 
 class PluginManagerEvent_PluginListRefreshed extends PluginManagerEvent {
   const PluginManagerEvent_PluginListRefreshed(
-      {required List<PluginInfo> plugins})
+      {required final List<PluginInfo> plugins})
       : _plugins = plugins,
         super._();
 

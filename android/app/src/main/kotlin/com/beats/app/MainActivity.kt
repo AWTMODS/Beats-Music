@@ -1,15 +1,32 @@
 package com.beats.app
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.media.AudioDeviceCallback
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.core.content.FileProvider
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 class MainActivity : AudioServiceActivity() {
     private val INSTALLER_CHANNEL = "com.beats.app/package_installer"
+    private val AUDIO_EVENTS_CHANNEL = "com.beats.app/audio_events"
+
+    private var eventSink: EventChannel.EventSink? = null
+    private var volumeReceiver: BroadcastReceiver? = null
+    private var audioDeviceCallback: AudioDeviceCallback? = null
+    private var audioManager: AudioManager? = null
+    private var lastMutedState: Boolean? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -46,6 +63,95 @@ class MainActivity : AudioServiceActivity() {
                 result.notImplemented()
             }
         }
+
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, AUDIO_EVENTS_CHANNEL).setStreamHandler(
+            object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                    eventSink = events
+                    startAudioListeners()
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    stopAudioListeners()
+                    eventSink = null
+                }
+            }
+        )
+    }
+
+    private fun startAudioListeners() {
+        val mgr = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+        audioManager = mgr
+        lastMutedState = mgr.getStreamVolume(AudioManager.STREAM_MUSIC) == 0
+
+        if (volumeReceiver == null) {
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    if (intent?.action != "android.media.VOLUME_CHANGED_ACTION") return
+                    val streamType = intent.getIntExtra("android.media.EXTRA_VOLUME_STREAM_TYPE", -1)
+                    if (streamType != AudioManager.STREAM_MUSIC && streamType != -1) return
+                    val isMuted = mgr.getStreamVolume(AudioManager.STREAM_MUSIC) == 0
+                    if (isMuted && lastMutedState != true) {
+                        eventSink?.success("muted")
+                    }
+                    lastMutedState = isMuted
+                }
+            }
+            val filter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                registerReceiver(receiver, filter)
+            }
+            volumeReceiver = receiver
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && audioDeviceCallback == null) {
+            val callback = object : AudioDeviceCallback() {
+                private var initialized = false
+
+                override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>?) {
+                    // Skip the initial callback fired immediately on registration.
+                    if (!initialized) {
+                        initialized = true
+                        return
+                    }
+                    val hasBluetooth = addedDevices?.any { dev ->
+                        dev.isSink && (
+                            dev.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                                    dev.type == AudioDeviceInfo.TYPE_BLE_HEADSET)
+                        )
+                    } == true
+                    if (hasBluetooth) {
+                        eventSink?.success("bluetooth_connected")
+                    }
+                }
+            }
+            mgr.registerAudioDeviceCallback(callback, Handler(Looper.getMainLooper()))
+            audioDeviceCallback = callback
+        }
+    }
+
+    private fun stopAudioListeners() {
+        volumeReceiver?.let {
+            try {
+                unregisterReceiver(it)
+            } catch (_: Exception) {}
+            volumeReceiver = null
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            audioDeviceCallback?.let {
+                try {
+                    audioManager?.unregisterAudioDeviceCallback(it)
+                } catch (_: Exception) {}
+                audioDeviceCallback = null
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        stopAudioListeners()
+        super.onDestroy()
     }
 }
-

@@ -583,8 +583,8 @@ class PluginBloc extends Bloc<PluginEvent, PluginState> {
           clearSuccessMessage: deletedIds.isEmpty,
         ));
       },
-      storageSet: (_, __, ___) {},
-      storageDeleted: (_, __) {},
+      storageSet: (_, _, _) {},
+      storageDeleted: (_, _) {},
       storageCleared: (_) {},
       managerInitialized: () {
         emit(state.copyWith(isInitialized: true));

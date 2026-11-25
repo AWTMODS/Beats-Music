@@ -10,14 +10,14 @@ class LikeBtnWidget extends StatefulWidget {
   final VoidCallback? onLiked;
   final VoidCallback? onDisliked;
   const LikeBtnWidget({
-    Key? key,
+    super.key,
     this.isLiked = false,
     this.isPlaying = false,
     this.iconSize = 50,
     this.useSpotifyStyle = false,
     this.onLiked,
     this.onDisliked,
-  }) : super(key: key);
+  });
 
   @override
   State<LikeBtnWidget> createState() => _LikeBtnWidgetState();

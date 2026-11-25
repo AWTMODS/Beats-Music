@@ -3,7 +3,7 @@
 /// All plugin-related errors are typed exceptions extending [PluginException].
 /// Service layer catches raw errors and wraps them in the appropriate subclass.
 /// BLoC layer pattern-matches on these for error state emission.
-library plugin_exceptions;
+library;
 
 /// Base class for all plugin-related exceptions.
 sealed class PluginException implements Exception {
@@ -34,9 +34,9 @@ sealed class PluginException implements Exception {
 /// Thrown when attempting to execute a command on a plugin that is not loaded.
 class PluginNotLoadedException extends PluginException {
   const PluginNotLoadedException({
-    required String pluginId,
-    String message = 'Plugin is not loaded',
-  }) : super(pluginId: pluginId, message: message);
+    required String super.pluginId,
+    super.message = 'Plugin is not loaded',
+  });
 }
 
 /// Thrown when a plugin command execution fails.
@@ -48,20 +48,20 @@ class PluginExecutionException extends PluginException {
   final String? errorCode;
 
   const PluginExecutionException({
-    String? pluginId,
-    required String message,
+    super.pluginId,
+    required super.message,
     this.errorCode,
-    Object? cause,
-  }) : super(pluginId: pluginId, message: message, cause: cause);
+    super.cause,
+  });
 }
 
 /// Thrown when plugin installation fails.
 class PluginInstallException extends PluginException {
   const PluginInstallException({
-    String? pluginId,
-    required String message,
-    Object? cause,
-  }) : super(pluginId: pluginId, message: message, cause: cause);
+    super.pluginId,
+    required super.message,
+    super.cause,
+  });
 }
 
 class PluginCountryRestrictedException extends PluginInstallException {
@@ -82,9 +82,9 @@ class PluginCountryRestrictedException extends PluginInstallException {
 /// Thrown when a plugin cannot be found (not available in plugin directory).
 class PluginNotFoundException extends PluginException {
   const PluginNotFoundException({
-    required String pluginId,
-    String message = 'Plugin not found',
-  }) : super(pluginId: pluginId, message: message);
+    required String super.pluginId,
+    super.message = 'Plugin not found',
+  });
 }
 
 /// Thrown when a media ID cannot be parsed (missing "::" separator).
@@ -94,6 +94,6 @@ class MalformedMediaIdException extends PluginException {
 
   const MalformedMediaIdException({
     required this.rawId,
-    String message = 'Malformed media ID',
-  }) : super(message: message);
+    super.message = 'Malformed media ID',
+  });
 }

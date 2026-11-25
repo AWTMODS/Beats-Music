@@ -13,7 +13,7 @@ import 'package:icons_plus/icons_plus.dart';
 class GenerativePlaylistSheet extends StatefulWidget {
   final GenerativePlaylistManager manager;
 
-  const GenerativePlaylistSheet({Key? key, required this.manager}) : super(key: key);
+  const GenerativePlaylistSheet({super.key, required this.manager});
 
   @override
   State<GenerativePlaylistSheet> createState() => _GenerativePlaylistSheetState();

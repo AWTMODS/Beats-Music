@@ -1243,5 +1243,174 @@
   },
   "pluginBootstrapErrorTitle": "Connection too slow",
   "pluginBootstrapErrorBody": "Some plugins could not be installed. You can still use Beats — plugins will be retried on next launch.",
-  "pluginBootstrapContinue": "Continue Anyway"
+  "pluginBootstrapContinue": "Continue Anyway",
+  "lastfmStatusSection": "Scrobble status",
+  "lastfmStatusSynced": "All caught up",
+  "lastfmStatusSending": "Sending…",
+  "lastfmStatusQueued": "{count, plural, =1{1 scrobble waiting} other{{count} scrobbles waiting}}",
+  "@lastfmStatusQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lastfmStatusRetrying": "Offline · will retry shortly",
+  "lastfmStatusAuthPaused": "Paused · sign in again",
+  "lastfmStatusOff": "Scrobbling is turned off",
+  "lastfmStatQueued": "Queued",
+  "lastfmStatLastSent": "Last sent",
+  "lastfmNever": "Never",
+  "lastfmJustNow": "Just now",
+  "lastfmMinutesAgo": "{n}m ago",
+  "@lastfmMinutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lastfmHoursAgo": "{n}h ago",
+  "@lastfmHoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lastfmDaysAgo": "{n}d ago",
+  "@lastfmDaysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lastfmLastTrack": "Last scrobbled",
+  "lastfmErrorNetwork": "Couldn't reach Last.fm. Your scrobbles are safe and will be sent automatically.",
+  "lastfmErrorAuth": "Your Last.fm session is no longer valid. Remove the keys and authenticate again.",
+  "lastfmErrorRejected": "{count, plural, =1{Last.fm rejected 1 scrobble and it was discarded.} other{Last.fm rejected {count} scrobbles and they were discarded.}}",
+  "@lastfmErrorRejected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lastfmSyncNow": "Sync now",
+  "lastfmClearQueue": "Clear queue",
+  "lastfmQueueCleared": "Scrobble queue cleared",
+  "settingsDiscord": "Discord",
+  "settingsDiscordSubtitle": "Rich Presence: show what you're listening to.",
+  "discordTitle": "Discord",
+  "discordEnable": "Show on Discord",
+  "discordEnableSubtitle": "Share the song you're playing on your Discord profile.",
+  "discordStatusIdle": "Ready to share",
+  "discordStatusConnecting": "Connecting to Discord…",
+  "discordStatusConnected": "Connected as {name}",
+  "@discordStatusConnected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "discordStatusConnectedNoUser": "Connected to Discord",
+  "discordStatusNotFound": "Discord isn't running",
+  "discordStatusError": "Discord refused the connection",
+  "discordReconnect": "Reconnect",
+  "discordSectionPreview": "Preview",
+  "discordSectionCard": "Appearance",
+  "discordSectionPrivacy": "Privacy",
+  "discordPreviewEmpty": "Play a song to preview your card.",
+  "discordKindListening": "Listening to Beats",
+  "discordWhenPaused": "When paused",
+  "discordPausedKeep": "Keep showing",
+  "discordPausedHideLater": "Hide after 5 minutes",
+  "discordPausedHide": "Hide right away",
+  "discordShowArtwork": "Album artwork",
+  "discordShowArtworkSubtitle": "Cover art with a play or pause badge.",
+  "discordShowProgress": "Time bar",
+  "discordShowProgressSubtitle": "Live progress bar that follows seeks.",
+  "discordShowLinks": "Clickable links",
+  "discordShowLinksSubtitle": "Song, artist and album open their pages.",
+  "discordShareLocal": "Share local files",
+  "discordShareLocalSubtitle": "Also publish songs from your local library.",
+  "discordFooter": "Needs the Discord desktop app running on this computer. Changes apply instantly; Discord accepts about one update every 4 seconds.",
+  "discordStatusRetry": "Retrying in {seconds}s",
+  "discordStatusIdleDetail": "Connects automatically when music plays.",
+  "discordPausedKeepSubtitle": "Shows a paused badge without the time bar.",
+  "discordPausedHideLaterSubtitle": "Short pauses keep your card, long ones clear it.",
+  "discordPausedHideSubtitle": "Clears the moment you pause.",
+  "discordPreviewCaption": "How friends see you on Discord.",
+  "@discordStatusRetry": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "discordStatusText": "Status text",
+  "discordStatusTextSubtitle": "What friends see next to your name.",
+  "discordStatusTextApp": "App name",
+  "discordStatusTextArtist": "Artist",
+  "discordStatusTextSong": "Song title",
+  "libraryReorderHint": "Drag to reorder",
+  "libraryReorderHintPinned": "Drag to reorder. Pinned items stay on top.",
+  "tooltipRemoveFromQueue": "Remove from queue",
+  "windowMinimize": "Minimize",
+  "windowMaximize": "Maximize",
+  "windowRestore": "Restore Down",
+  "windowClose": "Close",
+  "settingsWindow": "Window & Tray",
+  "settingsWindowSubtitle": "Close button, tray icon and background playback",
+  "windowCloseSection": "When you close the window",
+  "windowCloseTray": "Keep playing in the system tray",
+  "windowCloseTrayMac": "Keep playing in the menu bar",
+  "windowCloseTraySubtitle": "Hides the window and keeps the music going. Uses the fewest resources.",
+  "windowCloseMinimize": "Minimize the window",
+  "windowCloseMinimizeSubtitle": "Keeps playing with the window minimized to the taskbar.",
+  "windowCloseMinimizeSubtitleMac": "Keeps playing with the window minimized to the Dock.",
+  "windowCloseQuit": "Quit Beats",
+  "windowCloseQuitSubtitle": "Stops playback and closes the app completely.",
+  "windowTrayUnavailable": "No system tray is available, so closing minimizes the window instead.",
+  "windowTrayMenuSection": "Tray menu",
+  "windowTrayFootnote": "Click the tray icon to bring Beats back, or right-click it for playback controls.",
+  "windowTrayFootnoteMac": "Click the menu bar icon for playback controls or to bring Beats back.",
+  "windowTrayFootnoteLinux": "Open the tray icon's menu for playback controls. On GNOME, tray icons need the AppIndicator extension.",
+  "trayNothingPlaying": "Nothing playing",
+  "trayPlay": "Play",
+  "trayPause": "Pause",
+  "trayNext": "Next",
+  "trayPrevious": "Previous",
+  "trayShowWindow": "Show Beats",
+  "trayHideWindow": "Hide Beats",
+  "trayQuit": "Quit Beats",
+  "feedKindAnnouncement": "News",
+  "feedKindApp": "New app",
+  "feedKindForm": "Sign up",
+  "feedKindNotice": "Important",
+  "feedKindUpdate": "Update",
+  "feedUpdateTitle": "Beats {version} is available",
+  "@feedUpdateTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "feedUpdateBody": "See what's new and download it.",
+  "feedUpdateAction": "View update",
+  "feedOpen": "Open",
+  "feedDismiss": "Dismiss",
+  "feedNew": "New",
+  "feedDraft": "Draft",
+  "feedPreview": "Preview drafts",
+  "feedEmpty": "You're all caught up",
+  "feedEmptySubtitle": "News, new apps and updates will show up here.",
+  "settingsNotifications": "Updates & news",
+  "settingsNotificationsSubtitle": "Update alerts, news and announcements",
+  "feedSection": "News & announcements",
+  "feedOnHome": "Show on Home",
+  "feedOnHomeSubtitle": "A small card for news and new apps. Important notices always show."
 }

@@ -5,7 +5,7 @@
 ///
 /// Call [ServiceLocator.setup] from [bootstrapApp] (in [services/bootstrap.dart])
 /// before [runApp] so that registered services are available at widget-tree build time.
-library service_locator;
+library;
 
 import 'package:beats_music/repository/backup/backup_repository.dart';
 import 'package:beats_music/services/backup/backup_files.dart';

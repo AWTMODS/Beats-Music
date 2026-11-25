@@ -2,7 +2,7 @@
 ///
 /// These replace the legacy [mediaItemModelNull] sentinel that depended
 /// on [MediaItemModel]. All player code should use [trackNull] instead.
-library sentinel_values;
+library;
 
 import 'package:beats_music/core/models/exported.dart';
 

@@ -103,7 +103,7 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
         segments: (_) => unexpectedFn(),
         lyricsResult: (_) => unexpectedFn(),
         lyricsSearchResults: (_) => unexpectedFn(),
-        lyricsById: (_, __) => unexpectedFn(),
+        lyricsById: (_, _) => unexpectedFn(),
         suggestions: (_) => unexpectedFn(),
         canHandle: (_) => unexpectedFn(),
         collectionInfo: (_) => unexpectedFn(),
@@ -197,7 +197,7 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
         segments: (_) => unexpectedFn(),
         lyricsResult: (_) => unexpectedFn(),
         lyricsSearchResults: (_) => unexpectedFn(),
-        lyricsById: (_, __) => unexpectedFn(),
+        lyricsById: (_, _) => unexpectedFn(),
         suggestions: (_) => unexpectedFn(),
         canHandle: (_) => unexpectedFn(),
         collectionInfo: (_) => unexpectedFn(),
@@ -279,7 +279,7 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
             _unexpectedResponse(emit, 'forceRefreshChartDetails'),
         lyricsSearchResults: (_) =>
             _unexpectedResponse(emit, 'forceRefreshChartDetails'),
-        lyricsById: (_, __) =>
+        lyricsById: (_, _) =>
             _unexpectedResponse(emit, 'forceRefreshChartDetails'),
         suggestions: (_) =>
             _unexpectedResponse(emit, 'forceRefreshChartDetails'),

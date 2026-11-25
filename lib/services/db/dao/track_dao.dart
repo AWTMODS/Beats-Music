@@ -56,8 +56,14 @@ class TrackDAO {
   }
 
   /// Queue references and their tracks must become durable together.
+  ///
+  /// [upsertTracks] false skips re-writing the track rows: pass it when only
+  /// the index or title changed since the last save, so a skip in a long
+  /// queue does not rewrite every track on the UI isolate.
   Future<void> persistQueueState(List<Track> tracks,
-      {required int currentIndex, required String title}) async {
+      {required int currentIndex,
+      required String title,
+      bool upsertTracks = true}) async {
     final isar = await _db;
     isar.writeTxnSync(() {
       if (tracks.isEmpty) {
@@ -67,8 +73,10 @@ class TrackDAO {
             .deleteAllSync();
         return;
       }
-      for (final track in tracks) {
-        upsertTrackInTransaction(isar, track);
+      if (upsertTracks) {
+        for (final track in tracks) {
+          upsertTrackInTransaction(isar, track);
+        }
       }
       isar.appSettingsStrDBs.putSync(AppSettingsStrDB(
           settingName: SettingKeys.lastQueueState,
@@ -160,10 +168,13 @@ class TrackDAO {
   /// Safe to call after removing a playlist entry.
   Future<void> purgeOrphanTrack(String mediaId) async {
     final isar = await _db;
-    isar.writeTxnSync(() {
+    await isar.writeTxn(() async {
       final track =
-          isar.trackDBs.filter().mediaIdEqualTo(mediaId).findFirstSync();
-      if (track != null) _deleteIfOrphan(isar, track, _queueIds(isar));
+          await isar.trackDBs.filter().mediaIdEqualTo(mediaId).findFirst();
+      if (track != null) {
+        final queue = await _queueIdsAsync(isar);
+        await _deleteIfOrphanAsync(isar, track, queue);
+      }
     });
   }
 
@@ -176,12 +187,14 @@ class TrackDAO {
     final ids = await isar.trackDBs.where().idProperty().findAll();
     var purged = 0;
     for (var offset = 0; offset < ids.length; offset += 100) {
-      purged += isar.writeTxnSync(() {
-        final queue = _queueIds(isar);
+      purged += await isar.writeTxn(() async {
+        final queue = await _queueIdsAsync(isar);
         var count = 0;
         for (final id in ids.skip(offset).take(100)) {
-          final track = isar.trackDBs.getSync(id);
-          if (track != null && _deleteIfOrphan(isar, track, queue)) count++;
+          final track = await isar.trackDBs.get(id);
+          if (track != null && await _deleteIfOrphanAsync(isar, track, queue)) {
+            count++;
+          }
         }
         return count;
       });
@@ -191,11 +204,11 @@ class TrackDAO {
     return purged;
   }
 
-  Set<String>? _queueIds(Isar isar) {
-    final value = isar.appSettingsStrDBs
-        .filter()
-        .settingNameEqualTo(SettingKeys.lastQueueState)
-        .findFirstSync()
+  Future<Set<String>?> _queueIdsAsync(Isar isar) async {
+    final value = (await isar.appSettingsStrDBs
+            .filter()
+            .settingNameEqualTo(SettingKeys.lastQueueState)
+            .findFirst())
         ?.settingValue;
     if (value == null) return {};
     try {
@@ -207,30 +220,31 @@ class TrackDAO {
     } // Do not delete tracks when queue references cannot be verified.
   }
 
-  bool _deleteIfOrphan(Isar isar, TrackDB track, Set<String>? queue) {
+  Future<bool> _deleteIfOrphanAsync(
+      Isar isar, TrackDB track, Set<String>? queue) async {
     if (queue == null || queue.contains(track.mediaId)) return false;
-    if (isar.playlistEntryDBs
+    if (await isar.playlistEntryDBs
             .filter()
             .track((q) => q.idEqualTo(track.id))
-            .findFirstSync() !=
+            .findFirst() !=
         null) {
       return false;
     }
-    if (isar.downloadDBs
+    if (await isar.downloadDBs
             .filter()
             .mediaIdEqualTo(track.mediaId)
-            .findFirstSync() !=
+            .findFirst() !=
         null) {
       return false;
     }
-    if (isar.playbackHistoryDBs
+    if (await isar.playbackHistoryDBs
             .filter()
             .track((q) => q.idEqualTo(track.id))
-            .findFirstSync() !=
+            .findFirst() !=
         null) {
       return false;
     }
-    return isar.trackDBs.deleteSync(track.id);
+    return isar.trackDBs.delete(track.id);
   }
 
   // ── Watchers ──────────────────────────────────────────────────────────────

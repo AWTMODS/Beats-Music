@@ -11,11 +11,11 @@ sealed class SearchSuggestionEvent extends Equatable {
 }
 
 final class SearchSuggestionFetch extends SearchSuggestionEvent {
-  const SearchSuggestionFetch(String query) : super(query);
+  const SearchSuggestionFetch(super.query);
 }
 
 final class SearchSuggestionClear extends SearchSuggestionEvent {
-  const SearchSuggestionClear(String query) : super(query);
+  const SearchSuggestionClear(super.query);
 }
 
 final class SearchSuggestionSave extends SearchSuggestionEvent {
@@ -25,12 +25,12 @@ final class SearchSuggestionSave extends SearchSuggestionEvent {
   final String? type;
 
   const SearchSuggestionSave(
-    String query, {
+    super.query, {
     this.title,
     this.subtitle,
     this.imageUrl,
     this.type,
-  }) : super(query);
+  });
 
   @override
   List<Object?> get props => [query, title, subtitle, imageUrl, type];

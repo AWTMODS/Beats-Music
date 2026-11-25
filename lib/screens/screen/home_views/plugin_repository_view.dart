@@ -233,7 +233,7 @@ class _PluginRepositoryViewState extends State<PluginRepositoryView> {
                                 parent: AlwaysScrollableScrollPhysics()),
                             itemCount: state.repositories.length,
                             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(height: 12),
                             itemBuilder: (context, index) =>
                                 _RepoCard(repo: state.repositories[index]),

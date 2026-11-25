@@ -15,37 +15,32 @@ class BackupFiles {
   bool get canShareFiles => !Platform.isLinux;
   final Set<String> _ownedStaging = {};
   Future<String?> pick() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-      allowMultiple: false,
-      withReadStream: true,
-    );
-    if (result == null || result.files.isEmpty) return null;
-    final picked = result.files.single;
-    if (picked.size > BackupDocument.maxBytes * 8) {
+    final files = await FilePicker.pickFiles(type: FileType.any);
+    if (files.isEmpty) return null;
+    final picked = files.single;
+    final fileSize = await picked.length();
+    if (fileSize != null && fileSize > BackupDocument.maxBytes * 8) {
       throw const FormatException('Selected file is too large.');
     }
-    final dir = await Directory((await getTemporaryDirectory()).path)
-        .createTemp('bloomee_import_');
+    final dir = await Directory(
+      (await getTemporaryDirectory()).path,
+    ).createTemp('bloomee_import_');
     final target = File(p.join(dir.path, safeName(picked.name)));
     _ownedStaging.add(dir.path);
     try {
-      final stream = picked.readStream ??
-          (picked.path == null ? null : File(picked.path!).openRead());
-      if (stream == null) {
-        throw const FileSystemException(
-            'The document provider did not provide a readable file.');
-      }
+      final stream = picked.readAsByteStream();
       var count = 0;
       final sink = target.openWrite();
       try {
-        await sink.addStream(stream.map((chunk) {
-          count += chunk.length;
-          if (count > BackupDocument.maxBytes * 8) {
-            throw const FormatException('Selected file is too large.');
-          }
-          return chunk;
-        }));
+        await sink.addStream(
+          stream.map((chunk) {
+            count += chunk.length;
+            if (count > BackupDocument.maxBytes * 8) {
+              throw const FormatException('Selected file is too large.');
+            }
+            return chunk;
+          }),
+        );
       } finally {
         await sink.close();
       }
@@ -59,21 +54,23 @@ class BackupFiles {
 
   Future<String?> save(String source) async {
     final file = File(source);
-    final destination = await FilePicker.platform.saveFile(
-      fileName: p.basename(source), type: FileType.custom,
+    final destinationUri = await FilePicker.saveFile(
+      fileName: p.basename(source),
+      type: FileType.custom,
       allowedExtensions: const ['json'],
-      // The installed picker writes these bytes using SAF/UIDocumentPicker.
-      bytes: Platform.isAndroid || Platform.isIOS
-          ? await file.readAsBytes()
-          : null,
+      bytes: await file.readAsBytes(),
     );
-    if (destination == null) return null;
+    if (destinationUri == null) return null;
+    final destination = destinationUri.scheme == 'file'
+        ? destinationUri.toFilePath()
+        : destinationUri.toString();
     if (!(Platform.isAndroid || Platform.isIOS)) {
       if (p.equals(p.absolute(source), p.absolute(destination))) {
         return destination;
       }
       final pending = File(
-          '$destination.bloomee_${DateTime.now().microsecondsSinceEpoch}_${Random.secure().nextInt(1 << 32)}.partial');
+        '$destination.bloomee_${DateTime.now().microsecondsSinceEpoch}_${Random.secure().nextInt(1 << 32)}.partial',
+      );
       try {
         await file.copy(pending.path);
         final handle = await pending.open(mode: FileMode.append);
@@ -91,16 +88,19 @@ class BackupFiles {
   }
 
   Future<void> share(String source, {Rect? origin}) async {
-    await SharePlus.instance.share(ShareParams(
-      files: [XFile(source, mimeType: 'application/json')],
-      subject: 'Bloomee backup',
-      sharePositionOrigin: origin,
-    ));
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(source, mimeType: 'application/json')],
+        subject: 'Bloomee backup',
+        sharePositionOrigin: origin,
+      ),
+    );
   }
 
   static String safeName(String name) {
-    final cleaned =
-        p.basename(name).replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1f]'), '_');
+    final cleaned = p
+        .basename(name)
+        .replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1f]'), '_');
     if (utf8.encode(cleaned).length > 160) {
       final suffix = p.extension(cleaned);
       final extension = suffix.length <= 16 ? suffix : '';
@@ -120,12 +120,12 @@ class BackupFiles {
   }
 
   static Future<BackupDocument> readJson(String path) => Isolate.run(() async {
-        final file = File(path);
-        if (await file.length() > BackupDocument.maxBytes) {
-          throw const FormatException('JSON exceeds the 32 MB import limit.');
-        }
-        return BackupDocument.decode(await file.readAsString());
-      });
+    final file = File(path);
+    if (await file.length() > BackupDocument.maxBytes) {
+      throw const FormatException('JSON exceeds the 32 MB import limit.');
+    }
+    return BackupDocument.decode(await file.readAsString());
+  });
 
   /// Only delete staging directories owned by this transport, never user files.
   Future<String?> deliveryId(String path) async {

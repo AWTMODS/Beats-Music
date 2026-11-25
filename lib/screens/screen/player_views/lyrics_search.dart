@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:ui';
 import 'package:beats_music/blocs/media_player/beats_player_cubit.dart';
 import 'package:beats_music/blocs/lyrics/lyrics_cubit.dart';
 import 'package:beats_music/core/constants/setting_keys.dart';
@@ -244,7 +243,7 @@ class LyricsSearchDelegate extends SearchDelegate {
               itemCount: results.length,
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final result = results[index];
                 return _LyricsResultCard(
@@ -285,8 +284,8 @@ class _LyricsResultCardState extends State<_LyricsResultCard> {
   bool _isApplying = false;
 
   String _targetMediaId() {
-    final playerCubit = context.read<BeatsPlayerCubit>();
-    final current = playerCubit.BeatsPlayer.currentTrackInfo.id;
+    final current =
+        context.read<BeatsPlayerCubit>().BeatsPlayer.currentTrackInfo.id;
     return current.isNotEmpty ? current : widget.mediaID;
   }
 
@@ -539,8 +538,11 @@ class _LyricsPreviewModalState extends State<_LyricsPreviewModal> {
   bool _isLoading = true;
 
   String _targetMediaId() {
-    final playerCubit = widget.parentContext.read<BeatsPlayerCubit>();
-    final current = playerCubit.BeatsPlayer.currentTrackInfo.id;
+    final current = widget.parentContext
+        .read<BeatsPlayerCubit>()
+        .BeatsPlayer
+        .currentTrackInfo
+        .id;
     return current.isNotEmpty ? current : widget.mediaID;
   }
 
@@ -590,72 +592,68 @@ class _LyricsPreviewModalState extends State<_LyricsPreviewModal> {
           // Glassy Header
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
-                decoration: BoxDecoration(
-                  color: Default_Theme.primaryColor1.withValues(alpha: 0.02),
-                  border: Border(
-                      bottom: BorderSide(
-                          color: Default_Theme.primaryColor1
-                              .withValues(alpha: 0.08))),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color:
-                            Default_Theme.primaryColor1.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
+              decoration: BoxDecoration(
+                color: Default_Theme.primaryColor1.withValues(alpha: 0.02),
+                border: Border(
+                    bottom: BorderSide(
+                        color: Default_Theme.primaryColor1
+                            .withValues(alpha: 0.08))),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Default_Theme.primaryColor1.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.lyricsSearchPreview,
-                                style: TextStyle(
-                                  color: Default_Theme.accentColor2
-                                      .withValues(alpha: 0.8),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.2,
-                                ),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.lyricsSearchPreview,
+                              style: TextStyle(
+                                color: Default_Theme.accentColor2
+                                    .withValues(alpha: 0.8),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.2,
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                widget.match.title,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.95),
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.2,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.match.title,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.95),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.2,
                               ),
-                            ],
-                          ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          icon: Icon(MingCute.close_fill,
-                              color: Default_Theme.primaryColor1
-                                  .withValues(alpha: 0.6),
-                              size: 24),
-                          onPressed: () => Navigator.pop(context),
-                        )
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                      IconButton(
+                        icon: Icon(MingCute.close_fill,
+                            color: Default_Theme.primaryColor1
+                                .withValues(alpha: 0.6),
+                            size: 24),
+                        onPressed: () => Navigator.pop(context),
+                      )
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -756,5 +754,3 @@ class _LyricsPreviewModalState extends State<_LyricsPreviewModal> {
     );
   }
 }
-
-

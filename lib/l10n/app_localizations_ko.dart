@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1652,7 +1653,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String backupImportResult(
-      int playlists, int tracks, int history, int settings) {
+    int playlists,
+    int tracks,
+    int history,
+    int settings,
+  ) {
     return '가져오기 완료. 생성된 재생목록: $playlists개, 추가된 트랙 항목: $tracks개, 추가된 기록: $history개, 적용된 설정: $settings개.';
   }
 
@@ -1694,7 +1699,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String libraryRecoverySummary(
-      int tracks, int playlists, int downloads, int unavailable) {
+    int tracks,
+    int playlists,
+    int downloads,
+    int unavailable,
+  ) {
     return '트랙 $tracks개, 재생목록 $playlists개, 다운로드 기록 $downloads개를 찾았습니다. 현재 사용할 수 없는 파일은 $unavailable개이며, 해당 기록은 유지됩니다.';
   }
 
@@ -2280,4 +2289,396 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get pluginBootstrapContinue => 'Continue Anyway';
+
+  @override
+  String get lastfmStatusSection => 'Scrobble status';
+
+  @override
+  String get lastfmStatusSynced => 'All caught up';
+
+  @override
+  String get lastfmStatusSending => 'Sending…';
+
+  @override
+  String lastfmStatusQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count scrobbles waiting',
+      one: '1 scrobble waiting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lastfmStatusRetrying => 'Offline · will retry shortly';
+
+  @override
+  String get lastfmStatusAuthPaused => 'Paused · sign in again';
+
+  @override
+  String get lastfmStatusOff => 'Scrobbling is turned off';
+
+  @override
+  String get lastfmStatQueued => 'Queued';
+
+  @override
+  String get lastfmStatLastSent => 'Last sent';
+
+  @override
+  String get lastfmNever => 'Never';
+
+  @override
+  String get lastfmJustNow => 'Just now';
+
+  @override
+  String lastfmMinutesAgo(int n) {
+    return '${n}m ago';
+  }
+
+  @override
+  String lastfmHoursAgo(int n) {
+    return '${n}h ago';
+  }
+
+  @override
+  String lastfmDaysAgo(int n) {
+    return '${n}d ago';
+  }
+
+  @override
+  String get lastfmLastTrack => 'Last scrobbled';
+
+  @override
+  String get lastfmErrorNetwork =>
+      'Couldn\'t reach Last.fm. Your scrobbles are safe and will be sent automatically.';
+
+  @override
+  String get lastfmErrorAuth =>
+      'Your Last.fm session is no longer valid. Remove the keys and authenticate again.';
+
+  @override
+  String lastfmErrorRejected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Last.fm rejected $count scrobbles and they were discarded.',
+      one: 'Last.fm rejected 1 scrobble and it was discarded.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lastfmSyncNow => 'Sync now';
+
+  @override
+  String get lastfmClearQueue => 'Clear queue';
+
+  @override
+  String get lastfmQueueCleared => 'Scrobble queue cleared';
+
+  @override
+  String get settingsDiscord => 'Discord';
+
+  @override
+  String get settingsDiscordSubtitle =>
+      'Rich Presence: show what you\'re listening to.';
+
+  @override
+  String get discordTitle => 'Discord';
+
+  @override
+  String get discordEnable => 'Show on Discord';
+
+  @override
+  String get discordEnableSubtitle =>
+      'Share the song you\'re playing on your Discord profile.';
+
+  @override
+  String get discordStatusIdle => 'Ready to share';
+
+  @override
+  String get discordStatusConnecting => 'Connecting to Discord…';
+
+  @override
+  String discordStatusConnected(String name) {
+    return 'Connected as $name';
+  }
+
+  @override
+  String get discordStatusConnectedNoUser => 'Connected to Discord';
+
+  @override
+  String get discordStatusNotFound => 'Discord isn\'t running';
+
+  @override
+  String get discordStatusError => 'Discord refused the connection';
+
+  @override
+  String get discordReconnect => 'Reconnect';
+
+  @override
+  String get discordSectionPreview => 'Preview';
+
+  @override
+  String get discordSectionCard => 'Appearance';
+
+  @override
+  String get discordSectionPrivacy => 'Privacy';
+
+  @override
+  String get discordPreviewEmpty => 'Play a song to preview your card.';
+
+  @override
+  String get discordKindListening => 'Listening to Beats';
+
+  @override
+  String get discordWhenPaused => 'When paused';
+
+  @override
+  String get discordPausedKeep => 'Keep showing';
+
+  @override
+  String get discordPausedHideLater => 'Hide after 5 minutes';
+
+  @override
+  String get discordPausedHide => 'Hide right away';
+
+  @override
+  String get discordShowArtwork => 'Album artwork';
+
+  @override
+  String get discordShowArtworkSubtitle =>
+      'Cover art with a play or pause badge.';
+
+  @override
+  String get discordShowProgress => 'Time bar';
+
+  @override
+  String get discordShowProgressSubtitle =>
+      'Live progress bar that follows seeks.';
+
+  @override
+  String get discordShowLinks => 'Clickable links';
+
+  @override
+  String get discordShowLinksSubtitle =>
+      'Song, artist and album open their pages.';
+
+  @override
+  String get discordShareLocal => 'Share local files';
+
+  @override
+  String get discordShareLocalSubtitle =>
+      'Also publish songs from your local library.';
+
+  @override
+  String get discordFooter =>
+      'Needs the Discord desktop app running on this computer. Changes apply instantly; Discord accepts about one update every 4 seconds.';
+
+  @override
+  String discordStatusRetry(int seconds) {
+    return 'Retrying in ${seconds}s';
+  }
+
+  @override
+  String get discordStatusIdleDetail =>
+      'Connects automatically when music plays.';
+
+  @override
+  String get discordPausedKeepSubtitle =>
+      'Shows a paused badge without the time bar.';
+
+  @override
+  String get discordPausedHideLaterSubtitle =>
+      'Short pauses keep your card, long ones clear it.';
+
+  @override
+  String get discordPausedHideSubtitle => 'Clears the moment you pause.';
+
+  @override
+  String get discordPreviewCaption => 'How friends see you on Discord.';
+
+  @override
+  String get discordStatusText => 'Status text';
+
+  @override
+  String get discordStatusTextSubtitle => 'What friends see next to your name.';
+
+  @override
+  String get discordStatusTextApp => 'App name';
+
+  @override
+  String get discordStatusTextArtist => 'Artist';
+
+  @override
+  String get discordStatusTextSong => 'Song title';
+
+  @override
+  String get libraryReorderHint => 'Drag to reorder';
+
+  @override
+  String get libraryReorderHintPinned =>
+      'Drag to reorder. Pinned items stay on top.';
+
+  @override
+  String get tooltipRemoveFromQueue => 'Remove from queue';
+
+  @override
+  String get windowMinimize => 'Minimize';
+
+  @override
+  String get windowMaximize => 'Maximize';
+
+  @override
+  String get windowRestore => 'Restore Down';
+
+  @override
+  String get windowClose => 'Close';
+
+  @override
+  String get settingsWindow => 'Window & Tray';
+
+  @override
+  String get settingsWindowSubtitle =>
+      'Close button, tray icon and background playback';
+
+  @override
+  String get windowCloseSection => 'When you close the window';
+
+  @override
+  String get windowCloseTray => 'Keep playing in the system tray';
+
+  @override
+  String get windowCloseTrayMac => 'Keep playing in the menu bar';
+
+  @override
+  String get windowCloseTraySubtitle =>
+      'Hides the window and keeps the music going. Uses the fewest resources.';
+
+  @override
+  String get windowCloseMinimize => 'Minimize the window';
+
+  @override
+  String get windowCloseMinimizeSubtitle =>
+      'Keeps playing with the window minimized to the taskbar.';
+
+  @override
+  String get windowCloseMinimizeSubtitleMac =>
+      'Keeps playing with the window minimized to the Dock.';
+
+  @override
+  String get windowCloseQuit => 'Quit Beats';
+
+  @override
+  String get windowCloseQuitSubtitle =>
+      'Stops playback and closes the app completely.';
+
+  @override
+  String get windowTrayUnavailable =>
+      'No system tray is available, so closing minimizes the window instead.';
+
+  @override
+  String get windowTrayMenuSection => 'Tray menu';
+
+  @override
+  String get windowTrayFootnote =>
+      'Click the tray icon to bring Beats back, or right-click it for playback controls.';
+
+  @override
+  String get windowTrayFootnoteMac =>
+      'Click the menu bar icon for playback controls or to bring Beats back.';
+
+  @override
+  String get windowTrayFootnoteLinux =>
+      'Open the tray icon\'s menu for playback controls. On GNOME, tray icons need the AppIndicator extension.';
+
+  @override
+  String get trayNothingPlaying => 'Nothing playing';
+
+  @override
+  String get trayPlay => 'Play';
+
+  @override
+  String get trayPause => 'Pause';
+
+  @override
+  String get trayNext => 'Next';
+
+  @override
+  String get trayPrevious => 'Previous';
+
+  @override
+  String get trayShowWindow => 'Show Beats';
+
+  @override
+  String get trayHideWindow => 'Hide Beats';
+
+  @override
+  String get trayQuit => 'Quit Beats';
+
+  @override
+  String get feedKindAnnouncement => 'News';
+
+  @override
+  String get feedKindApp => 'New app';
+
+  @override
+  String get feedKindForm => 'Sign up';
+
+  @override
+  String get feedKindNotice => 'Important';
+
+  @override
+  String get feedKindUpdate => 'Update';
+
+  @override
+  String feedUpdateTitle(String version) {
+    return 'Beats $version is available';
+  }
+
+  @override
+  String get feedUpdateBody => 'See what\'s new and download it.';
+
+  @override
+  String get feedUpdateAction => 'View update';
+
+  @override
+  String get feedOpen => 'Open';
+
+  @override
+  String get feedDismiss => 'Dismiss';
+
+  @override
+  String get feedNew => 'New';
+
+  @override
+  String get feedDraft => 'Draft';
+
+  @override
+  String get feedPreview => 'Preview drafts';
+
+  @override
+  String get feedEmpty => 'You\'re all caught up';
+
+  @override
+  String get feedEmptySubtitle =>
+      'News, new apps and updates will show up here.';
+
+  @override
+  String get settingsNotifications => 'Updates & news';
+
+  @override
+  String get settingsNotificationsSubtitle =>
+      'Update alerts, news and announcements';
+
+  @override
+  String get feedSection => 'News & announcements';
+
+  @override
+  String get feedOnHome => 'Show on Home';
+
+  @override
+  String get feedOnHomeSubtitle =>
+      'A small card for news and new apps. Important notices always show.';
 }

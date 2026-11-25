@@ -7,13 +7,13 @@ class InfoTile extends StatelessWidget {
   final Color fg;
   final Function()? onTap;
   const InfoTile({
-    Key? key,
+    super.key,
     required this.title,
     required this.subtitle,
     required this.icon,
     this.onTap,
     this.fg = Default_Theme.primaryColor1,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

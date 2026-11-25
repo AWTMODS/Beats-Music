@@ -115,7 +115,7 @@ class _DownloadSettingsState extends State<DownloadSettings> {
                         : () async {
                             final settingsCubit = context.read<SettingsCubit>();
                             final value =
-                                await FilePicker.platform.getDirectoryPath();
+                                await FilePicker.getDirectoryPath();
                             if (value != null) {
                               settingsCubit.setDownPath(value);
                             }

@@ -33,6 +33,9 @@ class SettingsCubit extends Cubit<SettingsState> {
     final lastFMScrobbleFuture = _settingsRepo.getSettingBool(CacheKeys.lFMScrobbleSetting);
     final autoPlayFuture = _settingsRepo.getSettingBool(SettingKeys.autoPlay);
     final autoResolveUnavailableTracksFuture = _settingsRepo.getSettingBool(SettingKeys.autoResolveUnavailableTracks);
+    final skipSilenceFuture = _settingsRepo.getSettingBool(SettingKeys.skipSilence);
+    final pauseOnMuteFuture = _settingsRepo.getSettingBool(SettingKeys.pauseOnMute);
+    final bluetoothAutoResumeFuture = _settingsRepo.getSettingBool(SettingKeys.bluetoothAutoResume);
     final lFMPicksFuture = _settingsRepo.getSettingBool(CacheKeys.lFMUIPicks);
     final backupPathFuture = _settingsRepo.getSettingStr(SettingKeys.backupPath);
     final autoBackupFuture = _settingsRepo.getSettingBool(SettingKeys.autoBackup);
@@ -61,6 +64,9 @@ class SettingsCubit extends Cubit<SettingsState> {
       lastFMScrobbleFuture,
       autoPlayFuture,
       autoResolveUnavailableTracksFuture,
+      skipSilenceFuture,
+      pauseOnMuteFuture,
+      bluetoothAutoResumeFuture,
       lFMPicksFuture,
       backupPathFuture,
       autoBackupFuture,
@@ -181,6 +187,9 @@ class SettingsCubit extends Cubit<SettingsState> {
       lastFMScrobble: (await lastFMScrobbleFuture) ?? false,
       autoPlay: (await autoPlayFuture) ?? true,
       autoResolveUnavailableTracks: (await autoResolveUnavailableTracksFuture) ?? true,
+      skipSilence: (await skipSilenceFuture) ?? false,
+      pauseOnMute: (await pauseOnMuteFuture) ?? false,
+      bluetoothAutoResume: (await bluetoothAutoResumeFuture) ?? false,
       lFMPicks: (await lFMPicksFuture) ?? false,
       backupPath: defaultBackUpDir,
       autoBackup: (await autoBackupFuture) ?? false,
@@ -220,6 +229,21 @@ class SettingsCubit extends Cubit<SettingsState> {
       value,
     );
     emit(state.copyWith(autoResolveUnavailableTracks: value));
+  }
+
+  Future<void> setSkipSilence(bool value) async {
+    await _settingsRepo.putSettingBool(SettingKeys.skipSilence, value);
+    emit(state.copyWith(skipSilence: value));
+  }
+
+  Future<void> setPauseOnMute(bool value) async {
+    await _settingsRepo.putSettingBool(SettingKeys.pauseOnMute, value);
+    emit(state.copyWith(pauseOnMute: value));
+  }
+
+  Future<void> setBluetoothAutoResume(bool value) async {
+    await _settingsRepo.putSettingBool(SettingKeys.bluetoothAutoResume, value);
+    emit(state.copyWith(bluetoothAutoResume: value));
   }
 
   void autoUpdate() {

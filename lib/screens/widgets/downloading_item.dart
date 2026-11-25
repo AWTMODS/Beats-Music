@@ -11,9 +11,9 @@ class DownloadingCardWidget extends StatelessWidget {
   final DownloadProgress downloadProgress;
 
   const DownloadingCardWidget({
-    Key? key,
+    super.key,
     required this.downloadProgress,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -258,7 +258,7 @@ class _PluginManagerScreenState extends State<PluginManagerScreen> {
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             itemCount: filterOptions.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final entry = filterOptions.entries.elementAt(index);
               final filterType = entry.key;
@@ -363,7 +363,7 @@ class _PluginManagerScreenState extends State<PluginManagerScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           physics: const BouncingScrollPhysics(),
           itemCount: plugins.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             return AnimatedListItem(
               key: ValueKey(plugins[index].manifest.id),
@@ -383,14 +383,14 @@ class _PluginManagerScreenState extends State<PluginManagerScreen> {
   Future<void> _installPlugin(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final files = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['bex'],
         dialogTitle: l10n.pluginManagerSelectPackage,
       );
 
-      if (result == null || result.files.isEmpty) return;
-      final filePath = result.files.single.path;
+      if (files.isEmpty) return;
+      final filePath = files.single.path;
       if (filePath == null) return;
 
       if (context.mounted) {
