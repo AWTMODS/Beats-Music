@@ -18,8 +18,8 @@ import 'package:beats_music/blocs/search_suggestions/search_suggestion_bloc.dart
 import 'package:beats_music/blocs/settings_cubit/cubit/settings_cubit.dart';
 import 'package:beats_music/plugins/blocs/plugin/plugin_bloc.dart';
 import 'package:beats_music/plugins/blocs/plugin/plugin_event.dart';
-import 'package:beats_music/repository/Beats/download_repository.dart';
-import 'package:beats_music/repository/Beats/settings_repository.dart';
+import 'package:beats_music/repository/beats/download_repository.dart';
+import 'package:beats_music/repository/beats/settings_repository.dart';
 import 'package:beats_music/services/db/dao/cache_dao.dart';
 import 'package:beats_music/services/db/dao/download_dao.dart';
 import 'package:beats_music/services/db/dao/history_dao.dart';

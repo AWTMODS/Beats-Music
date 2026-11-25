@@ -11,7 +11,7 @@ import 'package:path/path.dart' as path;
 import 'package:beats_music/blocs/internet_connectivity/cubit/connectivity_cubit.dart';
 import 'package:beats_music/core/models/exported.dart';
 import 'package:beats_music/core/constants/setting_keys.dart';
-import 'package:beats_music/repository/Beats/download_repository.dart';
+import 'package:beats_music/repository/beats/download_repository.dart';
 import 'package:beats_music/screens/widgets/snackbar.dart';
 import 'package:beats_music/services/db/global_db.dart';
 import 'package:beats_music/services/db/dao/settings_dao.dart';

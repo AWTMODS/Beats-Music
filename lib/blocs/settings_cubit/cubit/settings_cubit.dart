@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:beats_music/core/constants/setting_keys.dart';
 import 'package:beats_music/core/constants/cache_keys.dart';
-import 'package:beats_music/repository/Beats/settings_repository.dart';
+import 'package:beats_music/repository/beats/settings_repository.dart';
 import 'package:beats_music/services/player/stream_quality_selector.dart';
 import 'package:beats_music/services/db/db_provider.dart';
 import 'package:beats_music/utils/country_info.dart';
