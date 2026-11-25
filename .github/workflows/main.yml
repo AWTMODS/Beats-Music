@@ -32,6 +32,14 @@ jobs:
             - name: Install Dependencies
               run: flutter pub get
 
+            - name: Accept Android Licenses
+              shell: powershell
+              run: |
+                  $sdkMgr = Get-ChildItem "$env:ANDROID_HOME\cmdline-tools\*\bin\sdkmanager.bat" | Select-Object -First 1
+                  if ($sdkMgr) {
+                    1..20 | ForEach-Object { "y" } | & $sdkMgr.FullName --licenses | Out-Null
+                  }
+
             - name: Extract version from pubspec.yaml
               shell: powershell
               run: |
@@ -109,7 +117,7 @@ jobs:
                   build-number.txt
                 tag: v${{ env.VERSION }}+${{github.run_number}}
                 token: ${{secrets.SECRET_KEY}}
-                prerelease: true
+                prerelease: false
                 allowUpdates: true 
             
             - name: Update update.json
@@ -157,7 +165,7 @@ jobs:
             - name: Install Linux Dependencies
               run: |
                 sudo apt-get update
-                sudo apt-get install -y clang cmake git ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libayatana-appindicator3-dev
+                sudo apt-get install -y clang cmake git ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libayatana-appindicator3-dev libsecret-1-dev libjsoncpp-dev libdbus-1-dev
 
             - name: Install Dependencies
               run: flutter pub get
@@ -186,6 +194,6 @@ jobs:
                 artifacts: Beats_tunes_linux_x64_v${{ env.VERSION }}+${{github.run_number}}.tar.gz
                 tag: v${{ env.VERSION }}+${{github.run_number}}
                 token: ${{secrets.SECRET_KEY}}
-                prerelease: true
+                prerelease: false
                 allowUpdates: true 
                 omitBodyDuringUpdate: true
