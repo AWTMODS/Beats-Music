@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:beats_music/services/db/global_db.dart';
 import 'package:isar_community/isar.dart';
 
@@ -13,9 +14,41 @@ class SearchHistoryDAO {
         .filter()
         .queryEqualTo(searchQuery)
         .findFirstSync();
+
+    if (existing == null) {
+      String cleanQuery = searchQuery;
+      if (searchQuery.startsWith('{') && searchQuery.endsWith('}')) {
+        try {
+          final map = json.decode(searchQuery) as Map<String, dynamic>;
+          cleanQuery = map['q'] as String? ?? searchQuery;
+        } catch (_) {}
+      }
+
+      final recent = isarDB.searchHistoryDBs
+          .where()
+          .sortByLastSearchedDesc()
+          .limit(25)
+          .findAllSync();
+      for (final item in recent) {
+        String existingQ = item.query;
+        if (existingQ.startsWith('{') && existingQ.endsWith('}')) {
+          try {
+            final map = json.decode(existingQ) as Map<String, dynamic>;
+            existingQ = map['q'] as String? ?? existingQ;
+          } catch (_) {}
+        }
+        if (existingQ.toLowerCase().trim() == cleanQuery.toLowerCase().trim()) {
+          existing = item;
+          break;
+        }
+      }
+    }
+
     if (existing != null) {
-      isarDB.writeTxn(() =>
-          isarDB.searchHistoryDBs.put(existing..lastSearched = DateTime.now()));
+      final target = existing;
+      isarDB.writeTxn(() => isarDB.searchHistoryDBs.put(target
+        ..query = searchQuery.startsWith('{') ? searchQuery : target.query
+        ..lastSearched = DateTime.now()));
     } else {
       isarDB.writeTxnSync(() => isarDB.searchHistoryDBs.putSync(SearchHistoryDB(
             query: searchQuery,

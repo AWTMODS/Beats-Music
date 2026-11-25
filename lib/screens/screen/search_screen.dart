@@ -145,16 +145,21 @@ class _SearchScreenState extends State<SearchScreen> {
     _highlightedSuggestionIndexNotifier.value = -1;
   }
 
-  void _performSearch(
-      {required String query, required ContentSearchFilter filter}) {
+  void _performSearch({
+    required String query,
+    required ContentSearchFilter filter,
+    bool saveHistory = true,
+  }) {
     final normalizedQuery = _normalizeSearchQuery(query);
     if (normalizedQuery.isEmpty || _activePluginIdNotifier.value == null) {
       return;
     }
 
-    context
-        .read<SearchSuggestionBloc>()
-        .add(SearchSuggestionSave(normalizedQuery));
+    if (saveHistory) {
+      context
+          .read<SearchSuggestionBloc>()
+          .add(SearchSuggestionSave(normalizedQuery));
+    }
     _setSearchFieldText(normalizedQuery);
     _filterNotifier.value = filter;
     _closeSuggestionPanel();
@@ -165,8 +170,9 @@ class _SearchScreenState extends State<SearchScreen> {
       _performSearch(query: query, filter: _filterNotifier.value);
   void _doSearchInAllCategories(String query) =>
       _performSearch(query: query, filter: ContentSearchFilter.all);
-  void _doSearchWithFilter(String query, ContentSearchFilter filter) =>
-      _performSearch(query: query, filter: filter);
+  void _doSearchWithFilter(String query, ContentSearchFilter filter,
+          {bool saveHistory = true}) =>
+      _performSearch(query: query, filter: filter, saveHistory: saveHistory);
 
   void _triggerSearch() {
     if (_textEditingController.text.trim().isNotEmpty) {
@@ -744,7 +750,8 @@ class _SuggestionsSliver extends StatelessWidget {
   final TextEditingController textEditingController;
   final ValueNotifier<int> highlightedIndexNotifier;
   final void Function(String) onSearchInAllCategories;
-  final void Function(String, ContentSearchFilter) onSearchWithFilter;
+  final void Function(String, ContentSearchFilter, {bool saveHistory})
+      onSearchWithFilter;
   final void Function(String) onSetSearchFieldText;
   final void Function(List<({String query, ContentSearchFilter filter})>)
       onSuggestionsGenerated;
@@ -769,15 +776,11 @@ class _SuggestionsSliver extends StatelessWidget {
       };
 
   String _buildEntitySearchQuery(plugin_models.EntitySuggestion entity) {
-    final parts = <String>[entity.title.trim()];
-    if (entity.subtitle != null && entity.subtitle!.isNotEmpty) {
-      parts.add(entity.subtitle!
-          .toLowerCase()
-          .replaceAll(RegExp(r'\s+'), " ")
-          .replaceAll(RegExp(r'[^\w\s]+', unicode: true), "")
-          .replaceAll(entity.title.toLowerCase().trim(), ""));
+    final title = entity.title.trim();
+    if (title.isNotEmpty) {
+      return _normalize(title);
     }
-    return _normalize(parts.where((p) => p.isNotEmpty).join(' '));
+    return _normalize(entity.subtitle ?? '');
   }
 
   @override
@@ -1324,7 +1327,7 @@ class _EntitySuggestionTile extends StatelessWidget {
   final ContentSearchFilter filter;
   final String query;
   final ValueNotifier<int> highlightedIndexNotifier;
-  final void Function(String, ContentSearchFilter) onSearch;
+  final void Function(String, ContentSearchFilter, {bool saveHistory}) onSearch;
 
   const _EntitySuggestionTile(
       {required this.entity,
@@ -1373,7 +1376,7 @@ class _EntitySuggestionTile extends StatelessWidget {
                 imageUrl: thumbnailUrl,
                 type: entity.kind.name,
               ));
-          onSearch(query, filter);
+          onSearch(query, filter, saveHistory: false);
         },
         splashColor: Colors.transparent,
         highlightColor: Default_Theme.primaryColor1.withValues(alpha: 0.05),
