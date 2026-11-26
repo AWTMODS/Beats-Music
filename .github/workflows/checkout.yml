@@ -72,8 +72,16 @@ jobs:
           channel: 'stable'
           cache: true 
 
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
       - name: Install Dependencies
         run: flutter pub get
+
+      - name: Generate Localizations
+        run: flutter gen-l10n
         
       - name: Extract version from pubspec.yaml
         shell: powershell
