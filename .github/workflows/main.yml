@@ -13,6 +13,8 @@ jobs:
     build-windows-android:
         name: Build Windows & Android
         runs-on: windows-latest
+        env:
+            PUB_CACHE: ${{ runner.temp }}\pub-cache
         steps:
             - name: Checkout Repository
               uses: actions/checkout@v4

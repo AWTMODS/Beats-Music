@@ -57,6 +57,8 @@ jobs:
     name: Build Android & Windows
     needs: check 
     runs-on: windows-latest
+    env:
+      PUB_CACHE: ${{ runner.temp }}\pub-cache
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -117,9 +119,9 @@ jobs:
       - name: Build Windows App
         run: flutter build windows --release --build-number ${{github.run_number}}
 
-      - name: Rename file
+      - name: Verify Windows Binary
         shell: powershell
-        run: Rename-Item -Path "build/windows/x64/runner/Release/Beats.exe" -NewName "Beats.exe"
+        run: if (-not (Test-Path "build/windows/x64/runner/Release/Beats.exe")) { Write-Error "Beats.exe not found"; exit 1 }
         
       - name: ZIP build
         shell: powershell
