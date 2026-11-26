@@ -29,8 +29,25 @@ jobs:
                 flutter-version: '3.50.1'
                 channel: 'stable'
 
+            - name: Setup Rust Toolchain
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+            - name: Verify Flutter and Dart Versions
+              run: flutter --version
+
             - name: Install Dependencies
               run: flutter pub get
+
+            - name: Generate Localizations
+              run: flutter gen-l10n
+
+            - name: Static Code Analysis
+              run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+            - name: Run Unit Tests
+              run: flutter test test/services/beats_player_test.dart
 
             - name: Accept Android Licenses
               shell: powershell
@@ -48,21 +65,38 @@ jobs:
                   $ver = $vLine.Matches[0].Groups[1].Value.Split('+')[0]
                   echo "VERSION=$ver" >> $env:GITHUB_ENV
 
+            - name: Create google-services.json
+              shell: powershell
+              run: |
+                  if ("${{ secrets.GOOGLE_SERVICES_JSON }}" -ne "") {
+                    [IO.File]::WriteAllText("./android/app/google-services.json", '${{ secrets.GOOGLE_SERVICES_JSON }}')
+                  }
+
             - name: Create keystore file
+              shell: powershell
               run: |
                   $b64 = "${{ secrets.KEY_STORE }}"
-                  $filename = "./android/Beats.jks"
-                  $bytes =[Convert]::FromBase64String($b64)
-                  [IO.File]::WriteAllBytes($filename, $bytes)
+                  if ($b64 -ne "") {
+                    $filename = "./android/Beats.jks"
+                    $bytes = [Convert]::FromBase64String($b64)
+                    [IO.File]::WriteAllBytes($filename, $bytes)
+                  }
             
             - name: Create Keystore properties
+              shell: powershell
               run: |
-                  echo keyPassword=\${{ secrets.KEY_PASSWORD }} > ./android/key.properties
-                  echo storePassword=\${{ secrets.STORE_PASSWORD }} >> ./android/key.properties
-                  echo keyAlias=\${{ secrets.KEY_ALIAS }} >> ./android/key.properties
+                  if ("${{ secrets.KEY_STORE }}" -ne "") {
+                    "storeFile=Beats.jks" | Out-File -FilePath "./android/key.properties" -Encoding ascii
+                    "keyPassword=${{ secrets.KEY_PASSWORD }}" | Out-File -FilePath "./android/key.properties" -Append -Encoding ascii
+                    "storePassword=${{ secrets.STORE_PASSWORD }}" | Out-File -FilePath "./android/key.properties" -Append -Encoding ascii
+                    "keyAlias=${{ secrets.KEY_ALIAS }}" | Out-File -FilePath "./android/key.properties" -Append -Encoding ascii
+                  }
             
-            - name: Build App files
+            - name: Build Android APKs
               run: flutter build apk --release --split-per-abi --build-number ${{github.run_number}}
+
+            - name: Build Android AAB
+              run: flutter build appbundle --release --build-number ${{github.run_number}}
 
             - name: Verify Sign
               run: |
@@ -87,8 +121,13 @@ jobs:
             - name: Create build-number.txt file
               run: echo ${{github.run_number}} > build-number.txt
 
-            - name: Rename file
-              run: Rename-Item -Path "build/windows/x64/runner/Release/Beats.exe" -NewName "Beats.exe"
+            - name: Verify Windows Binary
+              shell: powershell
+              run: |
+                  if (!(Test-Path "build/windows/x64/runner/Release/Beats.exe")) {
+                    Write-Error "Beats.exe not found"
+                    exit 1
+                  }
            
             - name: ZIP build
               run: Compress-Archive -Path build/windows/x64/runner/Release/* -Destination  build/windows/x64/Beats_tunes_windows_x64_v${{ env.VERSION }}+${{github.run_number}}.zip
@@ -161,6 +200,9 @@ jobs:
               with:
                 flutter-version: '3.50.1'
                 channel: 'stable'
+
+            - name: Setup Rust Toolchain
+              uses: dtolnay/rust-toolchain@stable
 
             - name: Install Linux Dependencies
               run: |

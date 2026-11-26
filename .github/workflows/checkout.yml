@@ -32,11 +32,20 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Verify Flutter and Dart Versions
+        run: flutter --version
+
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Generate Localizations
+        run: flutter gen-l10n
+
       - name: Static Code Analysis
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Run Unit Tests
+        run: flutter test test/services/beats_player_test.dart
 
   # ==========================================
   # JOB 2: BUILD APP 
