@@ -172,7 +172,7 @@ jobs:
                   build/app/outputs/flutter-apk/Beats_tunes_android_v${{ env.VERSION }}+${{github.run_number}}_x86_64.apk
                   build-number.txt
                 tag: v${{ env.VERSION }}+${{github.run_number}}
-                token: ${{secrets.SECRET_KEY}}
+                token: ${{ secrets.SECRET_KEY || secrets.GITHUB_TOKEN }}
                 prerelease: false
                 allowUpdates: true 
             
@@ -255,7 +255,7 @@ jobs:
               with:
                 artifacts: Beats_tunes_linux_x64_v${{ env.VERSION }}+${{github.run_number}}.tar.gz
                 tag: v${{ env.VERSION }}+${{github.run_number}}
-                token: ${{secrets.SECRET_KEY}}
+                token: ${{ secrets.SECRET_KEY || secrets.GITHUB_TOKEN }}
                 prerelease: false
                 allowUpdates: true 
                 omitBodyDuringUpdate: true
