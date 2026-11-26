@@ -57,9 +57,11 @@ jobs:
     name: Build Android & Windows
     needs: check 
     runs-on: windows-latest
-    env:
-      PUB_CACHE: ${{ runner.temp }}\pub-cache
     steps:
+      - name: Configure PUB_CACHE on Runner Drive
+        shell: powershell
+        run: echo "PUB_CACHE=$env:RUNNER_TEMP\pub-cache" >> $env:GITHUB_ENV
+
       - name: Checkout Repository
         uses: actions/checkout@v4
 
