@@ -32,6 +32,9 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# Silence MSVC STL1011 deprecation error for <experimental/coroutine> in C++/WinRT plugins (e.g., audio_service_win)
+add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Ensure MSVC finds ATL library
 set(ATL_LIB_DIR "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/atlmfc/lib/spectre/x64")
 if(EXISTS "${ATL_LIB_DIR}")
